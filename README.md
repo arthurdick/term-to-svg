@@ -1,5 +1,7 @@
 # term-to-svg: Animated Terminal Session Recorder
 
+![term-to-svg Demo](demo.svg)
+
 `term-to-svg` is a command-line PHP tool that converts terminal session recordings (made with the `script` command) into highly customizable, animated SVG files. This allows you to easily embed interactive and visually appealing terminal demonstrations directly into your project `README`s, websites, or documentation.
 
 Unlike GIF animations, SVG files are vector-based, resulting in sharper visuals at any zoom level, smaller file sizes, and the ability to be manipulated with CSS and JavaScript.
