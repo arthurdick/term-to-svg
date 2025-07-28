@@ -844,7 +844,7 @@ class TerminalToSvgConverter
         $charHeight = $this->config['font_size'] * $this->config['line_height_factor'];
         $charWidth = $this->config['font_size'] * 0.6;
         $svgWidth = $charWidth * $this->config['cols'];
-        $svgHeight = $charHeight * $this->config['rows'];
+        $svgHeight = ($charHeight * $this->config['rows']) + ($this->config['font_size'] * 0.2); // Add padding for descenders
 
         list($mainText, $mainRects, $mainScroll) = $this->renderBuffer($this->mainBuffer, $this->mainScrollEvents, $charHeight, $charWidth);
         list($altText, $altRects, $altScroll) = $this->renderBuffer($this->altBuffer, $this->altScrollEvents, $charHeight, $charWidth);
