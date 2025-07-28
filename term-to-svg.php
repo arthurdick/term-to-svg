@@ -11,7 +11,7 @@
  * The generated SVG will freeze on the last frame for 5 seconds, then loop.
  *
  * @author Arthur Dick
- * @version 1.0.1
+ * @version 1.0.2
  *
  * USAGE:
  * 1. Record a session: script --timing=rec.time rec.log
@@ -69,6 +69,26 @@ class TerminalToSvgConverter
     private const STATE_CSI_PARAM = 2;
     private const STATE_OSC_STRING = 3;
     private const STATE_CHARSET = 4; // Designate G0/G1 charset
+
+    // Lists of common terminal commands that don't affect the visual output
+    // and can be safely ignored without generating warnings.
+    private const WONT_IMPLEMENT_CSI = [
+        'n', // Device Status Report
+        's', // Save Cursor Position (ANSI.SYS)
+        'u', // Restore Cursor Position (ANSI.SYS)
+        't', // Window Manipulation
+    ];
+    private const WONT_IMPLEMENT_DEC = [
+        '1h', '1l',   // Set/Reset Cursor Key Mode
+        '7h', '7l',   // Set/Reset Autowrap Mode
+        '12h', '12l',  // Start/Stop Blinking Cursor
+        '1000h', '1000l', '1002h', '1002l', '1003h', '1003l', // Mouse Reporting
+        '1004h', '1004l', '1005h', '1005l', '1006h', '1006l', // Mouse Reporting
+        '2004h', '2004l', // Set/Reset Bracketed Paste Mode
+    ];
+    private const WONT_IMPLEMENT_ESC = [
+        '7', '8', // DECSC / DECRC (Save/Restore Cursor)
+    ];
 
     private $typescriptHandle;
     private $timingData;
@@ -258,7 +278,9 @@ class TerminalToSvgConverter
                         $state = self::STATE_GROUND;
                     } else {
                         // Unhandled escape sequence, return to ground state
-                        $this->logWarning("Unsupported escape sequence: ESC {$char}");
+                        if (!in_array($char, self::WONT_IMPLEMENT_ESC)) {
+                            $this->logWarning("Unsupported escape sequence: ESC {$char}");
+                        }
                         $state = self::STATE_GROUND;
                     }
                     break;
@@ -342,7 +364,9 @@ class TerminalToSvgConverter
         } elseif ($command === '25h') {
             $this->setCursorVisibility(true);
         } else {
-            $this->logWarning("Unsupported DEC Private Mode command: ?{$command}");
+            if (!in_array($command, self::WONT_IMPLEMENT_DEC)) {
+                $this->logWarning("Unsupported DEC Private Mode command: ?{$command}");
+            }
         }
     }
 
@@ -452,7 +476,9 @@ class TerminalToSvgConverter
             case 'S': $this->doScrollUp($p[0] ?? 1); break;
             case 'T': $this->doScrollDown($p[0] ?? 1); break;
             default:
-                $this->logWarning("Unsupported CSI command: '" . implode(';', $params) . "{$command}'");
+                if (!in_array($command, self::WONT_IMPLEMENT_CSI)) {
+                    $this->logWarning("Unsupported CSI command: '" . implode(';', $params) . "{$command}'");
+                }
                 break;
         }
 
