@@ -11,7 +11,7 @@
  * The generated SVG will freeze on the last frame for 5 seconds, then loop.
  *
  * @author Arthur Dick
- * @version 1.0.0
+ * @version 1.0.1
  *
  * USAGE:
  * 1. Record a session: script --timing=rec.time rec.log
@@ -969,9 +969,15 @@ class TerminalToSvgConverter
                         }
                         $textClass = $this->getClassName($textCss);
 
+                        // Conditionally add xml:space="preserve" only when needed
+                        $spacePreserveAttr = '';
+                        if (str_starts_with($textChunk, ' ') || str_ends_with($textChunk, ' ')) {
+                            $spacePreserveAttr = ' xml:space="preserve"';
+                        }
+
                         $textElements .= sprintf(
-                            '        <text class="%s" x="%.2F" y="%.2F">%s%s</text>' . "\n",
-                            $textClass, $textX, $textY, $textChunk, $visibilityAnims
+                            '        <text class="%s" x="%.2F" y="%.2F"%s>%s%s</text>' . "\n",
+                            $textClass, $textX, $textY, $spacePreserveAttr, $textChunk, $visibilityAnims
                         );
                     }
                 }
@@ -1052,7 +1058,7 @@ class TerminalToSvgConverter
 {$cssStyles}
     <animate id="master" begin="0;master.end + 5s" dur="{$totalDuration}s" attributeName="data-dummy" from="0" to="1" />
     <rect width="100%" height="100%" fill="{$bgColor}" />
-    <g id="main-screen" display="inline" xml:space="preserve">
+    <g id="main-screen" display="inline">
 {$mainAnims}
         <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden">
             <set attributeName="visibility" to="visible" begin="master.begin" />
