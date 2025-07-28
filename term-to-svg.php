@@ -1060,14 +1060,14 @@ class TerminalToSvgConverter
     <rect width="100%" height="100%" fill="{$bgColor}" />
     <g id="main-screen" display="inline">
 {$mainAnims}
-        <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden">
+        <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
             <set attributeName="visibility" to="visible" begin="master.begin" />
 {$resetScroll}{$mainScroll}{$mainRects}{$mainText}
         </g>
     </g>
     <g id="alt-screen" display="none">
 {$altAnims}
-        <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden">
+        <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
             <set attributeName="visibility" to="visible" begin="master.begin" />
 {$resetScroll}{$altScroll}{$altRects}{$altText}
         </g>
