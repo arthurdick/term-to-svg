@@ -1,0 +1,32 @@
+{
+    "name": "arthurdick/term-to-svg",
+    "description": "A command-line PHP tool that converts terminal session recordings into animated SVG files.",
+    "type": "project",
+    "keywords": [
+        "terminal",
+        "svg",
+        "animation",
+        "recorder",
+        "cli"
+    ],
+    "homepage": "https://github.com/arthurdick/term-to-svg",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Arthur Dick",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=7.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5"
+    },
+    "bin": [
+        "term-to-svg.php"
+    ],
+    "scripts": {
+        "test": "phpunit"
+    }
+}
