@@ -234,7 +234,7 @@ class AnsiCommandsTest extends TestCase
 
     public function testDeleteLines(): void
     {
-        $this->invokeMethod('processChunk', ["line1\nline2\nline3"]);
+        $this->invokeMethod('processChunk', ["line1\r\nline2\r\nline3"]);
         $this->setProperty('cursorY', 1);
         $this->invokeMethod('handleAnsiCommand', ['M', [1]]);
         $buffer = $this->getProperty('mainBuffer');
@@ -248,7 +248,7 @@ class AnsiCommandsTest extends TestCase
 
     public function testScrollUp(): void
     {
-        $this->invokeMethod('processChunk', ["line1\nline2"]);
+        $this->invokeMethod('processChunk', ["line1\r\nline2"]);
         $this->invokeMethod('handleAnsiCommand', ['S', [1]]);
         $buffer = $this->getProperty('mainBuffer');
         // "line2" should be on line 0
