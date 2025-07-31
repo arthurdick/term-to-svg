@@ -6,3 +6,6 @@
 *.svg
 *.log
 *.time
+
+# Un-ignore in the tests directory
+!/tests/**
