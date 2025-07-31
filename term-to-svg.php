@@ -11,7 +11,7 @@
  * The generated SVG will freeze on the last frame for 5 seconds, then loop.
  *
  * @author Arthur Dick
- * @version 1.0.2
+ * @version 1.0.3
  *
  * USAGE:
  * 1. Record a session: script --timing=rec.time rec.log
@@ -901,16 +901,16 @@ class TerminalToSvgConverter
 
         foreach ($this->screenSwitchEvents as $event) {
             if ($event['type'] === 'to_alt') {
-                $mainAnims .= sprintf('        <set attributeName="display" to="none" begin="master.begin+%.4fs" />' . "\n", $event['time']);
-                $altAnims .= sprintf('        <set attributeName="display" to="inline" begin="master.begin+%.4fs" />' . "\n", $event['time']);
+                $mainAnims .= sprintf('        <set attributeName="display" to="none" begin="loop.begin+%.4fs" />' . "\n", $event['time']);
+                $altAnims .= sprintf('        <set attributeName="display" to="inline" begin="loop.begin+%.4fs" />' . "\n", $event['time']);
             } else { // to_main
-                $mainAnims .= sprintf('        <set attributeName="display" to="inline" begin="master.begin+%.4fs" />' . "\n", $event['time']);
-                $altAnims .= sprintf('        <set attributeName="display" to="none" begin="master.begin+%.4fs" />' . "\n", $event['time']);
+                $mainAnims .= sprintf('        <set attributeName="display" to="inline" begin="loop.begin+%.4fs" />' . "\n", $event['time']);
+                $altAnims .= sprintf('        <set attributeName="display" to="none" begin="loop.begin+%.4fs" />' . "\n", $event['time']);
             }
         }
 
-        $mainAnims .= '        <set attributeName="display" to="inline" begin="master.begin" />' . "\n";
-        $altAnims .= '        <set attributeName="display" to="none" begin="master.begin" />' . "\n";
+        $mainAnims .= '        <set attributeName="display" to="inline" begin="loop.begin" />' . "\n";
+        $altAnims .= '        <set attributeName="display" to="none" begin="loop.begin" />' . "\n";
 
         return $this->getSvgTemplate($svgWidth, $svgHeight, $mainText, $mainRects, $mainScroll, $altText, $altRects, $altScroll, $mainAnims, $altAnims, $cursorAnims, $this->totalDuration);
     }
@@ -975,16 +975,16 @@ class TerminalToSvgConverter
                     }
 
                     $visibilityAnims = sprintf(
-                        '<set attributeName="visibility" to="visible" begin="master.begin+%.4fs" />',
+                        '<set attributeName="visibility" to="visible" begin="loop.begin+%.4fs" />',
                         $cell['startTime']
                     );
                     if (isset($cell['endTime'])) {
                         $visibilityAnims .= sprintf(
-                            '<set attributeName="visibility" to="hidden" begin="master.begin+%.4fs" />',
+                            '<set attributeName="visibility" to="hidden" begin="loop.begin+%.4fs" />',
                             $cell['endTime']
                         );
                     }
-                    $visibilityAnims .= '<set attributeName="visibility" to="hidden" begin="master.begin" />';
+                    $visibilityAnims .= '<set attributeName="visibility" to="hidden" begin="loop.begin" />';
                     
                     $chunkWidth = ($current_x - $x) * $charWidth;
 
@@ -1036,7 +1036,7 @@ class TerminalToSvgConverter
             $toY = -($event['offset'] + 1) * $charHeight;
 
             $scrollAnimations .= sprintf(
-                '        <animateTransform attributeName="transform" type="translate" from="0 %.2F" to="0 %.2F" begin="master.begin+%.4fs" dur="0.001s" fill="freeze" />' . "\n",
+                '        <animateTransform attributeName="transform" type="translate" from="0 %.2F" to="0 %.2F" begin="loop.begin+%.4fs" dur="0.001s" fill="freeze" />' . "\n",
                 $fromY, $toY, $time
             );
         }
@@ -1083,7 +1083,8 @@ class TerminalToSvgConverter
         $fgColor = $this->config['default_fg'];
         $cursorWidth = $this->config['font_size'] * 0.6;
         $cursorHeight = $this->config['font_size'] * $this->config['line_height_factor'];
-        $resetScroll = '        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="master.begin" fill="freeze" />' . "\n";
+        $loopDuration = $totalDuration + 5; // 5 seconds pause
+        $resetScroll = '        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="loop.begin" fill="freeze" />' . "\n";
 
         // Build the CSS style block from collected rules
         $cssStyles = '';
@@ -1101,25 +1102,27 @@ class TerminalToSvgConverter
 <svg width="{$width}" height="{$height}" xmlns="http://www.w3.org/2000/svg" font-family='{$fontFamily}' font-size="{$fontSize}">
     <title>Terminal Session Recording</title>
 {$cssStyles}
-    <animate id="master" begin="0;master.end + 5s" dur="{$totalDuration}s" attributeName="data-dummy" from="0" to="1" />
     <rect width="100%" height="100%" fill="{$bgColor}" />
-    <g id="main-screen" display="inline">
+    <g id="master">
+        <animate id="loop" attributeName="visibility" from="hidden" to="visible" begin="0;loop.end" dur="{$loopDuration}s" />
+        <g id="main-screen" display="inline">
 {$mainAnims}
-        <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
-            <set attributeName="visibility" to="visible" begin="master.begin" />
+            <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
+                <set attributeName="visibility" to="visible" begin="loop.begin" />
 {$resetScroll}{$mainScroll}{$mainRects}{$mainText}
+            </g>
         </g>
-    </g>
-    <g id="alt-screen" display="none">
+        <g id="alt-screen" display="none">
 {$altAnims}
-        <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
-            <set attributeName="visibility" to="visible" begin="master.begin" />
+            <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
+                <set attributeName="visibility" to="visible" begin="loop.begin" />
 {$resetScroll}{$altScroll}{$altRects}{$altText}
+            </g>
         </g>
-    </g>
-    <rect id="cursor" width="{$cursorWidth}" height="{$cursorHeight}" fill="{$fgColor}" opacity="0.7" visibility="visible">
+        <rect id="cursor" width="{$cursorWidth}" height="{$cursorHeight}" fill="{$fgColor}" opacity="0.7" visibility="visible">
 {$cursorAnims}
-    </rect>
+        </rect>
+    </g>
 </svg>
 SVG;
     }
@@ -1174,12 +1177,12 @@ SVG;
         foreach ($this->cursorEvents as $event) {
             if (isset($event['visible'])) {
                 $to = $event['visible'] ? 'visible' : 'hidden';
-                $anims .= sprintf('        <set attributeName="visibility" to="%s" begin="master.begin+%.4fs" />' . "\n", $to, $event['time']);
+                $anims .= sprintf('        <set attributeName="visibility" to="%s" begin="loop.begin+%.4fs" />' . "\n", $to, $event['time']);
             } else {
                 $toX = $event['x'] * $charWidth;
                 $toY = $event['y'] * $charHeight;
-                $anims .= sprintf('        <set attributeName="x" to="%.2F" begin="master.begin+%.4fs" />' . "\n", $toX, $event['time']);
-                $anims .= sprintf('        <set attributeName="y" to="%.2F" begin="master.begin+%.4fs" />' . "\n", $toY, $event['time']);
+                $anims .= sprintf('        <set attributeName="x" to="%.2F" begin="loop.begin+%.4fs" />' . "\n", $toX, $event['time']);
+                $anims .= sprintf('        <set attributeName="y" to="%.2F" begin="loop.begin+%.4fs" />' . "\n", $toY, $event['time']);
             }
         }
 
@@ -1204,9 +1207,9 @@ SVG;
             }
         }
 
-        $anims .= sprintf('        <set attributeName="x" to="%.2F" begin="master.begin"/>' . "\n", $initialX);
-        $anims .= sprintf('        <set attributeName="y" to="%.2F" begin="master.begin"/>' . "\n", $initialY);
-        $anims .= sprintf('        <set attributeName="visibility" to="%s" begin="master.begin"/>' . "\n", $initialVisibility);
+        $anims .= sprintf('        <set attributeName="x" to="%.2F" begin="loop.begin"/>' . "\n", $initialX);
+        $anims .= sprintf('        <set attributeName="y" to="%.2F" begin="loop.begin"/>' . "\n", $initialY);
+        $anims .= sprintf('        <set attributeName="visibility" to="%s" begin="loop.begin"/>' . "\n", $initialVisibility);
 
         return $anims;
     }

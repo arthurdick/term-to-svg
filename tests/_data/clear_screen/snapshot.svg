@@ -4,37 +4,39 @@
       .c1 { fill:#e0e0e0; }
     </style>
 
-    <animate id="master" begin="0;master.end + 5s" dur="1.2s" attributeName="data-dummy" from="0" to="1" />
     <rect width="100%" height="100%" fill="#1a1a1a" />
-    <g id="main-screen" display="inline">
-        <set attributeName="display" to="inline" begin="master.begin" />
+    <g id="master">
+        <animate id="loop" attributeName="visibility" from="hidden" to="visible" begin="0;loop.end" dur="6.2s" />
+        <g id="main-screen" display="inline">
+        <set attributeName="display" to="inline" begin="loop.begin" />
 
-        <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
-            <set attributeName="visibility" to="visible" begin="master.begin" />
-        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="master.begin" fill="freeze" />
-        <text class="c1" x="0.00" y="15.40">Hello<set attributeName="visibility" to="visible" begin="master.begin+0.5000s" /><set attributeName="visibility" to="hidden" begin="master.begin+1.0000s" /><set attributeName="visibility" to="hidden" begin="master.begin" /></text>
-        <text class="c1" x="42.00" y="15.40">Clear<set attributeName="visibility" to="visible" begin="master.begin+1.2000s" /><set attributeName="visibility" to="hidden" begin="master.begin" /></text>
+            <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
+                <set attributeName="visibility" to="visible" begin="loop.begin" />
+        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="loop.begin" fill="freeze" />
+        <text class="c1" x="0.00" y="15.40">Hello<set attributeName="visibility" to="visible" begin="loop.begin+0.5000s" /><set attributeName="visibility" to="hidden" begin="loop.begin+1.0000s" /><set attributeName="visibility" to="hidden" begin="loop.begin" /></text>
+        <text class="c1" x="42.00" y="15.40">Clear<set attributeName="visibility" to="visible" begin="loop.begin+1.2000s" /><set attributeName="visibility" to="hidden" begin="loop.begin" /></text>
 
+            </g>
         </g>
-    </g>
-    <g id="alt-screen" display="none">
-        <set attributeName="display" to="none" begin="master.begin" />
+        <g id="alt-screen" display="none">
+        <set attributeName="display" to="none" begin="loop.begin" />
 
-        <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
-            <set attributeName="visibility" to="visible" begin="master.begin" />
-        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="master.begin" fill="freeze" />
+            <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
+                <set attributeName="visibility" to="visible" begin="loop.begin" />
+        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="loop.begin" fill="freeze" />
 
+            </g>
         </g>
-    </g>
-    <rect id="cursor" width="8.4" height="16.8" fill="#e0e0e0" opacity="0.7" visibility="visible">
-        <set attributeName="visibility" to="visible" begin="master.begin+0.0000s" />
-        <set attributeName="x" to="42.00" begin="master.begin+0.5000s" />
-        <set attributeName="y" to="0.00" begin="master.begin+0.5000s" />
-        <set attributeName="x" to="84.00" begin="master.begin+1.2000s" />
-        <set attributeName="y" to="0.00" begin="master.begin+1.2000s" />
-        <set attributeName="x" to="0.00" begin="master.begin"/>
-        <set attributeName="y" to="0.00" begin="master.begin"/>
-        <set attributeName="visibility" to="visible" begin="master.begin"/>
+        <rect id="cursor" width="8.4" height="16.8" fill="#e0e0e0" opacity="0.7" visibility="visible">
+        <set attributeName="visibility" to="visible" begin="loop.begin+0.0000s" />
+        <set attributeName="x" to="42.00" begin="loop.begin+0.5000s" />
+        <set attributeName="y" to="0.00" begin="loop.begin+0.5000s" />
+        <set attributeName="x" to="84.00" begin="loop.begin+1.2000s" />
+        <set attributeName="y" to="0.00" begin="loop.begin+1.2000s" />
+        <set attributeName="x" to="0.00" begin="loop.begin"/>
+        <set attributeName="y" to="0.00" begin="loop.begin"/>
+        <set attributeName="visibility" to="visible" begin="loop.begin"/>
 
-    </rect>
+        </rect>
+    </g>
 </svg>
