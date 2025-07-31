@@ -1,11 +1,11 @@
 /vendor/
 /composer.lock
 
-.phpunit.result.cache
+/.phpunit.result.cache
 
 *.svg
 *.log
 *.time
 
-# Un-ignore in the tests directory
-!/tests/**
+# Un-ignore in the /tests/_data directory
+!/tests/_data/**
