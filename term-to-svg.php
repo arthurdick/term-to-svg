@@ -118,14 +118,14 @@ class TerminalToSvgConverter
     private array $mainScrollEvents = [];
     private array $altScrollEvents = [];
     private array $screenSwitchEvents = [];
-    
+
     // Scrolling Region
     private int $scrollTop = 0;
     private int $scrollBottom; // Initialized in constructor
 
     private array $cssRules = [];
     private int $classCounter = 0;
-    
+
     // Total animation duration
     private float $totalDuration = 0.0;
 
@@ -160,16 +160,16 @@ class TerminalToSvgConverter
                 echo "✅ Detected geometry from log file: {$this->config['cols']}x{$this->config['rows']}\n";
             }
         } else {
-             if (php_sapi_name() === 'cli' && realpath($_SERVER['SCRIPT_FILENAME']) === realpath(__FILE__)) {
+            if (php_sapi_name() === 'cli' && realpath($_SERVER['SCRIPT_FILENAME']) === realpath(__FILE__)) {
                 echo "⚠️  Warning: Could not detect geometry from log file. Using default dimensions.\n";
             }
         }
-        
+
         $this->scrollBottom = $this->config['rows'] - 1;
 
         $this->timingData = $this->parseTimingFile($timingPath);
     }
-    
+
     private function resetStyle(): void
     {
         $this->currentStyle = [
@@ -227,12 +227,12 @@ class TerminalToSvgConverter
                 $this->processChunk($chunk);
             }
         }
-        
+
         $this->totalDuration = $this->currentTime;
 
         return $this->generateSvg();
     }
-    
+
     /**
      * Process a chunk of terminal data using a state machine parser.
      * This method iterates through each character, tracking the parser's state
@@ -303,7 +303,7 @@ class TerminalToSvgConverter
                         $state = self::STATE_GROUND;
                     }
                     break;
-                
+
                 case self::STATE_CHARSET:
                     // We don't implement different charsets, just consume the command
                     // and return to ground state. The command is usually one character.
@@ -320,7 +320,7 @@ class TerminalToSvgConverter
                         $state = self::STATE_GROUND;
                     }
                     break;
-                
+
                 case self::STATE_CSI_PARAM:
                     // Check for DEC Private Mode marker at the start of params
                     if ($params === '' && $char === '?') {
@@ -356,11 +356,11 @@ class TerminalToSvgConverter
 
             $this->altScreenActive = true;
             $this->screenSwitchEvents[] = ['time' => $this->currentTime, 'type' => 'to_alt'];
-            
+
             // The application (e.g., vim, less) is responsible for clearing the
             // screen upon entering the alternate buffer. Resetting the cursor
             // and scroll region is the correct behavior.
-            
+
             $this->cursorX = 0;
             $this->cursorY = 0;
             $this->recordCursorState(); // Record move
@@ -370,10 +370,10 @@ class TerminalToSvgConverter
             // Switch to main buffer and restore cursor position
             $this->altScreenActive = false;
             $this->screenSwitchEvents[] = ['time' => $this->currentTime, 'type' => 'to_main'];
-            
+
             // Reset scroll region BEFORE restoring the cursor.
-            $this->setScrollRegion([]); 
-            
+            $this->setScrollRegion([]);
+
             // Now, restore the saved cursor position.
             $this->cursorX = $this->savedCursorX;
             $this->cursorY = $this->savedCursorY;
@@ -419,7 +419,7 @@ class TerminalToSvgConverter
                 }
                 break;
         }
-        
+
         // Use the correct scroll method for stream scrolling
         if ($this->cursorY > $this->scrollBottom) {
             $scrollCount = $this->cursorY - $this->scrollBottom;
@@ -436,7 +436,7 @@ class TerminalToSvgConverter
         $buffer = &$this->getActiveBuffer();
         $scrollOffset = $this->altScreenActive ? $this->altScrollOffset : $this->mainScrollOffset;
         $absoluteY = $this->cursorY + $scrollOffset;
-        
+
         if (isset($buffer[$absoluteY][$this->cursorX])) {
             $lastIndex = count($buffer[$absoluteY][$this->cursorX]) - 1;
             if (!isset($buffer[$absoluteY][$this->cursorX][$lastIndex]['endTime'])) {
@@ -459,7 +459,7 @@ class TerminalToSvgConverter
         $this->endLifespanForLine($absoluteY, $x, 1);
 
         $buffer[$absoluteY][$x][] = [
-            'char'      => '&#160;', 
+            'char'      => '&#160;',
             'style'     => $this->currentStyle,
             'startTime' => $this->currentTime,
         ];
@@ -470,30 +470,50 @@ class TerminalToSvgConverter
         $p = array_map('intval', $params);
         $moved = false;
         switch ($command) {
-            case 'm': $this->setGraphicsMode($params); break;
+            case 'm': $this->setGraphicsMode($params);
+                break;
             case 'H': case 'f':
                 $this->cursorY = max(0, ($p[0] ?? 1) - 1);
                 $this->cursorX = max(0, ($p[1] ?? 1) - 1);
                 $moved = true;
                 break;
-            case 'A': $this->cursorY = max(0, $this->cursorY - ($p[0] ?? 1)); $moved = true; break;
-            case 'B': $this->cursorY = min($this->config['rows'] - 1, $this->cursorY + ($p[0] ?? 1)); $moved = true; break;
-            case 'C': $this->cursorX = min($this->config['cols'] - 1, $this->cursorX + ($p[0] ?? 1)); $moved = true; break;
-            case 'D': $this->cursorX = max(0, $this->cursorX - ($p[0] ?? 1)); $moved = true; break;
+            case 'A': $this->cursorY = max(0, $this->cursorY - ($p[0] ?? 1));
+                $moved = true;
+                break;
+            case 'B': $this->cursorY = min($this->config['rows'] - 1, $this->cursorY + ($p[0] ?? 1));
+                $moved = true;
+                break;
+            case 'C': $this->cursorX = min($this->config['cols'] - 1, $this->cursorX + ($p[0] ?? 1));
+                $moved = true;
+                break;
+            case 'D': $this->cursorX = max(0, $this->cursorX - ($p[0] ?? 1));
+                $moved = true;
+                break;
             case 'G': // CHA - Cursor Character Absolute
                 $this->cursorX = max(0, ($p[0] ?? 1) - 1);
                 $moved = true;
                 break;
-            case 'd': $this->cursorY = max(0, ($p[0] ?? 1) - 1); $moved = true; break;
-            case 'J': $this->eraseInDisplay($p[0] ?? 0); break;
-            case 'K': $this->eraseInLine($p[0] ?? 0); break;
-            case '@': $this->insertCharacters($p[0] ?? 1); break;
-            case 'P': $this->deleteCharacters($p[0] ?? 1); break;
-            case 'r': $this->setScrollRegion($p); break;
-            case 'L': $this->insertLines($p[0] ?? 1); break;
-            case 'M': $this->deleteLines($p[0] ?? 1); break;
-            case 'S': $this->doScrollUp($p[0] ?? 1); break;
-            case 'T': $this->doScrollDown($p[0] ?? 1); break;
+            case 'd': $this->cursorY = max(0, ($p[0] ?? 1) - 1);
+                $moved = true;
+                break;
+            case 'J': $this->eraseInDisplay($p[0] ?? 0);
+                break;
+            case 'K': $this->eraseInLine($p[0] ?? 0);
+                break;
+            case '@': $this->insertCharacters($p[0] ?? 1);
+                break;
+            case 'P': $this->deleteCharacters($p[0] ?? 1);
+                break;
+            case 'r': $this->setScrollRegion($p);
+                break;
+            case 'L': $this->insertLines($p[0] ?? 1);
+                break;
+            case 'M': $this->deleteLines($p[0] ?? 1);
+                break;
+            case 'S': $this->doScrollUp($p[0] ?? 1);
+                break;
+            case 'T': $this->doScrollDown($p[0] ?? 1);
+                break;
             default:
                 if (!in_array($command, self::WONT_IMPLEMENT_CSI)) {
                     $this->logWarning("Unsupported CSI command: '" . implode(';', $params) . "{$command}'");
@@ -508,7 +528,9 @@ class TerminalToSvgConverter
 
     private function setGraphicsMode(array $params): void
     {
-        if (empty($params)) $params = [0];
+        if (empty($params)) {
+            $params = [0];
+        }
 
         $i = 0;
         while ($i < count($params)) {
@@ -555,10 +577,10 @@ class TerminalToSvgConverter
                     $i += 2;
                     $handled = true;
                 } elseif (isset($params[$i + 1]) && intval($params[$i + 1]) === 2) {
-                    if (isset($params[$i+2]) && isset($params[$i+3]) && isset($params[$i+4])) {
-                         $this->currentStyle[$colorType . '_hex'] = sprintf("#%02x%02x%02x", intval($params[$i+2]), intval($params[$i+3]), intval($params[$i+4]));
-                         $i += 4;
-                         $handled = true;
+                    if (isset($params[$i + 2]) && isset($params[$i + 3]) && isset($params[$i + 4])) {
+                        $this->currentStyle[$colorType . '_hex'] = sprintf("#%02x%02x%02x", intval($params[$i + 2]), intval($params[$i + 3]), intval($params[$i + 4]));
+                        $i += 4;
+                        $handled = true;
                     }
                 }
             }
@@ -569,11 +591,15 @@ class TerminalToSvgConverter
             $i++;
         }
     }
-    
+
     private function mapAnsi256ToHex(int $code): string
     {
-        if ($code < 8) { return self::ANSI_16_COLORS[$code + 30]; }
-        if ($code < 16) { return self::ANSI_16_COLORS[$code - 8 + 90]; }
+        if ($code < 8) {
+            return self::ANSI_16_COLORS[$code + 30];
+        }
+        if ($code < 16) {
+            return self::ANSI_16_COLORS[$code - 8 + 90];
+        }
         if ($code >= 16 && $code <= 231) {
             $code -= 16;
             $r = floor($code / 36);
@@ -608,7 +634,8 @@ class TerminalToSvgConverter
         }
     }
 
-    private function clearLine(int $y): void {
+    private function clearLine(int $y): void
+    {
         for ($x = 0; $x < $this->config['cols']; $x++) {
             $this->writeBlankCharToHistory($x, $y);
         }
@@ -629,7 +656,7 @@ class TerminalToSvgConverter
             $this->writeBlankCharToHistory($x, $this->cursorY);
         }
     }
-    
+
     private function deleteCharacters(int $n = 1): void
     {
         $n = max(1, $n);
@@ -639,7 +666,9 @@ class TerminalToSvgConverter
         $x_start = $this->cursorX;
         $cols = $this->config['cols'];
 
-        if (!isset($buffer[$y])) return;
+        if (!isset($buffer[$y])) {
+            return;
+        }
 
         for ($x = $x_start; $x < $cols; $x++) {
             $x_source = $x + $n;
@@ -648,16 +677,16 @@ class TerminalToSvgConverter
                 $lastIndex = count($buffer[$y][$x_source]) - 1;
                 $cellToMove = $buffer[$y][$x_source][$lastIndex];
                 if (!isset($cellToMove['endTime']) || $cellToMove['endTime'] > $this->currentTime) {
-                     $buffer[$y][$x][] = [
-                        'char'      => $cellToMove['char'],
-                        'style'     => $cellToMove['style'],
-                        'startTime' => $this->currentTime,
+                    $buffer[$y][$x][] = [
+                       'char'      => $cellToMove['char'],
+                       'style'     => $cellToMove['style'],
+                       'startTime' => $this->currentTime,
                     ];
                 }
             }
         }
     }
-    
+
     private function insertCharacters(int $n = 1): void
     {
         $n = max(1, $n);
@@ -667,7 +696,9 @@ class TerminalToSvgConverter
         $x_start = $this->cursorX;
         $cols = $this->config['cols'];
 
-        if (!isset($buffer[$y])) return;
+        if (!isset($buffer[$y])) {
+            return;
+        }
 
         // Shift existing characters to the right, starting from the end of the line
         for ($x = $cols - 1; $x >= $x_start + $n; $x--) {
@@ -675,11 +706,11 @@ class TerminalToSvgConverter
             if (isset($buffer[$y][$x_source]) && !empty($buffer[$y][$x_source])) {
                 // End the life of any character at the destination
                 $this->endLifespanForLine($y, $x, 1);
-                
+
                 // Find the last "live" state of the source character to move it
                 $lastIndex = count($buffer[$y][$x_source]) - 1;
                 $cellToMove = $buffer[$y][$x_source][$lastIndex];
-                
+
                 if (!isset($cellToMove['endTime']) || $cellToMove['endTime'] > $this->currentTime) {
                     $buffer[$y][$x][] = [
                         'char'      => $cellToMove['char'],
@@ -692,17 +723,18 @@ class TerminalToSvgConverter
                 unset($buffer[$y][$x]);
             }
         }
-        
+
         // Insert new blank characters at the cursor position
         for ($i = 0; $i < $n; $i++) {
             $this->writeBlankCharToHistory($x_start + $i, $this->cursorY);
         }
     }
 
-    private function setScrollRegion(array $params): void {
+    private function setScrollRegion(array $params): void
+    {
         $top = (isset($params[0]) && $params[0] > 0) ? $params[0] - 1 : 0;
         $bottom = (isset($params[1]) && $params[1] > 0) ? $params[1] - 1 : $this->config['rows'] - 1;
-        
+
         if ($top < $bottom) {
             $this->scrollTop = $top;
             $this->scrollBottom = $bottom;
@@ -716,7 +748,8 @@ class TerminalToSvgConverter
         $this->recordCursorState();
     }
 
-    private function insertLines(int $n): void {
+    private function insertLines(int $n): void
+    {
         $buffer = &$this->getActiveBuffer();
         $scrollOffset = $this->altScreenActive ? $this->altScrollOffset : $this->mainScrollOffset;
 
@@ -729,10 +762,10 @@ class TerminalToSvgConverter
         for ($i = 0; $i < $n; $i++) {
             $y_to_kill = $this->scrollBottom - $i;
             if ($y_to_kill >= $this->cursorY) {
-                 $this->endLifespanForLine($y_to_kill + $scrollOffset, 0);
+                $this->endLifespanForLine($y_to_kill + $scrollOffset, 0);
             }
         }
-        
+
         // Shift lines down
         for ($y = $this->scrollBottom; $y >= $this->cursorY + $n; $y--) {
             $src_y = $y - $n + $scrollOffset;
@@ -750,15 +783,16 @@ class TerminalToSvgConverter
         }
     }
 
-    private function deleteLines(int $n): void {
+    private function deleteLines(int $n): void
+    {
         $buffer = &$this->getActiveBuffer();
         $scrollOffset = $this->altScreenActive ? $this->altScrollOffset : $this->mainScrollOffset;
-        
+
         // Only works if cursor is within the scroll region
         if ($this->cursorY < $this->scrollTop || $this->cursorY > $this->scrollBottom) {
             return;
         }
-        
+
         // End lifespan for lines being deleted
         for ($i = 0; $i < $n; $i++) {
             $this->endLifespanForLine($this->cursorY + $i + $scrollOffset, 0);
@@ -770,7 +804,7 @@ class TerminalToSvgConverter
             $dest_y = $y + $scrollOffset;
             $buffer[$dest_y] = $buffer[$src_y] ?? [];
         }
-        
+
         // Add new blank lines at the bottom of the region
         for ($y = $this->scrollBottom - $n + 1; $y <= $this->scrollBottom; $y++) {
             $absY = $y + $scrollOffset;
@@ -781,21 +815,22 @@ class TerminalToSvgConverter
         }
     }
 
-    private function doScrollUp(int $n): void {
+    private function doScrollUp(int $n): void
+    {
         $buffer = &$this->getActiveBuffer();
         $scrollOffset = $this->altScreenActive ? $this->altScrollOffset : $this->mainScrollOffset;
-        
+
         for ($i = 0; $i < $n; $i++) {
             // End lifespan for the top line of the region
             $this->endLifespanForLine($this->scrollTop + $scrollOffset, 0);
-            
+
             // Shift lines up
             for ($y = $this->scrollTop; $y < $this->scrollBottom; $y++) {
                 $src_y = $y + 1 + $scrollOffset;
                 $dest_y = $y + $scrollOffset;
                 $buffer[$dest_y] = $buffer[$src_y] ?? [];
             }
-            
+
             // Add a blank line at the bottom
             $bottom_y = $this->scrollBottom;
             $buffer[$bottom_y + $scrollOffset] = [];
@@ -804,27 +839,28 @@ class TerminalToSvgConverter
             }
         }
     }
-    
-    private function doScrollDown(int $n): void {
+
+    private function doScrollDown(int $n): void
+    {
         $buffer = &$this->getActiveBuffer();
         $scrollOffset = $this->altScreenActive ? $this->altScrollOffset : $this->mainScrollOffset;
-        
+
         for ($i = 0; $i < $n; $i++) {
             // End lifespan for the bottom line of the region
             $this->endLifespanForLine($this->scrollBottom + $scrollOffset, 0);
 
             // Shift lines down
             for ($y = $this->scrollBottom; $y > $this->scrollTop; $y--) {
-                 $src_y = $y - 1 + $scrollOffset;
-                 $dest_y = $y + $scrollOffset;
-                 $buffer[$dest_y] = $buffer[$src_y] ?? [];
+                $src_y = $y - 1 + $scrollOffset;
+                $dest_y = $y + $scrollOffset;
+                $buffer[$dest_y] = $buffer[$src_y] ?? [];
             }
-            
+
             // Add a blank line at the top
             $top_y = $this->scrollTop;
             $buffer[$top_y + $scrollOffset] = [];
             for ($x = 0; $x < $this->config['cols']; $x++) {
-                 $this->writeBlankCharToHistory($x, $top_y);
+                $this->writeBlankCharToHistory($x, $top_y);
             }
         }
     }
@@ -843,11 +879,13 @@ class TerminalToSvgConverter
             $scrollOffsetRef++;
         }
     }
-    
+
     private function endLifespanForLine(int $y, int $startX, ?int $count = null): void
     {
         $buffer = &$this->getActiveBuffer();
-        if (!isset($buffer[$y])) return;
+        if (!isset($buffer[$y])) {
+            return;
+        }
         $endX = $count !== null ? $startX + $count : $this->config['cols'];
         for ($x = $startX; $x < $endX; $x++) {
             if (isset($buffer[$y][$x]) && !empty($buffer[$y][$x])) {
@@ -895,7 +933,7 @@ class TerminalToSvgConverter
         list($altText, $altRects, $altScroll) = $this->renderBuffer($this->altBuffer, $this->altScrollEvents, $charHeight, $charWidth);
 
         $cursorAnims = $this->generateCursorAnimations($charWidth, $charHeight);
-        
+
         $mainAnims = '';
         $altAnims = '';
 
@@ -914,21 +952,29 @@ class TerminalToSvgConverter
 
         return $this->getSvgTemplate($svgWidth, $svgHeight, $mainText, $mainRects, $mainScroll, $altText, $altRects, $altScroll, $mainAnims, $altAnims, $cursorAnims, $this->totalDuration);
     }
-    
+
     private function getHexForColor(string $type, array $style): string
     {
         if (!empty($style[$type . '_hex'])) {
             return $style[$type . '_hex'];
         }
         $class = $style[$type];
-        if ($class === 'fg-default') return $this->config['default_fg'];
-        if ($class === 'bg-default') return $this->config['default_bg'];
+        if ($class === 'fg-default') {
+            return $this->config['default_fg'];
+        }
+        if ($class === 'bg-default') {
+            return $this->config['default_bg'];
+        }
         $parts = explode('-', $class);
         $code = (int)end($parts);
         // This logic is a bit brittle, but handles the ANSI mapping for this script
-        if ($code >= 90 && $code <= 97) { /* bright fg */ } 
-        elseif ($code >= 100 && $code <= 107) { $code -= 10; } // bright bg
-        elseif ($code >= 40 && $code <= 47) { $code -= 10; } // standard bg
+        if ($code >= 90 && $code <= 97) { /* bright fg */
+        } elseif ($code >= 100 && $code <= 107) {
+            $code -= 10;
+        } // bright bg
+        elseif ($code >= 40 && $code <= 47) {
+            $code -= 10;
+        } // standard bg
         return self::ANSI_16_COLORS[$code] ?? ($type === 'fg' ? $this->config['default_fg'] : $this->config['default_bg']);
     }
 
@@ -950,23 +996,23 @@ class TerminalToSvgConverter
                     if (!isset($cell['startTime'])) {
                         continue;
                     }
-                    
+
                     $current_x = $x;
                     $textChunk = '';
                     $style = $cell['style'];
-                    
+
                     while ($current_x < $this->config['cols'] &&
                            isset($row[$current_x]) &&
                            ($foundCell = $this->findCellMatching($row[$current_x], $cell)) !== null) {
                         $textChunk .= $foundCell['char'];
-                        $this->markCellProcessed($row[$current_x], $foundCell); 
+                        $this->markCellProcessed($row[$current_x], $foundCell);
                         $current_x++;
                     }
 
                     if ($textChunk === '') {
                         continue;
                     }
-                    
+
                     $fgHex = $this->getHexForColor('fg', $style);
                     $bgHex = $this->getHexForColor('bg', $style);
 
@@ -985,7 +1031,7 @@ class TerminalToSvgConverter
                         );
                     }
                     $visibilityAnims .= '<set attributeName="visibility" to="hidden" begin="loop.begin" />';
-                    
+
                     $chunkWidth = ($current_x - $x) * $charWidth;
 
                     if ($bgHex !== $this->config['default_bg']) {
@@ -993,10 +1039,15 @@ class TerminalToSvgConverter
                         $rectY = $y * $charHeight;
                         $bgRule = sprintf('fill:%s;', $bgHex);
                         $bgClass = $this->getClassName($bgRule);
-                        
+
                         $rectElements .= sprintf(
                             '        <rect class="%s" x="%.2F" y="%.2F" width="%.2F" height="%.2F">%s</rect>' . "\n",
-                            $bgClass, $rectX, $rectY, $chunkWidth, $charHeight, $visibilityAnims
+                            $bgClass,
+                            $rectX,
+                            $rectY,
+                            $chunkWidth,
+                            $charHeight,
+                            $visibilityAnims
                         );
                     }
 
@@ -1007,7 +1058,7 @@ class TerminalToSvgConverter
                     if ($trimmedChunk !== '') {
                         $textX = $x * $charWidth;
                         $textY = ($y + 1) * $charHeight - ($charHeight - $this->config['font_size']) / 2;
-                        
+
                         $textCss = sprintf('fill:%s;', $fgHex);
                         if ($style['bold']) {
                             $textCss .= 'font-weight:bold;';
@@ -1022,14 +1073,19 @@ class TerminalToSvgConverter
 
                         $textElements .= sprintf(
                             '        <text class="%s" x="%.2F" y="%.2F"%s>%s%s</text>' . "\n",
-                            $textClass, $textX, $textY, $spacePreserveAttr, $textChunk, $visibilityAnims
+                            $textClass,
+                            $textX,
+                            $textY,
+                            $spacePreserveAttr,
+                            $textChunk,
+                            $visibilityAnims
                         );
                     }
                 }
                 $x++;
             }
         }
-        
+
         foreach ($scrollEvents as $event) {
             $time = $event['time'];
             $fromY = -($event['offset'] * $charHeight);
@@ -1037,13 +1093,15 @@ class TerminalToSvgConverter
 
             $scrollAnimations .= sprintf(
                 '        <animateTransform attributeName="transform" type="translate" from="0 %.2F" to="0 %.2F" begin="loop.begin+%.4fs" dur="0.001s" fill="freeze" />' . "\n",
-                $fromY, $toY, $time
+                $fromY,
+                $toY,
+                $time
             );
         }
 
         return [$textElements, $rectElements, $scrollAnimations];
     }
-    
+
     // Helper function to find a cell with matching style and timing
     private function findCellMatching(array &$lifespans, array $targetCell): ?array
     {
@@ -1069,12 +1127,12 @@ class TerminalToSvgConverter
                 (!isset($cell['endTime']) && !isset($targetCell['endTime']) ||
                  (isset($cell['endTime']) && isset($targetCell['endTime']) && $cell['endTime'] === $targetCell['endTime'])) &&
                 $cell['style'] === $targetCell['style']) {
-                 unset($cell['startTime']); // Unsetting start time marks it as processed
-                 return;
+                unset($cell['startTime']); // Unsetting start time marks it as processed
+                return;
             }
         }
     }
-    
+
     private function getSvgTemplate(float $width, float $height, string $mainText, string $mainRects, string $mainScroll, string $altText, string $altRects, string $altScroll, string $mainAnims, string $altAnims, string $cursorAnims, float $totalDuration): string
     {
         $fontFamily = $this->config['font_family'];
@@ -1138,15 +1196,15 @@ SVG;
                 break;
             }
         }
-        
+
         // If the cursor's current X and Y are the same as the last ones we
         // logged, there's nothing to do.
         if ($lastPositionEvent !== null && $lastPositionEvent['x'] === $this->cursorX && $lastPositionEvent['y'] === $this->cursorY) {
             return;
         }
-        
+
         $newEvent = ['time' => $this->currentTime, 'x' => $this->cursorX, 'y' => $this->cursorY];
-        
+
         // Before adding the event, check if the
         // very last event in our log occurred at the exact same time.
         $lastKey = array_key_last($this->cursorEvents);
@@ -1158,11 +1216,11 @@ SVG;
                 return;
             }
         }
-        
+
         // Otherwise, it's a new, distinct movement. Add it to the list.
         $this->cursorEvents[] = $newEvent;
     }
-    
+
     private function setCursorVisibility(bool $visible): void
     {
         if ($this->cursorVisible !== $visible) {

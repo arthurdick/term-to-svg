@@ -22,7 +22,7 @@ class SnapshotTest extends TestCase
         $this->assertFileExists($typescriptFile, "Log file missing for test case: $testCaseName");
         $this->assertFileExists($timingFile, "Timing file missing for test case: $testCaseName");
         $this->assertFileExists($snapshotFile, "Snapshot SVG missing for test case: $testCaseName");
-        
+
         $expected = trim(file_get_contents($snapshotFile));
 
         $converter = new TerminalToSvgConverter($typescriptFile, $timingFile, CONFIG);

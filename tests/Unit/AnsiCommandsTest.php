@@ -16,7 +16,7 @@ class AnsiCommandsTest extends TestCase
         // Mock file paths since we are not reading from actual files for unit tests
         $typescriptFile = 'php://memory';
         $timingFile = 'php://memory';
-        
+
         $config = [
             'rows' => 24,
             'cols' => 80,
@@ -50,7 +50,7 @@ class AnsiCommandsTest extends TestCase
         $property->setAccessible(true);
         return $property->getValue($this->converter);
     }
-    
+
     /**
      * Helper to set private property values.
      */
@@ -60,7 +60,7 @@ class AnsiCommandsTest extends TestCase
         $property->setAccessible(true);
         $property->setValue($this->converter, $value);
     }
-    
+
     /**
      * Test CSI J (Erase in Display) with parameter 2 (clear entire screen).
      */
@@ -68,13 +68,13 @@ class AnsiCommandsTest extends TestCase
     {
         // Write some text to the screen first
         $this->invokeMethod('processChunk', ["Hello\nWorld"]);
-        
+
         // Now, send the command to clear the screen (ESC[2J)
         $this->invokeMethod('handleAnsiCommand', ['J', [2]]);
 
         // Get the active screen buffer
         $buffer = $this->getProperty('mainBuffer');
-        
+
         // Assert that the screen buffer is now full of blank characters
         for ($y = 0; $y < 24; $y++) {
             for ($x = 0; $x < 80; $x++) {
@@ -97,10 +97,10 @@ class AnsiCommandsTest extends TestCase
 
         // Move cursor forward 5 columns (ESC[5C)
         $this->invokeMethod('handleAnsiCommand', ['C', [5]]);
-        
+
         $this->assertEquals(5, $this->getProperty('cursorX'));
     }
-    
+
     /**
      * Test cursor movement command CSI A (Cursor Up).
      */
@@ -112,10 +112,10 @@ class AnsiCommandsTest extends TestCase
 
         // Move cursor up 2 lines (ESC[2A)
         $this->invokeMethod('handleAnsiCommand', ['A', [2]]);
-        
+
         $this->assertEquals(1, $this->getProperty('cursorY'));
     }
-    
+
     public function testCursorDownMovesCursor(): void
     {
         $this->setProperty('cursorY', 5);
@@ -129,14 +129,14 @@ class AnsiCommandsTest extends TestCase
         $this->invokeMethod('handleAnsiCommand', ['D', [4]]);
         $this->assertEquals(6, $this->getProperty('cursorX'));
     }
-    
+
     public function testCursorPosition(): void
     {
         $this->invokeMethod('handleAnsiCommand', ['H', [10, 20]]);
         $this->assertEquals(9, $this->getProperty('cursorY'));
         $this->assertEquals(19, $this->getProperty('cursorX'));
     }
-    
+
     public function testCursorCharacterAbsolute(): void
     {
         $this->invokeMethod('handleAnsiCommand', ['G', [15]]);
@@ -148,7 +148,7 @@ class AnsiCommandsTest extends TestCase
         $this->invokeMethod('handleAnsiCommand', ['d', [12]]);
         $this->assertEquals(11, $this->getProperty('cursorY'));
     }
-    
+
     public function testIndexCommand(): void
     {
         $this->setProperty('cursorY', 10);
@@ -171,7 +171,7 @@ class AnsiCommandsTest extends TestCase
         $this->assertEquals(0, $this->getProperty('cursorX'));
         $this->assertEquals(11, $this->getProperty('cursorY'));
     }
-    
+
     // -- Erasing Text --
 
     public function testEraseInLineFromCursorToEnd(): void
@@ -186,7 +186,7 @@ class AnsiCommandsTest extends TestCase
             $this->assertEquals('&#160;', $lastCellState['char']);
         }
     }
-    
+
     public function testDeleteCharacters(): void
     {
         $this->invokeMethod('processChunk', ["abcdef"]);
@@ -226,7 +226,7 @@ class AnsiCommandsTest extends TestCase
         $this->invokeMethod('handleAnsiCommand', ['L', [2]]);
         $buffer = $this->getProperty('mainBuffer');
         // Check that lines 10 and 11 are blank
-        for($x=0; $x < 80; $x++) {
+        for ($x = 0; $x < 80; $x++) {
             $this->assertEquals('&#160;', end($buffer[10][$x])['char']);
             $this->assertEquals('&#160;', end($buffer[11][$x])['char']);
         }
@@ -283,7 +283,7 @@ class AnsiCommandsTest extends TestCase
     }
 
     // -- Cursor Visibility --
-    
+
     public function testCursorVisibility(): void
     {
         $this->invokeMethod('handleDecPrivateMode', ['25l']);
@@ -291,30 +291,30 @@ class AnsiCommandsTest extends TestCase
         $this->invokeMethod('handleDecPrivateMode', ['25h']);
         $this->assertTrue($this->getProperty('cursorVisible'));
     }
-    
+
     // -- Character Handling --
-    
+
     public function testCarriageReturn(): void
     {
         $this->setProperty('cursorX', 20);
         $this->invokeMethod('handleCharacter', ["\r"]);
         $this->assertEquals(0, $this->getProperty('cursorX'));
     }
-    
+
     public function testNewline(): void
     {
         $this->setProperty('cursorY', 5);
         $this->invokeMethod('handleCharacter', ["\n"]);
         $this->assertEquals(6, $this->getProperty('cursorY'));
     }
-    
+
     public function testBackspace(): void
     {
         $this->setProperty('cursorX', 10);
         $this->invokeMethod('handleCharacter', ["\x08"]);
         $this->assertEquals(9, $this->getProperty('cursorX'));
     }
-    
+
     public function testTab(): void
     {
         $this->setProperty('cursorX', 3);
@@ -339,7 +339,7 @@ class AnsiCommandsTest extends TestCase
         $style = $this->getProperty('currentStyle');
         $this->assertFalse($style['inverse']);
     }
-    
+
     public function testSetGraphicsModeBold(): void
     {
         $this->invokeMethod('setGraphicsMode', [[1]]);
@@ -349,7 +349,7 @@ class AnsiCommandsTest extends TestCase
         $style = $this->getProperty('currentStyle');
         $this->assertFalse($style['bold']);
     }
-    
+
     public function testSetGraphicsModeColor(): void
     {
         // Red foreground
