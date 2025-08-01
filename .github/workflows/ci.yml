@@ -27,7 +27,7 @@ jobs:
       matrix:
         # Defines the "php-version" variable for the matrix. The job will run once for each value in this array.
         # This tests the project's compatibility across its supported PHP versions.
-        php-version: ['7.0', '8.1', '8.4']
+        php-version: ['7.4', '8.1', '8.4']
 
     # This section lists the sequential steps that will be executed for each job in the matrix.
     steps:

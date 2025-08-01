@@ -86,7 +86,7 @@ const CONFIG = [
 
 ## Requirements
 
-  * PHP 7.0 or higher (tested with PHP 8.x)
+  * PHP 7.4 or higher
   * A Unix-like operating system with the `script` command available.
 
 ## Contributing
