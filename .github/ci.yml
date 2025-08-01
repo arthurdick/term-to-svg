@@ -1,0 +1,84 @@
+# This is the name of the workflow, which will be displayed in the "Actions" tab of the GitHub repository.
+name: CI
+
+# This section defines the events that will trigger the workflow to run.
+on:
+  # Run the workflow on every push to any branch.
+  push:
+    branches:
+      - '**'
+  # Run the workflow on every pull request targeting any branch.
+  pull_request:
+    branches:
+      - '**'
+
+# This section defines the jobs that make up the workflow. In this case, there is a single job named "test".
+jobs:
+  test:
+    # The name of the job as it will appear in the GitHub UI.
+    # The ${{ matrix.php-version }} variable makes the name dynamic, e.g., "Test on PHP 7.4".
+    name: Test on PHP ${{ matrix.php-version }}
+
+    # Specifies the type of runner to use. "ubuntu-latest" provides a clean, standard Linux environment.
+    runs-on: ubuntu-latest
+
+    # This strategy block defines a build matrix, allowing the job to run multiple times in parallel with different configurations.
+    strategy:
+      matrix:
+        # Defines the "php-version" variable for the matrix. The job will run once for each value in this array.
+        # This tests the project's compatibility across its supported PHP versions.
+        php-version: ['7.0', '8.1', '8.4']
+
+    # This section lists the sequential steps that will be executed for each job in the matrix.
+    steps:
+      # Step 1: Check out the repository's code so the workflow can access it.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up the specific PHP version for the current matrix job.
+      # This uses the popular and powerful "shivammathur/setup-php" action.
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          # Use the PHP version from the current matrix run.
+          php-version: ${{ matrix.php-version }}
+          # Explicitly list the required PHP extensions for clarity and robustness.
+          extensions: mbstring
+
+      # Step 3: Dynamically get the path to Composer's cache directory.
+      # This is more reliable than hardcoding a path. The output is used in the next step.
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-dir)" >> $GITHUB_OUTPUT
+
+      # Step 4: Cache Composer dependencies to speed up future workflow runs.
+      # This uses the official "actions/cache" action.
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          # The path to the directory to cache, obtained from the previous step.
+          path: ${{ steps.composer-cache.outputs.dir }}
+          # The primary cache key. A cache hit occurs only if this key is an exact match.
+          # It includes the OS, PHP version, and a hash of the composer.lock file.
+          # This ensures the cache is unique and is invalidated whenever dependencies change.
+          key: ${{ runner.os }}-${{ matrix.php-version }}-composer-${{ hashFiles('**/composer.json') }}
+          # Fallback keys. If the primary key doesn't match, the action will restore the most recent
+          # cache that matches this less-specific prefix.
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.php-version }}-composer-
+
+      # Step 5: Install project dependencies using Composer.
+      # The flags are optimized for a non-interactive CI environment.
+      - name: Install Composer dependencies
+        run: composer update --no-progress --no-interaction --prefer-dist
+
+      # Step 6: Run the PHP-CS-Fixer to check for code style violations.
+      # The "--dry-run" flag is critical: it reports errors without changing files and fails the build if violations are found.
+      # The "--diff" flag shows what needs to be fixed in the logs.
+      - name: Run PHP-CS-Fixer
+        run: ./vendor/bin/php-cs-fixer fix --dry-run --diff -v .
+
+      # Step 7: Run the project's PHPUnit test suite.
+      # This simple command is sufficient because all configuration is handled by the project's phpunit.xml file.
+      - name: Run PHPUnit tests
+        run: ./vendor/bin/phpunit
