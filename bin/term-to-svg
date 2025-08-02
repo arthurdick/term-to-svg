@@ -10,11 +10,34 @@
 
 use ArthurDick\TermToSvg\TerminalToSvgConverter;
 
-require_once __DIR__ . '/../vendor/autoload.php';
+// --- Autoloader ---
+// A robust way to find the autoloader, whether the script is run from a
+// local vendor directory or a global Composer installation.
+$autoloaders = [
+    // Project's own vendor directory (local development)
+    __DIR__ . '/../vendor/autoload.php',
+    
+    // Path for global Composer install
+    __DIR__ . '/../../../autoload.php',
+];
+
+$autoloader_found = false;
+foreach ($autoloaders as $autoloader) {
+    if (file_exists($autoloader)) {
+        require_once $autoloader;
+        $autoloader_found = true;
+        break;
+    }
+}
+
+if (!$autoloader_found) {
+    fwrite(STDERR, "Could not find a valid Composer autoloader. Please run 'composer install'.\n");
+    exit(1);
+}
 
 // --- Main Execution ---
 if ($argc < 4) {
-    echo "Usage: php {$argv[0]} <typescript_file> <timing_file> <output_svg_file>\n";
+    echo "Usage: term-to-svg <typescript_file> <timing_file> <output_svg_file>\n";
     exit(1);
 }
 
