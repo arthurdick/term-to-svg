@@ -8,6 +8,7 @@ $finder = PhpCsFixer\Finder::create()
     ])
     ->append([
         __FILE__, // Include this file itself
+        __DIR__ . '/bin/term-to-svg',
         __DIR__ . '/build.php',
     ]);
 
