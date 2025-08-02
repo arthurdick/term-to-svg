@@ -26,8 +26,18 @@
         "phpunit/phpunit": "^9.5",
         "friendsofphp/php-cs-fixer": "^3.85"
     },
+    "autoload": {
+        "psr-4": {
+            "ArthurDick\\TermToSvg\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
     "bin": [
-        "term-to-svg.php"
+        "bin/term-to-svg"
     ],
     "scripts": {
         "test": "phpunit",

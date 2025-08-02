@@ -1,0 +1,41 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * USAGE:
+ * 1. Record a session: script --timing=rec.time rec.log
+ * 2. Run commands in the new shell, then type `exit`.
+ * 3. Convert to SVG: ./term-to-svg rec.log rec.time output.svg
+ */
+
+use ArthurDick\TermToSvg\TerminalToSvgConverter;
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+// --- Main Execution ---
+if ($argc < 4) {
+    echo "Usage: php {$argv[0]} <typescript_file> <timing_file> <output_svg_file>\n";
+    exit(1);
+}
+
+[, $typescriptFile, $timingFile, $outputFile] = $argv;
+
+if (!file_exists($typescriptFile) || !is_readable($typescriptFile)) {
+    echo "Error: Typescript file not found or is not readable: {$typescriptFile}\n";
+    exit(1);
+}
+
+if (!file_exists($timingFile) || !is_readable($timingFile)) {
+    echo "Error: Timing file not found or is not readable: {$timingFile}\n";
+    exit(1);
+}
+
+try {
+    $converter = new TerminalToSvgConverter($typescriptFile, $timingFile, TerminalToSvgConverter::CONFIG);
+    $svgContent = $converter->convert();
+    file_put_contents($outputFile, $svgContent);
+    echo "✅ Successfully generated animated SVG: {$outputFile}\n";
+} catch (Exception $e) {
+    echo "❌ An error occurred: " . $e->getMessage() . "\n";
+    exit(1);
+}

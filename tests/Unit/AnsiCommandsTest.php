@@ -2,9 +2,9 @@
 
 namespace Tests\Unit;
 
+use ArthurDick\TermToSvg\TerminalToSvgConverter;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
-use TerminalToSvgConverter;
 
 class AnsiCommandsTest extends TestCase
 {

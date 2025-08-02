@@ -11,17 +11,14 @@
  * The generated SVG will freeze on the last frame for 5 seconds, then loop.
  *
  * @author Arthur Dick
- * @version 1.0.3
- *
- * USAGE:
- * 1. Record a session: script --timing=rec.time rec.log
- * 2. Run commands in the new shell, then type `exit`.
- * 3. Convert to SVG: php term-to-svg.php rec.log rec.time output.svg
+ * @version 1.0.4
  */
 
-// --- Configuration ---
-// Default settings; can be overridden by geometry info in the log file.
-const CONFIG = [
+namespace ArthurDick\TermToSvg;
+
+class TerminalToSvgConverter
+{
+    public const CONFIG = [
     'rows' => 24,
     'cols' => 80,
     'font_size' => 14,
@@ -30,44 +27,6 @@ const CONFIG = [
     'default_fg' => '#e0e0e0', // Default text color
     'default_bg' => '#1a1a1a', // Terminal background color
 ];
-
-// --- Main Execution ---
-// This block checks if the script is being run directly from the command line,
-// and not just included by another script (like PHPUnit).
-if (php_sapi_name() === 'cli' && isset($argv[0]) && realpath($argv[0]) === realpath(__FILE__)) {
-    if ($argc < 4) {
-        echo "Usage: php {$argv[0]} <typescript_file> <timing_file> <output_svg_file>\n";
-        exit(1);
-    }
-
-    [, $typescriptFile, $timingFile, $outputFile] = $argv;
-
-    if (!file_exists($typescriptFile) || !is_readable($typescriptFile)) {
-        echo "Error: Typescript file not found or is not readable: {$typescriptFile}\n";
-        exit(1);
-    }
-
-    if (!file_exists($timingFile) || !is_readable($timingFile)) {
-        echo "Error: Timing file not found or is not readable: {$timingFile}\n";
-        exit(1);
-    }
-
-    try {
-        $converter = new TerminalToSvgConverter($typescriptFile, $timingFile, CONFIG);
-        $svgContent = $converter->convert();
-        file_put_contents($outputFile, $svgContent);
-        echo "✅ Successfully generated animated SVG: {$outputFile}\n";
-    } catch (Exception $e) {
-        echo "❌ An error occurred: " . $e->getMessage() . "\n";
-        exit(1);
-    }
-}
-
-
-// --- Implementation ---
-
-class TerminalToSvgConverter
-{
     // --- Parser States ---
     private const STATE_GROUND = 0;
     private const STATE_ESCAPE = 1;
