@@ -12,7 +12,7 @@ Unlike GIF animations, SVG files are vector-based, resulting in sharper visuals 
   * **Animated SVG Output**: Generates a single SVG file that animates the terminal session, making it ideal for web embedding. The animations are powered by SMIL (Synchronized Multimedia Integration Language).
   * **Configurable**: Supports configuration for terminal dimensions, font size, font family, and default colors.
   * **Automatic Geometry Detection**: Can automatically detect terminal dimensions from the `script` log file if available.
-  * **Lightweight**: A single PHP script with no external dependencies beyond a standard PHP installation.
+  * **Lightweight**: A single PHP script with no external library dependencies beyond a standard PHP installation.
 
 ## Why animated SVG?
 
@@ -87,6 +87,7 @@ const CONFIG = [
 ## Requirements
 
   * PHP 7.4 or higher
+  * The `mbstring` PHP extension
   * A Unix-like operating system with the `script` command available.
 
 ## Contributing
