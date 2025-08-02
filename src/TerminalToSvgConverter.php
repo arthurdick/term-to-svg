@@ -2,16 +2,38 @@
 
 namespace ArthurDick\TermToSvg;
 
+/**
+ * Main orchestrator for converting terminal recordings to animated SVG.
+ *
+ * This class coordinates the process:
+ * 1. Reads the typescript and timing files.
+ * 2. Initializes the terminal state and parser.
+ * 3. Processes the recording chunk by chunk.
+ * 4. Triggers the final SVG generation.
+ */
 class TerminalToSvgConverter
 {
+    /** @var string The current version of the tool. */
     public const VERSION = '3.0.0';
+
+    /** @var resource|false The file handle for the typescript recording. */
     private $typescriptHandle;
+
+    /** @var array<int, array<string, mixed>> The parsed timing data. */
     private array $timingData;
+
+    /** @var array<string, mixed> The configuration for the conversion. */
     private array $config;
+
     private TerminalState $state;
     private AnsiParser $parser;
     private float $currentTime = 0.0;
 
+    /**
+     * @param string $typescriptPath Path to the typescript file.
+     * @param string $timingPath Path to the timing file.
+     * @param array<string, mixed> $config The configuration array.
+     */
     public function __construct(string $typescriptPath, string $timingPath, array $config)
     {
         $this->config = $config;
@@ -38,6 +60,11 @@ class TerminalToSvgConverter
         }
     }
 
+    /**
+     * Starts the conversion process and returns the final SVG content.
+     *
+     * @return string The animated SVG content.
+     */
     public function convert(): string
     {
         $this->state->cursorEvents[] = ['time' => 0.0, 'x' => $this->state->cursorX, 'y' => $this->state->cursorY, 'visible' => $this->state->cursorVisible];

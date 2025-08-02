@@ -2,8 +2,17 @@
 
 namespace ArthurDick\TermToSvg;
 
+/**
+ * Holds the default configuration options for the SVG converter.
+ *
+ * This class contains a constant array with default values for terminal
+ * dimensions, fonts, and colors, which can be overridden by the user.
+ */
 class Config
 {
+    /**
+     * @var array<string, mixed> Default configuration values.
+     */
     public const DEFAULTS = [
         'rows' => 24,
         'cols' => 80,

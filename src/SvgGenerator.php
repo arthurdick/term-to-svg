@@ -2,6 +2,12 @@
 
 namespace ArthurDick\TermToSvg;
 
+/**
+ * Generates an animated SVG from a processed TerminalState object.
+ *
+ * This class takes the final state of the terminal buffers, styles, and animation
+ * events, and renders them into a self-contained, animated SVG file using SMIL.
+ */
 class SvgGenerator
 {
     private TerminalState $state;
@@ -10,6 +16,11 @@ class SvgGenerator
     private int $classCounter = 0;
     private float $totalDuration;
 
+    /**
+     * @param TerminalState $state The fully processed terminal state.
+     * @param array<string, mixed> $config The rendering configuration array.
+     * @param float $totalDuration The total duration of the terminal session recording.
+     */
     public function __construct(TerminalState $state, array $config, float $totalDuration)
     {
         $this->state = $state;
@@ -17,6 +28,11 @@ class SvgGenerator
         $this->totalDuration = $totalDuration;
     }
 
+    /**
+     * Renders the complete SVG string.
+     *
+     * @return string The generated SVG content.
+     */
     public function generate(): string
     {
         $charHeight = $this->config['font_size'] * $this->config['line_height_factor'];

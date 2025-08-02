@@ -2,6 +2,13 @@
 
 namespace ArthurDick\TermToSvg;
 
+/**
+ * Parses terminal output streams, including ANSI escape codes.
+ *
+ * This class uses a state machine to process chunks of terminal data,
+ * interpreting ANSI commands for cursor movement, color changes, screen clearing,
+ * and other virtual terminal operations. It updates the TerminalState accordingly.
+ */
 class AnsiParser
 {
     private const STATE_GROUND = 0;
@@ -18,6 +25,7 @@ class AnsiParser
     ];
     private const WONT_IMPLEMENT_ESC = ['7', '8'];
 
+    /** @var array<int, string> The 16 standard ANSI color hex codes. */
     public const ANSI_16_COLORS = [
         30 => '#2e3436', 31 => '#cc0000', 32 => '#4e9a06', 33 => '#c4a000',
         34 => '#3465a4', 35 => '#75507b', 36 => '#06989a', 37 => '#d3d7cf',
@@ -29,12 +37,22 @@ class AnsiParser
     private array $config;
     private float $currentTime = 0.0;
 
+    /**
+     * @param TerminalState $state The terminal state object to manipulate.
+     * @param array<string, mixed> $config The application configuration.
+     */
     public function __construct(TerminalState $state, array $config)
     {
         $this->state = $state;
         $this->config = $config;
     }
 
+    /**
+     * Processes a chunk of data from the terminal output stream.
+     *
+     * @param string $chunk The chunk of data to process.
+     * @param float $time The timestamp of this chunk.
+     */
     public function processChunk(string $chunk, float $time): void
     {
         $this->currentTime = $time;
