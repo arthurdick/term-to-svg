@@ -11,7 +11,7 @@
  * The generated SVG will freeze on the last frame for 5 seconds, then loop.
  *
  * @author Arthur Dick
- * @version 2.0.1
+ * @version 2.0.2
  */
 
 namespace ArthurDick\TermToSvg;
@@ -114,18 +114,9 @@ class TerminalToSvgConverter
         if ($firstLine && preg_match('/COLUMNS="(\d+)".*?LINES="(\d+)"/', $firstLine, $matches)) {
             $this->config['cols'] = (int)$matches[1];
             $this->config['rows'] = (int)$matches[2];
-            // Suppress output during tests
-            if (php_sapi_name() === 'cli' && realpath($_SERVER['SCRIPT_FILENAME']) === realpath(__FILE__)) {
-                echo "✅ Detected geometry from log file: {$this->config['cols']}x{$this->config['rows']}\n";
-            }
-        } else {
-            if (php_sapi_name() === 'cli' && realpath($_SERVER['SCRIPT_FILENAME']) === realpath(__FILE__)) {
-                echo "⚠️  Warning: Could not detect geometry from log file. Using default dimensions.\n";
-            }
         }
 
         $this->scrollBottom = $this->config['rows'] - 1;
-
         $this->timingData = $this->parseTimingFile($timingPath);
     }
 
@@ -143,10 +134,6 @@ class TerminalToSvgConverter
 
     private function logWarning(string $message): void
     {
-        // Suppress warnings during tests
-        if (php_sapi_name() !== 'cli' || realpath($_SERVER['SCRIPT_FILENAME']) !== realpath(__FILE__)) {
-            return;
-        }
         fwrite(STDERR, "⚠️  Warning: {$message}\n");
     }
 
