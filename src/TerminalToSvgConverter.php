@@ -11,7 +11,7 @@
  * The generated SVG will freeze on the last frame for 5 seconds, then loop.
  *
  * @author Arthur Dick
- * @version 1.0.4
+ * @version 2.0.0
  */
 
 namespace ArthurDick\TermToSvg;

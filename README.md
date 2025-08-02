@@ -6,20 +6,29 @@
 
 Unlike GIF animations, SVG files are vector-based, resulting in sharper visuals at any zoom level, smaller file sizes, and the ability to be manipulated with CSS and JavaScript.
 
+-----
+
 ## Features
 
   * **High Fidelity Playback**: Accurately interprets ANSI escape codes for cursor movement, color changes, inverse video, character/line manipulation, scroll regions, and screen clearing to reproduce your terminal session as precisely as possible.
   * **Animated SVG Output**: Generates a single SVG file that animates the terminal session, making it ideal for web embedding. The animations are powered by SMIL (Synchronized Multimedia Integration Language).
   * **Configurable**: Supports configuration for terminal dimensions, font size, font family, and default colors.
   * **Automatic Geometry Detection**: Can automatically detect terminal dimensions from the `script` log file if available.
-  * **Lightweight**: A single PHP script with no external library dependencies beyond a standard PHP installation.
+  * **Lightweight**: A single-class PHP script with no external runtime dependencies.
 
-## Why animated SVG?
+-----
 
-  * **Crisp Quality**: Vector graphics scale perfectly to any size without pixelation.
-  * **Smaller File Sizes**: Often significantly smaller than equivalent GIF recordings, especially for longer sessions.
-  * **Web-Friendly**: Easily embeddable in HTML, Markdown (like GitHub READMEs), and other web contexts.
-  * **Pausable and Loopable**: The generated SVG freezes on the last frame for 5 seconds by default and then loops seamlessly.
+## Installation
+
+Install the tool globally using Composer:
+
+```bash
+composer global require arthurdick/term-to-svg
+```
+
+Make sure your Composer `bin` directory (`~/.composer/vendor/bin` or `~/.config/composer/vendor/bin`) is in your system's `PATH`.
+
+-----
 
 ## Usage
 
@@ -36,59 +45,63 @@ script --timing=rec.time rec.log
 
 After running the command, you'll be dropped into a subshell. Perform the commands you want to record. When you're finished, type `exit` to end the recording session.
 
-Example:
-
-```bash
-script --timing=my_session.time my_session.log
-# Now you are in a recorded shell. Type your commands:
-ls -la
-echo "Hello, term-to-svg!"
-git status
-# ...
-exit
-```
-
 ### 2\. Convert to SVG
 
-Once you have your `rec.log` and `rec.time` files, run the `term-to-svg.php` script:
+Once you have your `rec.log` and `rec.time` files, run the `term-to-svg` command:
 
 ```bash
-php term-to-svg.php <typescript_file> <timing_file> <output_svg_file>
+term-to-svg <typescript_file> <timing_file> <output_svg_file>
 ```
-
-Replace `<typescript_file>`, `<timing_file>`, and `<output_svg_file>` with your actual file names.
 
 Example:
 
 ```bash
-php term-to-svg.php my_session.log my_session.time output.svg
+term-to-svg my_session.log my_session.time output.svg
 ```
 
 Upon successful conversion, you'll see a message like: `✅ Successfully generated animated SVG: output.svg`
 
+-----
+
 ## Configuration
 
-The script includes a `CONFIG` array at the top of the `term-to-svg.php` file that you can modify to customize the output SVG:
+To customize the output, you can create your own executable script. The default configuration is a public constant within the `TerminalToSvgConverter` class.
+
+Example custom script:
 
 ```php
-const CONFIG = [
-    'rows' => 24,           // Default number of terminal rows
-    'cols' => 80,           // Default number of terminal columns
-    'font_size' => 14,      // Font size in pixels
-    'line_height_factor' => 1.2, // Line height as a factor of font_size
-    'font_family' => 'Menlo, Monaco, "Courier New", monospace', // CSS font-family stack
-    'default_fg' => '#e0e0e0', // Default text color (light gray)
-    'default_bg' => '#1a1a1a', // Terminal background color (dark gray)
-];
+#!/usr/bin/env php
+<?php
+
+use ArthurDick\TermToSvg\TerminalToSvgConverter;
+
+require_once __DIR__ . '/vendor/autoload.php';
+
+// 1. Get default config
+$config = TerminalToSvgConverter::CONFIG;
+
+// 2. Modify it
+$config['font_family'] = 'Fira Code, monospace';
+$config['font_size'] = 16;
+$config['default_bg'] = '#282a36'; // Dracula theme
+
+// 3. Run the converter with your custom config
+$converter = new TerminalToSvgConverter($argv[1], $argv[2], $config);
+$svgContent = $converter->convert();
+file_put_contents($argv[3], $svgContent);
 ```
 
-**Note on Geometry Detection**: If your `rec.log` file was generated with a `script` version that includes `COLUMNS` and `LINES` information in its first line (e.g., `COLUMNS="80" LINES="24"`), the script will automatically use these dimensions, overriding the `rows` and `cols` in the `CONFIG` array. A warning will be issued if auto-detection fails.
+**Note on Geometry Detection**: If your `rec.log` file was generated with a `script` version that includes `COLUMNS` and `LINES` information in its first line (e.g., `COLUMNS="80" LINES="24"`), the script will automatically use these dimensions, overriding the `rows` and `cols` in your configuration.
+
+-----
 
 ## Requirements
 
-  * PHP 7.4 or higher
-  * The `mbstring` PHP extension
+  * PHP 7.4 or higher.
+  * The `mbstring` PHP extension.
   * A Unix-like operating system with the `script` command available.
+
+-----
 
 ## Contributing
 
