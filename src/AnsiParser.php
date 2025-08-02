@@ -19,11 +19,11 @@ class AnsiParser
 
     private const WONT_IMPLEMENT_CSI = ['n', 's', 'u', 't'];
     private const WONT_IMPLEMENT_DEC = [
-        '1h', '1l', '7h', '7l', '12h', '12l', '1000h', '1000l', '1002h', '1002l',
+        '1h', '1l', '12h', '12l', '1000h', '1000l', '1002h', '1002l',
         '1003h', '1003l', '1004h', '1004l', '1005h', '1005l', '1006h', '1006l',
         '2004h', '2004l',
     ];
-    private const WONT_IMPLEMENT_ESC = ['7', '8'];
+    private const WONT_IMPLEMENT_ESC = [];
 
     /** @var array<int, string> The 16 standard ANSI color hex codes. */
     public const ANSI_16_COLORS = [
@@ -84,12 +84,7 @@ class AnsiParser
                     } elseif ($char === '(') {
                         $state = self::STATE_CHARSET;
                     } elseif ($char === 'D') {
-                        $this->state->cursorY++;
-                        if ($this->state->cursorY > $this->state->scrollBottom) {
-                            $scrollCount = $this->state->cursorY - $this->state->scrollBottom;
-                            $this->doStreamScroll($scrollCount);
-                            $this->state->cursorY = $this->state->scrollBottom;
-                        }
+                        $this->moveCursorDownAndScroll();
                         $this->state->recordCursorState($this->currentTime);
                         $state = self::STATE_GROUND;
                     } elseif ($char === 'M') {
@@ -102,12 +97,18 @@ class AnsiParser
                         $state = self::STATE_GROUND;
                     } elseif ($char === 'E') {
                         $this->state->cursorX = 0;
-                        $this->state->cursorY++;
-                        if ($this->state->cursorY > $this->state->scrollBottom) {
-                            $scrollCount = $this->state->cursorY - $this->state->scrollBottom;
-                            $this->doStreamScroll($scrollCount);
-                            $this->state->cursorY = $this->state->scrollBottom;
-                        }
+                        $this->moveCursorDownAndScroll();
+                        $this->state->recordCursorState($this->currentTime);
+                        $state = self::STATE_GROUND;
+                    } elseif ($char === '7') {
+                        $this->state->savedCursorX = $this->state->cursorX;
+                        $this->state->savedCursorY = $this->state->cursorY;
+                        $this->state->savedStyle = $this->state->currentStyle;
+                        $state = self::STATE_GROUND;
+                    } elseif ($char === '8') {
+                        $this->state->cursorX = $this->state->savedCursorX;
+                        $this->state->cursorY = $this->state->savedCursorY;
+                        $this->state->currentStyle = $this->state->savedStyle;
                         $this->state->recordCursorState($this->currentTime);
                         $state = self::STATE_GROUND;
                     } else {
@@ -150,6 +151,15 @@ class AnsiParser
         }
     }
 
+    private function moveCursorDownAndScroll(): void
+    {
+        if ($this->state->cursorY === $this->state->scrollBottom) {
+            $this->doStreamScroll(1);
+        } else {
+            $this->state->cursorY++;
+        }
+    }
+
     private function handleCharacter(string $char): void
     {
         switch ($char) {
@@ -157,37 +167,39 @@ class AnsiParser
                 $this->state->cursorX = 0;
                 break;
             case "\n":
-                $this->state->cursorY++;
+                $this->moveCursorDownAndScroll();
                 break;
             case "\x08":
             case "\x7f":
                 $this->state->cursorX = max(0, $this->state->cursorX - 1);
-                $this->state->recordCursorState($this->currentTime);
                 break;
             case "\t":
                 $this->state->cursorX = min($this->config['cols'] - 1, (int)($this->state->cursorX / 8 + 1) * 8);
-                $this->state->recordCursorState($this->currentTime);
                 break;
             default:
                 if (mb_check_encoding($char, 'UTF-8') && preg_match('/[[:print:]]/u', $char)) {
                     if ($this->state->cursorX >= $this->config['cols']) {
-                        $this->state->cursorX = 0;
-                        $this->state->cursorY++;
+                        if ($this->state->autoWrapMode) {
+                            $this->state->cursorX = 0;
+                            $this->moveCursorDownAndScroll();
+                        } else {
+                            $this->state->cursorX = $this->config['cols'] - 1;
+                        }
                     }
+
                     $this->writeCharToHistory($char);
-                    $this->state->cursorX++;
+
+                    if ($this->state->autoWrapMode) {
+                        $this->state->cursorX++;
+                    } else {
+                        if ($this->state->cursorX < $this->config['cols'] - 1) {
+                            $this->state->cursorX++;
+                        }
+                    }
                 }
                 break;
         }
-
-        if ($this->state->cursorY > $this->state->scrollBottom) {
-            $scrollCount = $this->state->cursorY - $this->state->scrollBottom;
-            $this->doStreamScroll($scrollCount);
-            $this->state->cursorY = $this->state->scrollBottom;
-            $this->state->recordCursorState($this->currentTime);
-        } else {
-            $this->state->recordCursorState($this->currentTime);
-        }
+        $this->state->recordCursorState($this->currentTime);
     }
 
     private function handleAnsiCommand(string $command, array $params): void
@@ -293,6 +305,10 @@ class AnsiParser
             $this->state->setCursorVisibility(false, $this->currentTime);
         } elseif ($command === '25h') {
             $this->state->setCursorVisibility(true, $this->currentTime);
+        } elseif ($command === '7h') {
+            $this->state->autoWrapMode = true;
+        } elseif ($command === '7l') {
+            $this->state->autoWrapMode = false;
         } else {
             if (!in_array($command, self::WONT_IMPLEMENT_DEC)) {
                 $this->logWarning("Unsupported DEC Private Mode command: ?{$command}");
@@ -427,16 +443,16 @@ class AnsiParser
     {
         if ($mode === 0) {
             $this->eraseInLine(0);
-            for ($y = $this->state->cursorY + 1; $y < $this->config['rows']; $y++) {
+            for ($y = $this->state->cursorY + 1; $y <= $this->state->scrollBottom; $y++) {
                 $this->clearLine($y);
             }
         } elseif ($mode === 1) {
-            for ($y = 0; $y < $this->state->cursorY; $y++) {
+            for ($y = $this->state->scrollTop; $y < $this->state->cursorY; $y++) {
                 $this->clearLine($y);
             }
             $this->eraseInLine(1);
         } elseif ($mode === 2 || $mode === 3) {
-            for ($y = 0; $y < $this->config['rows']; $y++) {
+            for ($y = $this->state->scrollTop; $y <= $this->state->scrollBottom; $y++) {
                 $this->clearLine($y);
             }
         }

@@ -25,8 +25,14 @@ class TerminalState
     /** @var array<string, mixed> The current text style attributes (color, bold, etc.). */
     public array $currentStyle;
 
+    /** @var array<string, mixed> The saved text style attributes. */
+    public array $savedStyle;
+
     /** @var bool Whether the cursor is currently visible. */
     public bool $cursorVisible = true;
+
+    /** @var bool Whether auto-wrap mode is enabled. */
+    public bool $autoWrapMode = true;
 
     /** @var array<int, array<string, mixed>> A log of cursor movement and visibility change events. */
     public array $cursorEvents = [];
@@ -72,6 +78,7 @@ class TerminalState
         $this->config = $config;
         $this->scrollBottom = $this->config['rows'] - 1;
         $this->resetStyle();
+        $this->savedStyle = $this->currentStyle;
     }
 
     /**
