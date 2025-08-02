@@ -38,6 +38,27 @@ This method provides a single, executable file, but **requires PHP to be install
     ./term-to-svg.phar my_session.log my_session.time output.svg
     ```
 
+#### Making it Globally Available (Optional)
+
+To run `term-to-svg` from any directory without typing `./term-to-svg.phar`, you can move it to a directory in your system's `PATH`.
+
+1.  **Move & Rename:** Move the phar to a common location for binaries and rename it for convenience. `/usr/local/bin` is a good choice.
+    ```bash
+    sudo mv term-to-svg.phar /usr/local/bin/term-to-svg
+    ```
+2.  **Verify:** Close and reopen your terminal, then check if the command is available:
+    ```bash
+    term-to-svg --version
+    ```
+
+If it's not found, ensure `/usr/local/bin` is in your `PATH`. You can check with `echo $PATH`. If it's missing, add it to your shell's startup file (e.g., `~/.bashrc`, `~/.zshrc`):
+
+````
+```bash
+export PATH="/usr/local/bin:$PATH"
+```
+````
+
 ### Method 2: Global Install with Composer
 
 **Best for:** PHP developers who want the `term-to-svg` command to be available system-wide.
@@ -58,7 +79,7 @@ This method provides a single, executable file, but **requires PHP to be install
 
 1.  **Clone:** Clone the repository to your local machine.
     ```bash
-    git clone [https://github.com/arthurdick/term-to-svg.git](https://github.com/arthurdick/term-to-svg.git)
+    git clone https://github.com/arthurdick/term-to-svg.git
     cd term-to-svg
     ```
 2.  **Install Dependencies:**
