@@ -2,6 +2,7 @@
 
 namespace Tests\Integration;
 
+use ArthurDick\TermToSvg\Config;
 use ArthurDick\TermToSvg\TerminalToSvgConverter;
 use PHPUnit\Framework\TestCase;
 
@@ -25,7 +26,8 @@ class SnapshotTest extends TestCase
 
         $expected = trim(file_get_contents($snapshotFile));
 
-        $converter = new TerminalToSvgConverter($typescriptFile, $timingFile, TerminalToSvgConverter::CONFIG);
+        // Use the new Config class for default settings
+        $converter = new TerminalToSvgConverter($typescriptFile, $timingFile, Config::DEFAULTS);
         $svgContent = trim($converter->convert());
 
         $this->assertEquals($expected, $svgContent, "Generated SVG does not match snapshot for test case: $testCaseName");

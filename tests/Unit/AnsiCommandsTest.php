@@ -2,21 +2,18 @@
 
 namespace Tests\Unit;
 
-use ArthurDick\TermToSvg\TerminalToSvgConverter;
+use ArthurDick\TermToSvg\AnsiParser;
+use ArthurDick\TermToSvg\TerminalState;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 
 class AnsiCommandsTest extends TestCase
 {
-    private $converter;
-    private $reflection;
+    private AnsiParser $parser;
+    private TerminalState $state;
+    private float $time = 0.0;
 
     protected function setUp(): void
     {
-        // Mock file paths since we are not reading from actual files for unit tests
-        $typescriptFile = 'php://memory';
-        $timingFile = 'php://memory';
-
         $config = [
             'rows' => 24,
             'cols' => 80,
@@ -27,38 +24,14 @@ class AnsiCommandsTest extends TestCase
             'default_bg' => '#1a1a1a',
         ];
 
-        $this->converter = new TerminalToSvgConverter($typescriptFile, $timingFile, $config);
-        $this->reflection = new ReflectionClass($this->converter);
+        $this->state = new TerminalState($config);
+        $this->parser = new AnsiParser($this->state, $config);
     }
 
-    /**
-     * Helper to call private methods on the converter instance.
-     */
-    private function invokeMethod($methodName, array $parameters = [])
+    private function process(string $chunk): void
     {
-        $method = $this->reflection->getMethod($methodName);
-        $method->setAccessible(true);
-        return $method->invokeArgs($this->converter, $parameters);
-    }
-
-    /**
-     * Helper to get private property values.
-     */
-    private function getProperty($propertyName)
-    {
-        $property = $this->reflection->getProperty($propertyName);
-        $property->setAccessible(true);
-        return $property->getValue($this->converter);
-    }
-
-    /**
-     * Helper to set private property values.
-     */
-    private function setProperty($propertyName, $value)
-    {
-        $property = $this->reflection->getProperty($propertyName);
-        $property->setAccessible(true);
-        $property->setValue($this->converter, $value);
+        $this->time += 0.1;
+        $this->parser->processChunk($chunk, $this->time);
     }
 
     /**
@@ -66,121 +39,98 @@ class AnsiCommandsTest extends TestCase
      */
     public function testEraseInDisplayClearsEntireScreen(): void
     {
-        // Write some text to the screen first
-        $this->invokeMethod('processChunk', ["Hello\nWorld"]);
+        $this->process("Hello\nWorld");
+        $this->process("\x1b[2J"); // ESC[2J
 
-        // Now, send the command to clear the screen (ESC[2J)
-        $this->invokeMethod('handleAnsiCommand', ['J', [2]]);
+        $buffer = $this->state->mainBuffer;
 
-        // Get the active screen buffer
-        $buffer = $this->getProperty('mainBuffer');
-
-        // Assert that the screen buffer is now full of blank characters
         for ($y = 0; $y < 24; $y++) {
             for ($x = 0; $x < 80; $x++) {
                 $this->assertArrayHasKey($y, $buffer);
                 $this->assertArrayHasKey($x, $buffer[$y]);
                 $lastCellState = end($buffer[$y][$x]);
-                // Check if the character is a non-breaking space, which represents a cleared cell
                 $this->assertEquals('&#160;', $lastCellState['char']);
             }
         }
     }
 
-    /**
-     * Test cursor movement command CSI C (Cursor Forward).
-     */
     public function testCursorForwardMovesCursor(): void
     {
-        // Initial cursor X should be 0
-        $this->assertEquals(0, $this->getProperty('cursorX'));
-
-        // Move cursor forward 5 columns (ESC[5C)
-        $this->invokeMethod('handleAnsiCommand', ['C', [5]]);
-
-        $this->assertEquals(5, $this->getProperty('cursorX'));
+        $this->assertEquals(0, $this->state->cursorX);
+        $this->process("\x1b[5C"); // ESC[5C
+        $this->assertEquals(5, $this->state->cursorX);
     }
 
-    /**
-     * Test cursor movement command CSI A (Cursor Up).
-     */
     public function testCursorUpMovesCursor(): void
     {
-        // Move cursor down first to have a baseline
-        $this->invokeMethod('processChunk', ["\n\n\n"]);
-        $this->assertEquals(3, $this->getProperty('cursorY'));
-
-        // Move cursor up 2 lines (ESC[2A)
-        $this->invokeMethod('handleAnsiCommand', ['A', [2]]);
-
-        $this->assertEquals(1, $this->getProperty('cursorY'));
+        $this->process("\n\n\n");
+        $this->assertEquals(3, $this->state->cursorY);
+        $this->process("\x1b[2A"); // ESC[2A
+        $this->assertEquals(1, $this->state->cursorY);
     }
 
     public function testCursorDownMovesCursor(): void
     {
-        $this->setProperty('cursorY', 5);
-        $this->invokeMethod('handleAnsiCommand', ['B', [3]]);
-        $this->assertEquals(8, $this->getProperty('cursorY'));
+        $this->state->cursorY = 5;
+        $this->process("\x1b[3B");
+        $this->assertEquals(8, $this->state->cursorY);
     }
 
     public function testCursorBackwardMovesCursor(): void
     {
-        $this->setProperty('cursorX', 10);
-        $this->invokeMethod('handleAnsiCommand', ['D', [4]]);
-        $this->assertEquals(6, $this->getProperty('cursorX'));
+        $this->state->cursorX = 10;
+        $this->process("\x1b[4D");
+        $this->assertEquals(6, $this->state->cursorX);
     }
 
     public function testCursorPosition(): void
     {
-        $this->invokeMethod('handleAnsiCommand', ['H', [10, 20]]);
-        $this->assertEquals(9, $this->getProperty('cursorY'));
-        $this->assertEquals(19, $this->getProperty('cursorX'));
+        $this->process("\x1b[10;20H");
+        $this->assertEquals(9, $this->state->cursorY);
+        $this->assertEquals(19, $this->state->cursorX);
     }
 
     public function testCursorCharacterAbsolute(): void
     {
-        $this->invokeMethod('handleAnsiCommand', ['G', [15]]);
-        $this->assertEquals(14, $this->getProperty('cursorX'));
+        $this->process("\x1b[15G");
+        $this->assertEquals(14, $this->state->cursorX);
     }
 
     public function testVerticalLinePositionAbsolute(): void
     {
-        $this->invokeMethod('handleAnsiCommand', ['d', [12]]);
-        $this->assertEquals(11, $this->getProperty('cursorY'));
+        $this->process("\x1b[12d");
+        $this->assertEquals(11, $this->state->cursorY);
     }
 
     public function testIndexCommand(): void
     {
-        $this->setProperty('cursorY', 10);
-        $this->invokeMethod('processChunk', ["\x1bD"]);
-        $this->assertEquals(11, $this->getProperty('cursorY'));
+        $this->state->cursorY = 10;
+        $this->process("\x1bD");
+        $this->assertEquals(11, $this->state->cursorY);
     }
 
     public function testReverseIndexCommand(): void
     {
-        $this->setProperty('cursorY', 10);
-        $this->invokeMethod('processChunk', ["\x1bM"]);
-        $this->assertEquals(9, $this->getProperty('cursorY'));
+        $this->state->cursorY = 10;
+        $this->process("\x1bM");
+        $this->assertEquals(9, $this->state->cursorY);
     }
 
     public function testNextLineCommand(): void
     {
-        $this->setProperty('cursorX', 15);
-        $this->setProperty('cursorY', 10);
-        $this->invokeMethod('processChunk', ["\x1bE"]);
-        $this->assertEquals(0, $this->getProperty('cursorX'));
-        $this->assertEquals(11, $this->getProperty('cursorY'));
+        $this->state->cursorX = 15;
+        $this->state->cursorY = 10;
+        $this->process("\x1bE");
+        $this->assertEquals(0, $this->state->cursorX);
+        $this->assertEquals(11, $this->state->cursorY);
     }
-
-    // -- Erasing Text --
 
     public function testEraseInLineFromCursorToEnd(): void
     {
-        $this->invokeMethod('processChunk', ["some text"]);
-        $this->setProperty('cursorX', 5);
-        $this->invokeMethod('handleAnsiCommand', ['K', [0]]);
-        $buffer = $this->getProperty('mainBuffer');
-        // "text" should be cleared
+        $this->process("some text");
+        $this->state->cursorX = 5;
+        $this->process("\x1b[0K");
+        $buffer = $this->state->mainBuffer;
         for ($x = 5; $x < 9; $x++) {
             $lastCellState = end($buffer[0][$x]);
             $this->assertEquals('&#160;', $lastCellState['char']);
@@ -189,43 +139,38 @@ class AnsiCommandsTest extends TestCase
 
     public function testDeleteCharacters(): void
     {
-        $this->invokeMethod('processChunk', ["abcdef"]);
-        $this->setProperty('cursorX', 2); // cursor on 'c'
-        $this->invokeMethod('handleAnsiCommand', ['P', [2]]); // delete 2 chars
-        $buffer = $this->getProperty('mainBuffer');
+        $this->process("abcdef");
+        $this->state->cursorX = 2; // cursor on 'c'
+        $this->process("\x1b[2P"); // delete 2 chars
+        $buffer = $this->state->mainBuffer;
         $this->assertEquals('e', end($buffer[0][2])['char']);
         $this->assertEquals('f', end($buffer[0][3])['char']);
     }
 
     public function testInsertCharacters(): void
     {
-        $this->invokeMethod('processChunk', ["abcdef"]);
-        $this->setProperty('cursorX', 2); // cursor on 'c'
-        $this->invokeMethod('handleAnsiCommand', ['@', [2]]); // insert 2 chars
-        $buffer = $this->getProperty('mainBuffer');
-        // Blanks at 2 and 3
+        $this->process("abcdef");
+        $this->state->cursorX = 2; // cursor on 'c'
+        $this->process("\x1b[2@"); // insert 2 chars
+        $buffer = $this->state->mainBuffer;
         $this->assertEquals('&#160;', end($buffer[0][2])['char']);
         $this->assertEquals('&#160;', end($buffer[0][3])['char']);
-        // 'c' and 'd' shifted
         $this->assertEquals('c', end($buffer[0][4])['char']);
         $this->assertEquals('d', end($buffer[0][5])['char']);
     }
 
-    // -- Screen and Scrolling --
-
     public function testSetScrollRegion(): void
     {
-        $this->invokeMethod('handleAnsiCommand', ['r', [5, 15]]);
-        $this->assertEquals(4, $this->getProperty('scrollTop'));
-        $this->assertEquals(14, $this->getProperty('scrollBottom'));
+        $this->process("\x1b[5;15r");
+        $this->assertEquals(4, $this->state->scrollTop);
+        $this->assertEquals(14, $this->state->scrollBottom);
     }
 
     public function testInsertLines(): void
     {
-        $this->setProperty('cursorY', 10);
-        $this->invokeMethod('handleAnsiCommand', ['L', [2]]);
-        $buffer = $this->getProperty('mainBuffer');
-        // Check that lines 10 and 11 are blank
+        $this->state->cursorY = 10;
+        $this->process("\x1b[2L");
+        $buffer = $this->state->mainBuffer;
         for ($x = 0; $x < 80; $x++) {
             $this->assertEquals('&#160;', end($buffer[10][$x])['char']);
             $this->assertEquals('&#160;', end($buffer[11][$x])['char']);
@@ -234,11 +179,10 @@ class AnsiCommandsTest extends TestCase
 
     public function testDeleteLines(): void
     {
-        $this->invokeMethod('processChunk', ["line1\r\nline2\r\nline3"]);
-        $this->setProperty('cursorY', 1);
-        $this->invokeMethod('handleAnsiCommand', ['M', [1]]);
-        $buffer = $this->getProperty('mainBuffer');
-        // "line3" should now be on line 1
+        $this->process("line1\r\nline2\r\nline3");
+        $this->state->cursorY = 1;
+        $this->process("\x1b[1M");
+        $buffer = $this->state->mainBuffer;
         $this->assertEquals('l', end($buffer[1][0])['char']);
         $this->assertEquals('i', end($buffer[1][1])['char']);
         $this->assertEquals('n', end($buffer[1][2])['char']);
@@ -248,128 +192,106 @@ class AnsiCommandsTest extends TestCase
 
     public function testScrollUp(): void
     {
-        $this->invokeMethod('processChunk', ["line1\r\nline2"]);
-        $this->invokeMethod('handleAnsiCommand', ['S', [1]]);
-        $buffer = $this->getProperty('mainBuffer');
-        // "line2" should be on line 0
+        $this->process("line1\r\nline2");
+        $this->process("\x1b[1S");
+        $buffer = $this->state->mainBuffer;
         $this->assertEquals('l', end($buffer[0][0])['char']);
         $this->assertEquals('2', end($buffer[0][4])['char']);
     }
 
     public function testScrollDown(): void
     {
-        $this->invokeMethod('processChunk', ["line1\nline2"]);
-        $this->invokeMethod('handleAnsiCommand', ['T', [1]]);
-        $buffer = $this->getProperty('mainBuffer');
-        // "line1" should be on line 1
+        $this->process("line1\nline2");
+        $this->process("\x1b[1T");
+        $buffer = $this->state->mainBuffer;
         $this->assertEquals('l', end($buffer[1][0])['char']);
         $this->assertEquals('1', end($buffer[1][4])['char']);
     }
 
     public function testAlternateScreenBuffer(): void
     {
-        $this->invokeMethod('handleDecPrivateMode', ['1049h']);
-        $this->assertTrue($this->getProperty('altScreenActive'));
+        $this->process("\x1b[?1049h");
+        $this->assertTrue($this->state->altScreenActive);
     }
 
     public function testMainScreenBuffer(): void
     {
-        // First switch to alt screen
-        $this->invokeMethod('handleDecPrivateMode', ['1049h']);
-        $this->assertTrue($this->getProperty('altScreenActive'));
-        // Now switch back
-        $this->invokeMethod('handleDecPrivateMode', ['1049l']);
-        $this->assertFalse($this->getProperty('altScreenActive'));
+        $this->process("\x1b[?1049h");
+        $this->assertTrue($this->state->altScreenActive);
+        $this->process("\x1b[?1049l");
+        $this->assertFalse($this->state->altScreenActive);
     }
-
-    // -- Cursor Visibility --
 
     public function testCursorVisibility(): void
     {
-        $this->invokeMethod('handleDecPrivateMode', ['25l']);
-        $this->assertFalse($this->getProperty('cursorVisible'));
-        $this->invokeMethod('handleDecPrivateMode', ['25h']);
-        $this->assertTrue($this->getProperty('cursorVisible'));
+        $this->process("\x1b[?25l");
+        $this->assertFalse($this->state->cursorVisible);
+        $this->process("\x1b[?25h");
+        $this->assertTrue($this->state->cursorVisible);
     }
-
-    // -- Character Handling --
 
     public function testCarriageReturn(): void
     {
-        $this->setProperty('cursorX', 20);
-        $this->invokeMethod('handleCharacter', ["\r"]);
-        $this->assertEquals(0, $this->getProperty('cursorX'));
+        $this->state->cursorX = 20;
+        $this->process("\r");
+        $this->assertEquals(0, $this->state->cursorX);
     }
 
     public function testNewline(): void
     {
-        $this->setProperty('cursorY', 5);
-        $this->invokeMethod('handleCharacter', ["\n"]);
-        $this->assertEquals(6, $this->getProperty('cursorY'));
+        $this->state->cursorY = 5;
+        $this->process("\n");
+        $this->assertEquals(6, $this->state->cursorY);
     }
 
     public function testBackspace(): void
     {
-        $this->setProperty('cursorX', 10);
-        $this->invokeMethod('handleCharacter', ["\x08"]);
-        $this->assertEquals(9, $this->getProperty('cursorX'));
+        $this->state->cursorX = 10;
+        $this->process("\x08");
+        $this->assertEquals(9, $this->state->cursorX);
     }
+
+
 
     public function testTab(): void
     {
-        $this->setProperty('cursorX', 3);
-        $this->invokeMethod('handleCharacter', ["\t"]);
-        $this->assertEquals(8, $this->getProperty('cursorX'));
-        $this->invokeMethod('handleCharacter', ["\t"]);
-        $this->assertEquals(16, $this->getProperty('cursorX'));
+        $this->state->cursorX = 3;
+        $this->process("\t");
+        $this->assertEquals(8, $this->state->cursorX);
+        $this->process("\t");
+        $this->assertEquals(16, $this->state->cursorX);
     }
 
-    /**
-     * Test SGR 7 (inverse video).
-     */
     public function testSetGraphicsModeInverse(): void
     {
-        // SGR 7 should enable inverse mode
-        $this->invokeMethod('setGraphicsMode', [[7]]);
-        $style = $this->getProperty('currentStyle');
-        $this->assertTrue($style['inverse']);
-
-        // SGR 27 should disable inverse mode
-        $this->invokeMethod('setGraphicsMode', [[27]]);
-        $style = $this->getProperty('currentStyle');
-        $this->assertFalse($style['inverse']);
+        $this->process("\x1b[7m");
+        $this->assertTrue($this->state->currentStyle['inverse']);
+        $this->process("\x1b[27m");
+        $this->assertFalse($this->state->currentStyle['inverse']);
     }
 
     public function testSetGraphicsModeBold(): void
     {
-        $this->invokeMethod('setGraphicsMode', [[1]]);
-        $style = $this->getProperty('currentStyle');
-        $this->assertTrue($style['bold']);
-        $this->invokeMethod('setGraphicsMode', [[22]]);
-        $style = $this->getProperty('currentStyle');
-        $this->assertFalse($style['bold']);
+        $this->process("\x1b[1m");
+        $this->assertTrue($this->state->currentStyle['bold']);
+        $this->process("\x1b[22m");
+        $this->assertFalse($this->state->currentStyle['bold']);
     }
 
     public function testSetGraphicsModeColor(): void
     {
-        // Red foreground
-        $this->invokeMethod('setGraphicsMode', [[31]]);
-        $style = $this->getProperty('currentStyle');
-        $this->assertEquals('fg-31', $style['fg']);
-
-        // Green background
-        $this->invokeMethod('setGraphicsMode', [[42]]);
-        $style = $this->getProperty('currentStyle');
-        $this->assertEquals('bg-42', $style['bg']);
+        $this->process("\x1b[31m");
+        $this->assertEquals('fg-31', $this->state->currentStyle['fg']);
+        $this->process("\x1b[42m");
+        $this->assertEquals('bg-42', $this->state->currentStyle['bg']);
     }
 
     public function testSetGraphicsModeReset(): void
     {
-        $this->invokeMethod('setGraphicsMode', [[1, 31, 42]]);
-        $this->invokeMethod('setGraphicsMode', [[0]]);
-        $style = $this->getProperty('currentStyle');
-        $this->assertFalse($style['bold']);
-        $this->assertEquals('fg-default', $style['fg']);
-        $this->assertEquals('bg-default', $style['bg']);
+        $this->process("\x1b[1;31;42m");
+        $this->process("\x1b[0m");
+        $this->assertFalse($this->state->currentStyle['bold']);
+        $this->assertEquals('fg-default', $this->state->currentStyle['fg']);
+        $this->assertEquals('bg-default', $this->state->currentStyle['bg']);
     }
 }

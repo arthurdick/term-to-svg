@@ -1,0 +1,669 @@
+<?php
+
+namespace ArthurDick\TermToSvg;
+
+class AnsiParser
+{
+    private const STATE_GROUND = 0;
+    private const STATE_ESCAPE = 1;
+    private const STATE_CSI_PARAM = 2;
+    private const STATE_OSC_STRING = 3;
+    private const STATE_CHARSET = 4;
+
+    private const WONT_IMPLEMENT_CSI = ['n', 's', 'u', 't'];
+    private const WONT_IMPLEMENT_DEC = [
+        '1h', '1l', '7h', '7l', '12h', '12l', '1000h', '1000l', '1002h', '1002l',
+        '1003h', '1003l', '1004h', '1004l', '1005h', '1005l', '1006h', '1006l',
+        '2004h', '2004l',
+    ];
+    private const WONT_IMPLEMENT_ESC = ['7', '8'];
+
+    public const ANSI_16_COLORS = [
+        30 => '#2e3436', 31 => '#cc0000', 32 => '#4e9a06', 33 => '#c4a000',
+        34 => '#3465a4', 35 => '#75507b', 36 => '#06989a', 37 => '#d3d7cf',
+        90 => '#555753', 91 => '#ef2929', 92 => '#8ae234', 93 => '#fce94f',
+        94 => '#729fcf', 95 => '#ad7fa8', 96 => '#34e2e2', 97 => '#eeeeec',
+    ];
+
+    private TerminalState $state;
+    private array $config;
+    private float $currentTime = 0.0;
+
+    public function __construct(TerminalState $state, array $config)
+    {
+        $this->state = $state;
+        $this->config = $config;
+    }
+
+    public function processChunk(string $chunk, float $time): void
+    {
+        $this->currentTime = $time;
+        static $state = self::STATE_GROUND;
+        static $params = '';
+        static $isDecPrivate = false;
+
+        $characters = mb_str_split($chunk, 1, 'UTF-8');
+        $charCount = count($characters);
+
+        for ($i = 0; $i < $charCount; $i++) {
+            $char = $characters[$i];
+
+            switch ($state) {
+                case self::STATE_GROUND:
+                    if ($char === "\x1b") {
+                        $state = self::STATE_ESCAPE;
+                    } else {
+                        $this->handleCharacter($char);
+                    }
+                    break;
+                case self::STATE_ESCAPE:
+                    if ($char === '[') {
+                        $params = '';
+                        $isDecPrivate = false;
+                        $state = self::STATE_CSI_PARAM;
+                    } elseif ($char === ']') {
+                        $state = self::STATE_OSC_STRING;
+                    } elseif ($char === '(') {
+                        $state = self::STATE_CHARSET;
+                    } elseif ($char === 'D') {
+                        $this->state->cursorY++;
+                        if ($this->state->cursorY > $this->state->scrollBottom) {
+                            $scrollCount = $this->state->cursorY - $this->state->scrollBottom;
+                            $this->doStreamScroll($scrollCount);
+                            $this->state->cursorY = $this->state->scrollBottom;
+                        }
+                        $this->state->recordCursorState($this->currentTime);
+                        $state = self::STATE_GROUND;
+                    } elseif ($char === 'M') {
+                        $this->state->cursorY--;
+                        if ($this->state->cursorY < $this->state->scrollTop) {
+                            $this->doScrollDown(1);
+                            $this->state->cursorY = $this->state->scrollTop;
+                        }
+                        $this->state->recordCursorState($this->currentTime);
+                        $state = self::STATE_GROUND;
+                    } elseif ($char === 'E') {
+                        $this->state->cursorX = 0;
+                        $this->state->cursorY++;
+                        if ($this->state->cursorY > $this->state->scrollBottom) {
+                            $scrollCount = $this->state->cursorY - $this->state->scrollBottom;
+                            $this->doStreamScroll($scrollCount);
+                            $this->state->cursorY = $this->state->scrollBottom;
+                        }
+                        $this->state->recordCursorState($this->currentTime);
+                        $state = self::STATE_GROUND;
+                    } else {
+                        if (!in_array($char, self::WONT_IMPLEMENT_ESC)) {
+                            $this->logWarning("Unsupported escape sequence: ESC {$char}");
+                        }
+                        $state = self::STATE_GROUND;
+                    }
+                    break;
+                case self::STATE_CHARSET:
+                    $state = self::STATE_GROUND;
+                    break;
+                case self::STATE_OSC_STRING:
+                    if ($char === "\x07") {
+                        $state = self::STATE_GROUND;
+                    } elseif ($char === "\x1b" && ($i + 1 < $charCount) && $characters[$i + 1] === '\\') {
+                        $i++;
+                        $state = self::STATE_GROUND;
+                    }
+                    break;
+                case self::STATE_CSI_PARAM:
+                    if ($params === '' && $char === '?') {
+                        $isDecPrivate = true;
+                        continue 2;
+                    }
+
+                    if (ctype_digit($char) || $char === ';') {
+                        $params .= $char;
+                    } else {
+                        if ($isDecPrivate) {
+                            $this->handleDecPrivateMode($params . $char);
+                        } else {
+                            $paramArray = ($params === '') ? [] : explode(';', $params);
+                            $this->handleAnsiCommand($char, $paramArray);
+                        }
+                        $state = self::STATE_GROUND;
+                    }
+                    break;
+            }
+        }
+    }
+
+    private function handleCharacter(string $char): void
+    {
+        switch ($char) {
+            case "\r":
+                $this->state->cursorX = 0;
+                break;
+            case "\n":
+                $this->state->cursorY++;
+                break;
+            case "\x08":
+            case "\x7f":
+                $this->state->cursorX = max(0, $this->state->cursorX - 1);
+                $this->state->recordCursorState($this->currentTime);
+                break;
+            case "\t":
+                $this->state->cursorX = min($this->config['cols'] - 1, (int)($this->state->cursorX / 8 + 1) * 8);
+                $this->state->recordCursorState($this->currentTime);
+                break;
+            default:
+                if (mb_check_encoding($char, 'UTF-8') && preg_match('/[[:print:]]/u', $char)) {
+                    if ($this->state->cursorX >= $this->config['cols']) {
+                        $this->state->cursorX = 0;
+                        $this->state->cursorY++;
+                    }
+                    $this->writeCharToHistory($char);
+                    $this->state->cursorX++;
+                }
+                break;
+        }
+
+        if ($this->state->cursorY > $this->state->scrollBottom) {
+            $scrollCount = $this->state->cursorY - $this->state->scrollBottom;
+            $this->doStreamScroll($scrollCount);
+            $this->state->cursorY = $this->state->scrollBottom;
+            $this->state->recordCursorState($this->currentTime);
+        } else {
+            $this->state->recordCursorState($this->currentTime);
+        }
+    }
+
+    private function handleAnsiCommand(string $command, array $params): void
+    {
+        $p = array_map('intval', $params);
+        $moved = false;
+        switch ($command) {
+            case 'm':
+                $this->setGraphicsMode($params);
+                break;
+            case 'H':
+            case 'f':
+                $this->state->cursorY = max(0, ($p[0] ?? 1) - 1);
+                $this->state->cursorX = max(0, ($p[1] ?? 1) - 1);
+                $moved = true;
+                break;
+            case 'A':
+                $this->state->cursorY = max(0, $this->state->cursorY - ($p[0] ?? 1));
+                $moved = true;
+                break;
+            case 'B':
+                $this->state->cursorY = min($this->config['rows'] - 1, $this->state->cursorY + ($p[0] ?? 1));
+                $moved = true;
+                break;
+            case 'C':
+                $this->state->cursorX = min($this->config['cols'] - 1, $this->state->cursorX + ($p[0] ?? 1));
+                $moved = true;
+                break;
+            case 'D':
+                $this->state->cursorX = max(0, $this->state->cursorX - ($p[0] ?? 1));
+                $moved = true;
+                break;
+            case 'G':
+                $this->state->cursorX = max(0, ($p[0] ?? 1) - 1);
+                $moved = true;
+                break;
+            case 'd':
+                $this->state->cursorY = max(0, ($p[0] ?? 1) - 1);
+                $moved = true;
+                break;
+            case 'J':
+                $this->eraseInDisplay($p[0] ?? 0);
+                break;
+            case 'K':
+                $this->eraseInLine($p[0] ?? 0);
+                break;
+            case '@':
+                $this->insertCharacters($p[0] ?? 1);
+                break;
+            case 'P':
+                $this->deleteCharacters($p[0] ?? 1);
+                break;
+            case 'r':
+                $this->setScrollRegion($p);
+                break;
+            case 'L':
+                $this->insertLines($p[0] ?? 1);
+                break;
+            case 'M':
+                $this->deleteLines($p[0] ?? 1);
+                break;
+            case 'S':
+                $this->doScrollUp($p[0] ?? 1);
+                break;
+            case 'T':
+                $this->doScrollDown($p[0] ?? 1);
+                break;
+            default:
+                if (!in_array($command, self::WONT_IMPLEMENT_CSI)) {
+                    $this->logWarning("Unsupported CSI command: '" . implode(';', $params) . "{$command}'");
+                }
+                break;
+        }
+
+        if ($moved) {
+            $this->state->recordCursorState($this->currentTime);
+        }
+    }
+
+    private function handleDecPrivateMode(string $command): void
+    {
+        if ($command === '1049h') {
+            $this->state->savedCursorX = $this->state->cursorX;
+            $this->state->savedCursorY = $this->state->cursorY;
+
+            $this->state->altScreenActive = true;
+            $this->state->screenSwitchEvents[] = ['time' => $this->currentTime, 'type' => 'to_alt'];
+
+            $this->state->cursorX = 0;
+            $this->state->cursorY = 0;
+            $this->state->recordCursorState($this->currentTime);
+            $this->setScrollRegion([]);
+        } elseif ($command === '1049l') {
+            $this->state->altScreenActive = false;
+            $this->state->screenSwitchEvents[] = ['time' => $this->currentTime, 'type' => 'to_main'];
+
+            $this->setScrollRegion([]);
+
+            $this->state->cursorX = $this->state->savedCursorX;
+            $this->state->cursorY = $this->state->savedCursorY;
+            $this->state->recordCursorState($this->currentTime);
+        } elseif ($command === '25l') {
+            $this->state->setCursorVisibility(false, $this->currentTime);
+        } elseif ($command === '25h') {
+            $this->state->setCursorVisibility(true, $this->currentTime);
+        } else {
+            if (!in_array($command, self::WONT_IMPLEMENT_DEC)) {
+                $this->logWarning("Unsupported DEC Private Mode command: ?{$command}");
+            }
+        }
+    }
+
+    private function writeCharToHistory(string $char): void
+    {
+        $buffer = &$this->state->getActiveBuffer();
+        $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
+        $absoluteY = $this->state->cursorY + $scrollOffset;
+
+        if (isset($buffer[$absoluteY][$this->state->cursorX])) {
+            $lastIndex = count($buffer[$absoluteY][$this->state->cursorX]) - 1;
+            if (!isset($buffer[$absoluteY][$this->state->cursorX][$lastIndex]['endTime'])) {
+                $buffer[$absoluteY][$this->state->cursorX][$lastIndex]['endTime'] = $this->currentTime;
+            }
+        }
+        $buffer[$absoluteY][$this->state->cursorX][] = [
+            'char'      => htmlspecialchars($char, ENT_XML1),
+            'style'     => $this->state->currentStyle,
+            'startTime' => $this->currentTime,
+        ];
+    }
+
+    private function writeBlankCharToHistory(int $x, int $y): void
+    {
+        $buffer = &$this->state->getActiveBuffer();
+        $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
+        $absoluteY = $y + $scrollOffset;
+
+        $this->endLifespanForLine($absoluteY, $x, 1);
+
+        $buffer[$absoluteY][$x][] = [
+            'char'      => '&#160;',
+            'style'     => $this->state->currentStyle,
+            'startTime' => $this->currentTime,
+        ];
+    }
+
+    private function setGraphicsMode(array $params): void
+    {
+        if (empty($params)) {
+            $params = [0];
+        }
+
+        $i = 0;
+        while ($i < count($params)) {
+            $p = intval($params[$i]);
+            $handled = false;
+
+            if ($p === 0) {
+                $this->state->resetStyle();
+                $handled = true;
+            } elseif ($p === 1) {
+                $this->state->currentStyle['bold'] = true;
+                $handled = true;
+            } elseif ($p === 7) {
+                $this->state->currentStyle['inverse'] = true;
+                $handled = true;
+            } elseif ($p === 22) {
+                $this->state->currentStyle['bold'] = false;
+                $handled = true;
+            } elseif ($p === 27) {
+                $this->state->currentStyle['inverse'] = false;
+                $handled = true;
+            } elseif (array_key_exists($p, self::ANSI_16_COLORS)) {
+                $this->state->currentStyle['fg'] = 'fg-' . $p;
+                $this->state->currentStyle['fg_hex'] = null;
+                $handled = true;
+            } elseif (array_key_exists($p - 10, self::ANSI_16_COLORS)) {
+                $this->state->currentStyle['bg'] = 'bg-' . $p;
+                $this->state->currentStyle['bg_hex'] = null;
+                $handled = true;
+            } elseif ($p === 39) {
+                $this->state->currentStyle['fg'] = 'fg-default';
+                $this->state->currentStyle['fg_hex'] = null;
+                $handled = true;
+            } elseif ($p === 49) {
+                $this->state->currentStyle['bg'] = 'bg-default';
+                $this->state->currentStyle['bg_hex'] = null;
+                $handled = true;
+            } elseif ($p === 38 || $p === 48) {
+                $colorType = ($p === 38) ? 'fg' : 'bg';
+                if (isset($params[$i + 1]) && intval($params[$i + 1]) === 5 && isset($params[$i + 2])) {
+                    $colorCode = intval($params[$i + 2]);
+                    $this->state->currentStyle[$colorType . '_hex'] = $this->mapAnsi256ToHex($colorCode);
+                    $this->state->currentStyle[$colorType] = 'fg-default';
+                    $i += 2;
+                    $handled = true;
+                } elseif (isset($params[$i + 1]) && intval($params[$i + 1]) === 2) {
+                    if (isset($params[$i + 2]) && isset($params[$i + 3]) && isset($params[$i + 4])) {
+                        $this->state->currentStyle[$colorType . '_hex'] = sprintf("#%02x%02x%02x", intval($params[$i + 2]), intval($params[$i + 3]), intval($params[$i + 4]));
+                        $i += 4;
+                        $handled = true;
+                    }
+                }
+            }
+
+            if (!$handled) {
+                $this->logWarning("Unsupported SGR parameter: {$p}");
+            }
+            $i++;
+        }
+    }
+
+    private function mapAnsi256ToHex(int $code): string
+    {
+        if ($code < 8) {
+            return self::ANSI_16_COLORS[$code + 30];
+        }
+        if ($code < 16) {
+            return self::ANSI_16_COLORS[$code - 8 + 90];
+        }
+        if ($code >= 16 && $code <= 231) {
+            $code -= 16;
+            $r = floor($code / 36);
+            $g = floor(($code % 36) / 6);
+            $b = $code % 6;
+            $levels = [0, 95, 135, 175, 215, 255];
+            return sprintf("#%02x%02x%02x", $levels[$r], $levels[$g], $levels[$b]);
+        }
+        if ($code >= 232 && $code <= 255) {
+            $level = ($code - 232) * 10 + 8;
+            return sprintf("#%02x%02x%02x", $level, $level, $level);
+        }
+        return $this->config['default_fg'];
+    }
+
+    private function eraseInDisplay(int $mode): void
+    {
+        if ($mode === 0) {
+            $this->eraseInLine(0);
+            for ($y = $this->state->cursorY + 1; $y < $this->config['rows']; $y++) {
+                $this->clearLine($y);
+            }
+        } elseif ($mode === 1) {
+            for ($y = 0; $y < $this->state->cursorY; $y++) {
+                $this->clearLine($y);
+            }
+            $this->eraseInLine(1);
+        } elseif ($mode === 2 || $mode === 3) {
+            for ($y = 0; $y < $this->config['rows']; $y++) {
+                $this->clearLine($y);
+            }
+        }
+    }
+
+    private function clearLine(int $y): void
+    {
+        for ($x = 0; $x < $this->config['cols']; $x++) {
+            $this->writeBlankCharToHistory($x, $y);
+        }
+    }
+
+    private function eraseInLine(int $mode): void
+    {
+        $startX = 0;
+        $endX = $this->config['cols'];
+
+        if ($mode === 0) {
+            $startX = $this->state->cursorX;
+        } elseif ($mode === 1) {
+            $endX = $this->state->cursorX + 1;
+        }
+
+        for ($x = $startX; $x < $endX; $x++) {
+            $this->writeBlankCharToHistory($x, $this->state->cursorY);
+        }
+    }
+
+    private function deleteCharacters(int $n = 1): void
+    {
+        $n = max(1, $n);
+        $buffer = &$this->state->getActiveBuffer();
+        $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
+        $y = $this->state->cursorY + $scrollOffset;
+        $x_start = $this->state->cursorX;
+        $cols = $this->config['cols'];
+
+        if (!isset($buffer[$y])) {
+            return;
+        }
+
+        for ($x = $x_start; $x < $cols; $x++) {
+            $x_source = $x + $n;
+            $this->endLifespanForLine($y, $x, 1);
+            if ($x_source < $cols && isset($buffer[$y][$x_source]) && !empty($buffer[$y][$x_source])) {
+                $lastIndex = count($buffer[$y][$x_source]) - 1;
+                $cellToMove = $buffer[$y][$x_source][$lastIndex];
+                if (!isset($cellToMove['endTime']) || $cellToMove['endTime'] > $this->currentTime) {
+                    $buffer[$y][$x][] = [
+                        'char' => $cellToMove['char'],
+                        'style' => $cellToMove['style'],
+                        'startTime' => $this->currentTime,
+                    ];
+                }
+            }
+        }
+    }
+
+    private function insertCharacters(int $n = 1): void
+    {
+        $n = max(1, $n);
+        $buffer = &$this->state->getActiveBuffer();
+        $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
+        $y = $this->state->cursorY + $scrollOffset;
+        $x_start = $this->state->cursorX;
+        $cols = $this->config['cols'];
+
+        if (!isset($buffer[$y])) {
+            return;
+        }
+
+        for ($x = $cols - 1; $x >= $x_start + $n; $x--) {
+            $x_source = $x - $n;
+            if (isset($buffer[$y][$x_source]) && !empty($buffer[$y][$x_source])) {
+                $this->endLifespanForLine($y, $x, 1);
+                $lastIndex = count($buffer[$y][$x_source]) - 1;
+                $cellToMove = $buffer[$y][$x_source][$lastIndex];
+                if (!isset($cellToMove['endTime']) || $cellToMove['endTime'] > $this->currentTime) {
+                    $buffer[$y][$x][] = [
+                        'char' => $cellToMove['char'],
+                        'style' => $cellToMove['style'],
+                        'startTime' => $this->currentTime,
+                    ];
+                }
+            } else {
+                unset($buffer[$y][$x]);
+            }
+        }
+
+        for ($i = 0; $i < $n; $i++) {
+            $this->writeBlankCharToHistory($x_start + $i, $this->state->cursorY);
+        }
+    }
+
+    private function setScrollRegion(array $params): void
+    {
+        $top = (isset($params[0]) && $params[0] > 0) ? $params[0] - 1 : 0;
+        $bottom = (isset($params[1]) && $params[1] > 0) ? $params[1] - 1 : $this->config['rows'] - 1;
+
+        if ($top < $bottom) {
+            $this->state->scrollTop = $top;
+            $this->state->scrollBottom = $bottom;
+        } else {
+            $this->state->scrollTop = 0;
+            $this->state->scrollBottom = $this->config['rows'] - 1;
+        }
+        $this->state->cursorX = 0;
+        $this->state->cursorY = 0;
+        $this->state->recordCursorState($this->currentTime);
+    }
+
+    private function insertLines(int $n): void
+    {
+        $buffer = &$this->state->getActiveBuffer();
+        $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
+
+        if ($this->state->cursorY < $this->state->scrollTop || $this->state->cursorY > $this->state->scrollBottom) {
+            return;
+        }
+
+        for ($i = 0; $i < $n; $i++) {
+            $y_to_kill = $this->state->scrollBottom - $i;
+            if ($y_to_kill >= $this->state->cursorY) {
+                $this->endLifespanForLine($y_to_kill + $scrollOffset, 0);
+            }
+        }
+
+        for ($y = $this->state->scrollBottom; $y >= $this->state->cursorY + $n; $y--) {
+            $src_y = $y - $n + $scrollOffset;
+            $dest_y = $y + $scrollOffset;
+            $buffer[$dest_y] = $buffer[$src_y] ?? [];
+        }
+
+        for ($y = $this->state->cursorY; $y < $this->state->cursorY + $n; $y++) {
+            $absY = $y + $scrollOffset;
+            $buffer[$absY] = [];
+            for ($x = 0; $x < $this->config['cols']; $x++) {
+                $this->writeBlankCharToHistory($x, $y);
+            }
+        }
+    }
+
+    private function deleteLines(int $n): void
+    {
+        $buffer = &$this->state->getActiveBuffer();
+        $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
+
+        if ($this->state->cursorY < $this->state->scrollTop || $this->state->cursorY > $this->state->scrollBottom) {
+            return;
+        }
+
+        for ($i = 0; $i < $n; $i++) {
+            $this->endLifespanForLine($this->state->cursorY + $i + $scrollOffset, 0);
+        }
+
+        for ($y = $this->state->cursorY; $y <= $this->state->scrollBottom - $n; $y++) {
+            $src_y = $y + $n + $scrollOffset;
+            $dest_y = $y + $scrollOffset;
+            $buffer[$dest_y] = $buffer[$src_y] ?? [];
+        }
+
+        for ($y = $this->state->scrollBottom - $n + 1; $y <= $this->state->scrollBottom; $y++) {
+            $absY = $y + $scrollOffset;
+            $buffer[$absY] = [];
+            for ($x = 0; $x < $this->config['cols']; $x++) {
+                $this->writeBlankCharToHistory($x, $y);
+            }
+        }
+    }
+
+    private function doScrollUp(int $n): void
+    {
+        $buffer = &$this->state->getActiveBuffer();
+        $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
+
+        for ($i = 0; $i < $n; $i++) {
+            $this->endLifespanForLine($this->state->scrollTop + $scrollOffset, 0);
+
+            for ($y = $this->state->scrollTop; $y < $this->state->scrollBottom; $y++) {
+                $src_y = $y + 1 + $scrollOffset;
+                $dest_y = $y + $scrollOffset;
+                $buffer[$dest_y] = $buffer[$src_y] ?? [];
+            }
+
+            $bottom_y = $this->state->scrollBottom;
+            $buffer[$bottom_y + $scrollOffset] = [];
+            for ($x = 0; $x < $this->config['cols']; $x++) {
+                $this->writeBlankCharToHistory($x, $bottom_y);
+            }
+        }
+    }
+
+    private function doScrollDown(int $n): void
+    {
+        $buffer = &$this->state->getActiveBuffer();
+        $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
+
+        for ($i = 0; $i < $n; $i++) {
+            $this->endLifespanForLine($this->state->scrollBottom + $scrollOffset, 0);
+
+            for ($y = $this->state->scrollBottom; $y > $this->state->scrollTop; $y--) {
+                $src_y = $y - 1 + $scrollOffset;
+                $dest_y = $y + $scrollOffset;
+                $buffer[$dest_y] = $buffer[$src_y] ?? [];
+            }
+
+            $top_y = $this->state->scrollTop;
+            $buffer[$top_y + $scrollOffset] = [];
+            for ($x = 0; $x < $this->config['cols']; $x++) {
+                $this->writeBlankCharToHistory($x, $top_y);
+            }
+        }
+    }
+
+    private function doStreamScroll(int $n = 1): void
+    {
+        $scrollOffsetRef = &$this->state->getActiveScrollOffsetRef();
+        $scrollEventsRef = &$this->state->getActiveScrollEventsRef();
+
+        for ($i = 0; $i < $n; $i++) {
+            $this->endLifespanForLine($scrollOffsetRef, 0);
+            $scrollEventsRef[] = ['time' => $this->currentTime, 'offset' => $scrollOffsetRef];
+            $scrollOffsetRef++;
+        }
+    }
+
+    private function endLifespanForLine(int $y, int $startX, ?int $count = null): void
+    {
+        $buffer = &$this->state->getActiveBuffer();
+        if (!isset($buffer[$y])) {
+            return;
+        }
+        $endX = $count !== null ? $startX + $count : $this->config['cols'];
+        for ($x = $startX; $x < $endX; $x++) {
+            if (isset($buffer[$y][$x]) && !empty($buffer[$y][$x])) {
+                $lastIndex = count($buffer[$y][$x]) - 1;
+                if (!isset($buffer[$y][$x][$lastIndex]['endTime'])) {
+                    $buffer[$y][$x][$lastIndex]['endTime'] = $this->currentTime;
+                }
+            }
+        }
+    }
+
+    private function logWarning(string $message): void
+    {
+        fwrite(STDERR, "⚠️  Warning: {$message}\n");
+    }
+}

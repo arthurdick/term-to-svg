@@ -14,7 +14,7 @@ Unlike GIF animations, SVG files are vector-based, resulting in sharper visuals 
   * **Animated SVG Output**: Generates a single SVG file that animates the terminal session, making it ideal for web embedding. The animations are powered by SMIL (Synchronized Multimedia Integration Language).
   * **Configurable**: Supports configuration for terminal dimensions, font size, font family, and default colors.
   * **Automatic Geometry Detection**: Can automatically detect terminal dimensions from the `script` log file if available.
-  * **Lightweight**: A single-class PHP script with no external runtime dependencies.
+  * **Lightweight**: A lightweight PHP application with no external runtime dependencies.
 
 -----
 
@@ -58,7 +58,7 @@ This method provides a single, executable file, but **requires PHP to be install
 
 1.  **Clone:** Clone the repository to your local machine.
     ```bash
-    git clone https://github.com/arthurdick/term-to-svg.git
+    git clone [https://github.com/arthurdick/term-to-svg.git](https://github.com/arthurdick/term-to-svg.git)
     cd term-to-svg
     ```
 2.  **Install Dependencies:**
@@ -89,7 +89,7 @@ You will now have two files: `rec.log` (the terminal output) and `rec.time` (the
 
 ## Configuration
 
-To customize the output, you can create your own executable script. The default configuration is a public constant within the `TerminalToSvgConverter` class.
+To customize the output, you can create your own executable script. The default configuration is available as a public constant in the `ArthurDick\TermToSvg\Config` class.
 
 Example custom script:
 
@@ -97,12 +97,13 @@ Example custom script:
 #!/usr/bin/env php
 <?php
 
+use ArthurDick\TermToSvg\Config;
 use ArthurDick\TermToSvg\TerminalToSvgConverter;
 
 require_once __DIR__ . '/vendor/autoload.php';
 
 // 1. Get default config
-$config = TerminalToSvgConverter::CONFIG;
+$config = Config::DEFAULTS;
 
 // 2. Modify it
 $config['font_family'] = 'Fira Code, monospace';

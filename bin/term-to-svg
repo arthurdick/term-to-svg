@@ -8,6 +8,7 @@
  * 3. Convert to SVG: ./term-to-svg rec.log rec.time output.svg
  */
 
+use ArthurDick\TermToSvg\Config;
 use ArthurDick\TermToSvg\TerminalToSvgConverter;
 
 // --- Autoloader ---
@@ -73,7 +74,8 @@ if ($timingFile === false || !is_readable($timingFile)) {
 }
 
 try {
-    $converter = new TerminalToSvgConverter($typescriptFile, $timingFile, TerminalToSvgConverter::CONFIG);
+    // Use the new Config class for default settings
+    $converter = new TerminalToSvgConverter($typescriptFile, $timingFile, Config::DEFAULTS);
     $svgContent = $converter->convert();
     file_put_contents($outputFile, $svgContent);
     echo "✅ Successfully generated animated SVG: {$outputFile}\n";
