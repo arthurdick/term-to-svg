@@ -154,7 +154,11 @@ class AnsiParser
     private function moveCursorDownAndScroll(): void
     {
         if ($this->state->cursorY === $this->state->scrollBottom) {
-            $this->doStreamScroll(1);
+            if ($this->state->scrollBottom === $this->config['rows'] - 1 && $this->state->scrollTop === 0) {
+                $this->doStreamScroll(1);
+            } else {
+                $this->doScrollUp(1);
+            }
         } else {
             $this->state->cursorY++;
         }
@@ -629,18 +633,34 @@ class AnsiParser
         $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
 
         for ($i = 0; $i < $n; $i++) {
-            $this->endLifespanForLine($this->state->scrollTop + $scrollOffset, 0);
-
-            for ($y = $this->state->scrollTop; $y < $this->state->scrollBottom; $y++) {
-                $src_y = $y + 1 + $scrollOffset;
-                $dest_y = $y + $scrollOffset;
-                $buffer[$dest_y] = $buffer[$src_y] ?? [];
+            $regionSnapshot = [];
+            for ($y = $this->state->scrollTop + 1; $y <= $this->state->scrollBottom; $y++) {
+                $absY = $y + $scrollOffset;
+                $regionSnapshot[$y - 1] = $buffer[$absY] ?? [];
             }
 
-            $bottom_y = $this->state->scrollBottom;
-            $buffer[$bottom_y + $scrollOffset] = [];
+            for ($y = $this->state->scrollTop; $y <= $this->state->scrollBottom; $y++) {
+                $this->endLifespanForLine($y + $scrollOffset, 0);
+            }
+
+            foreach ($regionSnapshot as $y => $row) {
+                foreach ($row as $x => $lifespans) {
+                    if (empty($lifespans)) {
+                        continue;
+                    }
+                    $cell = end($lifespans);
+                    if (!isset($cell['endTime']) || $cell['endTime'] > $this->currentTime) {
+                        $buffer[$y + $scrollOffset][$x][] = [
+                            'char' => $cell['char'],
+                            'style' => $cell['style'],
+                            'startTime' => $this->currentTime,
+                        ];
+                    }
+                }
+            }
+
             for ($x = 0; $x < $this->config['cols']; $x++) {
-                $this->writeBlankCharToHistory($x, $bottom_y);
+                $this->writeBlankCharToHistory($x, $this->state->scrollBottom);
             }
         }
     }
