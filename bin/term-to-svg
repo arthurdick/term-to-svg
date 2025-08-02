@@ -12,44 +12,63 @@ use ArthurDick\TermToSvg\TerminalToSvgConverter;
 
 // --- Autoloader ---
 // A robust way to find the autoloader, whether the script is run from a
-// local vendor directory or a global Composer installation.
-$autoloaders = [
-    // Project's own vendor directory (local development)
-    __DIR__ . '/../vendor/autoload.php',
-    
-    // Path for global Composer install
-    __DIR__ . '/../../../autoload.php',
-];
+// local vendor directory, a global Composer installation, or inside a PHAR.
+if (Phar::running()) {
+    // When running in a PHAR, the path is predictable.
+    require_once __DIR__ . '/../vendor/autoload.php';
+} else {
+    // For local dev or global install, search for the autoloader.
+    $autoloaders = [
+        // Project's own vendor directory (local development)
+        __DIR__ . '/../vendor/autoload.php',
+        // Path for global Composer install
+        __DIR__ . '/../../../autoload.php',
+    ];
 
-$autoloader_found = false;
-foreach ($autoloaders as $autoloader) {
-    if (file_exists($autoloader)) {
-        require_once $autoloader;
-        $autoloader_found = true;
-        break;
+    $autoloader_found = false;
+    foreach ($autoloaders as $autoloader) {
+        if (file_exists($autoloader)) {
+            require_once $autoloader;
+            $autoloader_found = true;
+            break;
+        }
+    }
+
+    if (!$autoloader_found) {
+        fwrite(STDERR, "Could not find a valid Composer autoloader. Please run 'composer install'.\n");
+        exit(1);
     }
 }
 
-if (!$autoloader_found) {
-    fwrite(STDERR, "Could not find a valid Composer autoloader. Please run 'composer install'.\n");
-    exit(1);
-}
 
 // --- Main Execution ---
+
+// Handle version flag
+if ($argc > 1 && in_array($argv[1], ['-v', '--version'])) {
+    echo 'term-to-svg version ' . TerminalToSvgConverter::VERSION . "\n";
+    exit(0);
+}
+
 if ($argc < 4) {
     echo "Usage: term-to-svg <typescript_file> <timing_file> <output_svg_file>\n";
+    echo "       term-to-svg --version\n";
     exit(1);
 }
 
-[, $typescriptFile, $timingFile, $outputFile] = $argv;
+// Resolve arguments to absolute paths to ensure they can be found when run from the PHAR
+$typescriptFile = realpath($argv[1]);
+$timingFile = realpath($argv[2]);
+// The output file path can be relative, so we don't use realpath on it.
+$outputFile = $argv[3];
 
-if (!file_exists($typescriptFile) || !is_readable($typescriptFile)) {
-    echo "Error: Typescript file not found or is not readable: {$typescriptFile}\n";
+
+if ($typescriptFile === false || !is_readable($typescriptFile)) {
+    echo "Error: Typescript file not found or is not readable: {$argv[1]}\n";
     exit(1);
 }
 
-if (!file_exists($timingFile) || !is_readable($timingFile)) {
-    echo "Error: Timing file not found or is not readable: {$timingFile}\n";
+if ($timingFile === false || !is_readable($timingFile)) {
+    echo "Error: Timing file not found or is not readable: {$argv[2]}\n";
     exit(1);
 }
 

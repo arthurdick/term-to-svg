@@ -11,13 +11,14 @@
  * The generated SVG will freeze on the last frame for 5 seconds, then loop.
  *
  * @author Arthur Dick
- * @version 2.0.2
  */
 
 namespace ArthurDick\TermToSvg;
 
 class TerminalToSvgConverter
 {
+    public const VERSION = '2.1.0';
+
     public const CONFIG = [
     'rows' => 24,
     'cols' => 80,

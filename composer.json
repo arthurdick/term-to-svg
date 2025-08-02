@@ -41,6 +41,17 @@
     ],
     "scripts": {
         "test": "phpunit",
-        "fix": "php-cs-fixer fix ."
+        "fix": "php-cs-fixer fix .",
+        "build": [
+            "echo 'Temporarily moving dev dependencies...'",
+            "mv vendor vendor_dev",
+            "echo 'Creating production vendor directory...'",
+            "composer install --no-dev --no-scripts --optimize-autoloader",
+            "echo 'Building PHAR archive...'",
+            "php -d phar.readonly=0 build.php",
+            "echo 'Restoring dev dependencies...'",
+            "rm -rf vendor",
+            "mv vendor_dev vendor"
+        ]
     }
 }

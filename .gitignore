@@ -8,5 +8,7 @@
 *.log
 *.time
 
+*.phar
+
 # Un-ignore in the /tests/_data directory
 !/tests/_data/**

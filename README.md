@@ -18,48 +18,72 @@ Unlike GIF animations, SVG files are vector-based, resulting in sharper visuals 
 
 -----
 
-## Installation
+## Installation & Usage
 
-Install the tool globally using Composer:
+There are three ways to use `term-to-svg`, depending on your needs.
 
-```bash
-composer global require arthurdick/term-to-svg
-```
+### Method 1: Standalone PHAR (Recommended)
 
-Make sure your Composer `bin` directory (`~/.composer/vendor/bin` or `~/.config/composer/vendor/bin`) is in your system's `PATH`.
+This method provides a single, executable file, but **requires PHP to be installed** on your system.
+
+**Best for:** Most users, including non-developers, who want a simple way to run the tool.
+
+1.  **Download:** Grab the latest `term-to-svg.phar` file from the project's **Releases** page on GitHub.
+2.  **Make Executable:** Open your terminal and make the downloaded file executable.
+    ```bash
+    chmod +x term-to-svg.phar
+    ```
+3.  **Run:** You can now run the tool directly.
+    ```bash
+    ./term-to-svg.phar my_session.log my_session.time output.svg
+    ```
+
+### Method 2: Global Install with Composer
+
+**Best for:** PHP developers who want the `term-to-svg` command to be available system-wide.
+
+1.  **Install:** Use Composer to install the tool globally.
+    ```bash
+    composer global require arthurdick/term-to-svg
+    ```
+2.  **Update PATH:** Make sure your Composer `bin` directory is in your system's `PATH`.
+3.  **Run:**
+    ```bash
+    term-to-svg my_session.log my_session.time output.svg
+    ```
+
+### Method 3: From Source
+
+**Best for:** Developers who want to contribute to the project or modify the source code.
+
+1.  **Clone:** Clone the repository to your local machine.
+    ```bash
+    git clone https://github.com/arthurdick/term-to-svg.git
+    cd term-to-svg
+    ```
+2.  **Install Dependencies:**
+    ```bash
+    composer install
+    ```
+3.  **Run:** Execute the script using PHP.
+    ```bash
+    php bin/term-to-svg my_session.log my_session.time output.svg
+    ```
 
 -----
 
-## Usage
+## The Recording Process
 
-### 1\. Record your terminal session
+No matter how you installed the tool, the recording process is the same.
 
-Use the standard `script` command available on most Unix-like systems to record your terminal session. It's crucial to use the `--timing` option to capture the timing information alongside the typescript.
+1.  **Record:** Use the standard `script` command with the `--timing` option.
+    ```bash
+    script --timing=rec.time rec.log
+    ```
+2.  **Perform Actions:** A subshell will start. Perform the commands you want to record.
+3.  **Exit:** When you're finished, type `exit` to end the recording session.
 
-```bash
-script --timing=rec.time rec.log
-```
-
-  * `rec.log`: This file will contain the raw terminal output (typescript).
-  * `rec.time`: This file will contain the timing information (delays between output chunks).
-
-After running the command, you'll be dropped into a subshell. Perform the commands you want to record. When you're finished, type `exit` to end the recording session.
-
-### 2\. Convert to SVG
-
-Once you have your `rec.log` and `rec.time` files, run the `term-to-svg` command:
-
-```bash
-term-to-svg <typescript_file> <timing_file> <output_svg_file>
-```
-
-Example:
-
-```bash
-term-to-svg my_session.log my_session.time output.svg
-```
-
-Upon successful conversion, you'll see a message like: `✅ Successfully generated animated SVG: output.svg`
+You will now have two files: `rec.log` (the terminal output) and `rec.time` (the timing information), ready for conversion.
 
 -----
 
