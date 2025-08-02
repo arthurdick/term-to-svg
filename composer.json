@@ -41,7 +41,7 @@
     ],
     "scripts": {
         "test": "phpunit",
-        "fix": "php-cs-fixer fix .",
+        "fix": "php-cs-fixer fix",
         "build": [
             "echo 'Temporarily moving dev dependencies...'",
             "mv vendor vendor_dev",

@@ -76,7 +76,7 @@ jobs:
       # The "--dry-run" flag is critical: it reports errors without changing files and fails the build if violations are found.
       # The "--diff" flag shows what needs to be fixed in the logs.
       - name: Run PHP-CS-Fixer
-        run: ./vendor/bin/php-cs-fixer fix --dry-run --diff -v .
+        run: ./vendor/bin/php-cs-fixer fix --dry-run --diff -v
 
       # Step 7: Run the project's PHPUnit test suite.
       # This simple command is sufficient because all configuration is handled by the project's phpunit.xml file.
