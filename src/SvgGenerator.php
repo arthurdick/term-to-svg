@@ -36,7 +36,7 @@ class SvgGenerator
     public function generate(): string
     {
         $charHeight = $this->config['font_size'] * $this->config['line_height_factor'];
-        $charWidth = $this->config['font_size'] * 0.6;
+        $charWidth = $this->config['font_size'] * $this->config['font_width_factor'];
         $svgWidth = $charWidth * $this->config['cols'];
         $svgHeight = ($charHeight * $this->config['rows']) + ($this->config['font_size'] * 0.2);
 
@@ -71,7 +71,7 @@ class SvgGenerator
         $fgColor = $this->config['default_fg'];
         $cursorWidth = $this->config['font_size'] * 0.6;
         $cursorHeight = $this->config['font_size'] * $this->config['line_height_factor'];
-        $loopDuration = $this->totalDuration + 5;
+        $loopDuration = $this->totalDuration + $this->config['animation_pause_seconds'];
         $resetScroll = '        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="loop.begin" fill="freeze" />' . "\n";
 
         $cssStyles = '';
