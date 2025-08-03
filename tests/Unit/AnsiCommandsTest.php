@@ -199,6 +199,60 @@ class AnsiCommandsTest extends TestCase
         $this->assertEquals('2', end($buffer[0][4])['char']);
     }
 
+    public function testScrollUpInRegionMovesTextCorrectly(): void
+    {
+        // -- Arrange --
+        // Write content outside the scroll region to ensure it's not affected
+        $this->process("Header\n"); // Line 0
+
+        // Set scroll region from line 3 to 7 (0-indexed: 2 to 6)
+        $this->process("\x1b[3;7r");
+        $this->assertEquals(2, $this->state->scrollTop);
+        $this->assertEquals(6, $this->state->scrollBottom);
+
+        // Fill the scroll region with distinct text
+        $this->process("\x1b[3;1HLine 3");
+        $this->process("\x1b[4;1HLine 4");
+        $this->process("\x1b[5;1HLine 5");
+        $this->process("\x1b[6;1HLine 6");
+        $this->process("\x1b[7;1HLine 7");
+
+        // Write content below the scroll region
+        $this->process("\x1b[10;1HFooter");
+
+        // -- Act --
+        // Move cursor to the bottom of the scroll region and trigger a scroll
+        $this->process("\x1b[7;1H\n");
+
+        // -- Assert --
+        $buffer = $this->state->mainBuffer;
+
+        // Check that the header is untouched
+        $this->assertEquals('H', end($buffer[0][0])['char']);
+
+        // Check that the footer is untouched
+        $this->assertEquals('F', end($buffer[9][0])['char']);
+
+        // Check that "Line 3" is gone (scrolled out of view)
+        // The old cell's lifespan should have ended. The original character is at index 0 of the history.
+        $this->assertArrayHasKey('endTime', $buffer[2][0][0]);
+        $this->assertNotNull($buffer[2][0][0]['endTime']);
+
+        // Check that "Line 4" has moved up to row 2. The character '4' is at index 5.
+        $this->assertEquals('4', end($buffer[2][5])['char']);
+        $this->assertEquals($this->time, end($buffer[2][5])['startTime']);
+
+        // Check that "Line 7" has moved up to row 5. The character '7' is at index 5.
+        $this->assertEquals('7', end($buffer[5][5])['char']);
+        $this->assertEquals($this->time, end($buffer[5][5])['startTime']);
+
+        // Check that the last line of the scroll region is now blank where text used to be
+        for ($x = 0; $x < 6; $x++) {
+            $this->assertEquals('&#160;', end($buffer[6][$x])['char']);
+        }
+    }
+
+
     public function testScrollDown(): void
     {
         $this->process("line1\nline2");

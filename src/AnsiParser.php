@@ -322,36 +322,32 @@ class AnsiParser
 
     private function writeCharToHistory(string $char): void
     {
-        $buffer = &$this->state->getActiveBuffer();
-        $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
-        $absoluteY = $this->state->cursorY + $scrollOffset;
-
-        if (isset($buffer[$absoluteY][$this->state->cursorX])) {
-            $lastIndex = count($buffer[$absoluteY][$this->state->cursorX]) - 1;
-            if (!isset($buffer[$absoluteY][$this->state->cursorX][$lastIndex]['endTime'])) {
-                $buffer[$absoluteY][$this->state->cursorX][$lastIndex]['endTime'] = $this->currentTime;
-            }
-        }
-        $buffer[$absoluteY][$this->state->cursorX][] = [
-            'char'      => htmlspecialchars($char, ENT_XML1),
-            'style'     => $this->state->currentStyle,
-            'startTime' => $this->currentTime,
-        ];
+        $this->writeCharToHistoryAt($this->state->cursorX, $this->state->cursorY, htmlspecialchars($char, ENT_XML1), $this->state->currentStyle);
     }
 
-    private function writeBlankCharToHistory(int $x, int $y): void
+    private function writeCharToHistoryAt(int $x, int $y, string $char, array $style): void
     {
         $buffer = &$this->state->getActiveBuffer();
         $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
         $absoluteY = $y + $scrollOffset;
 
-        $this->endLifespanForLine($absoluteY, $x, 1);
-
+        if (isset($buffer[$absoluteY][$x])) {
+            $lastIndex = count($buffer[$absoluteY][$x]) - 1;
+            if ($lastIndex >= 0 && !isset($buffer[$absoluteY][$x][$lastIndex]['endTime'])) {
+                $buffer[$absoluteY][$x][$lastIndex]['endTime'] = $this->currentTime;
+            }
+        }
         $buffer[$absoluteY][$x][] = [
-            'char'      => '&#160;',
-            'style'     => $this->state->currentStyle,
+            'char'      => $char,
+            'style'     => $style,
             'startTime' => $this->currentTime,
         ];
+    }
+
+
+    private function writeBlankCharToHistory(int $x, int $y): void
+    {
+        $this->writeCharToHistoryAt($x, $y, '&#160;', $this->state->currentStyle);
     }
 
     private function setGraphicsMode(array $params): void
@@ -629,32 +625,29 @@ class AnsiParser
 
     private function doScrollUp(int $n): void
     {
-        $buffer = &$this->state->getActiveBuffer();
         $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
 
         for ($i = 0; $i < $n; $i++) {
             $regionSnapshot = [];
-            for ($y = $this->state->scrollTop + 1; $y <= $this->state->scrollBottom; $y++) {
+            for ($y = $this->state->scrollTop; $y <= $this->state->scrollBottom; $y++) {
                 $absY = $y + $scrollOffset;
-                $regionSnapshot[$y - 1] = $buffer[$absY] ?? [];
+                $regionSnapshot[$y] = $this->state->getActiveBuffer()[$absY] ?? [];
             }
 
             for ($y = $this->state->scrollTop; $y <= $this->state->scrollBottom; $y++) {
                 $this->endLifespanForLine($y + $scrollOffset, 0);
             }
 
-            foreach ($regionSnapshot as $y => $row) {
-                foreach ($row as $x => $lifespans) {
+            for ($y = $this->state->scrollTop + 1; $y <= $this->state->scrollBottom; $y++) {
+                $sourceRow = $regionSnapshot[$y] ?? [];
+                $destY = $y - 1;
+                foreach ($sourceRow as $x => $lifespans) {
                     if (empty($lifespans)) {
                         continue;
                     }
                     $cell = end($lifespans);
                     if (!isset($cell['endTime']) || $cell['endTime'] > $this->currentTime) {
-                        $buffer[$y + $scrollOffset][$x][] = [
-                            'char' => $cell['char'],
-                            'style' => $cell['style'],
-                            'startTime' => $this->currentTime,
-                        ];
+                        $this->writeCharToHistoryAt($x, $destY, $cell['char'], $cell['style']);
                     }
                 }
             }
@@ -664,6 +657,7 @@ class AnsiParser
             }
         }
     }
+
 
     private function doScrollDown(int $n): void
     {
