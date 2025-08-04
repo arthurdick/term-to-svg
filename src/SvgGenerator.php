@@ -197,6 +197,19 @@ SVG;
                         if ($style['bold']) {
                             $textCss .= 'font-weight:bold;';
                         }
+                        if ($style['italic']) {
+                            $textCss .= 'font-style:italic;';
+                        }
+                        if ($style['underline']) {
+                            $textCss .= 'text-decoration:underline;';
+                        }
+                        if ($style['strikethrough']) {
+                            $textCss .= 'text-decoration:line-through;';
+                        }
+                        if ($style['dim']) {
+                            $textCss .= 'opacity:0.5;';
+                        }
+
                         $textClass = $this->getClassName($textCss);
                         $spacePreserveAttr = '';
                         if (str_starts_with($textChunk, ' ') || str_ends_with($textChunk, ' ')) {

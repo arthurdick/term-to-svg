@@ -367,14 +367,36 @@ class AnsiParser
             } elseif ($p === 1) {
                 $this->state->currentStyle['bold'] = true;
                 $handled = true;
+            } elseif ($p === 2) {
+                $this->state->currentStyle['dim'] = true;
+                $handled = true;
+            } elseif ($p === 3) {
+                $this->state->currentStyle['italic'] = true;
+                $handled = true;
+            } elseif ($p === 4) {
+                $this->state->currentStyle['underline'] = true;
+                $handled = true;
             } elseif ($p === 7) {
                 $this->state->currentStyle['inverse'] = true;
                 $handled = true;
+            } elseif ($p === 9) {
+                $this->state->currentStyle['strikethrough'] = true;
+                $handled = true;
             } elseif ($p === 22) {
                 $this->state->currentStyle['bold'] = false;
+                $this->state->currentStyle['dim'] = false;
+                $handled = true;
+            } elseif ($p === 23) {
+                $this->state->currentStyle['italic'] = false;
+                $handled = true;
+            } elseif ($p === 24) {
+                $this->state->currentStyle['underline'] = false;
                 $handled = true;
             } elseif ($p === 27) {
                 $this->state->currentStyle['inverse'] = false;
+                $handled = true;
+            } elseif ($p === 29) {
+                $this->state->currentStyle['strikethrough'] = false;
                 $handled = true;
             } elseif (array_key_exists($p, self::ANSI_16_COLORS)) {
                 $this->state->currentStyle['fg'] = 'fg-' . $p;
