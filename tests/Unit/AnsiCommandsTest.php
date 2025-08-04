@@ -342,6 +342,14 @@ class AnsiCommandsTest extends TestCase
         $this->assertEquals('bg-42', $this->state->currentStyle['bg']);
     }
 
+    public function testSetGraphicsMode24BitColor(): void
+    {
+        $this->process("\x1b[38;2;10;20;30m");
+        $this->assertEquals('#0a141e', $this->state->currentStyle['fg_hex']);
+        $this->process("\x1b[48;2;40;50;60m");
+        $this->assertEquals('#28323c', $this->state->currentStyle['bg_hex']);
+    }
+
     public function testSetGraphicsModeReset(): void
     {
         $this->process("\x1b[1;31;42m");
