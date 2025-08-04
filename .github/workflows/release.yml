@@ -12,6 +12,10 @@ jobs:
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
+    
+    # Add this permissions block to grant the necessary access
+    permissions:
+      contents: write
 
     steps:
       # Step 1: Check out the repository's code so the workflow can access it.
