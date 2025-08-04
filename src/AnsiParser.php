@@ -17,7 +17,7 @@ class AnsiParser
     private const STATE_OSC_STRING = 3;
     private const STATE_CHARSET = 4;
 
-    private const WONT_IMPLEMENT_CSI = ['n', 's', 'u', 't'];
+    private const WONT_IMPLEMENT_CSI = ['n', 't'];
     private const WONT_IMPLEMENT_DEC = [
         '1h', '1l', '12h', '12l', '1000h', '1000l', '1002h', '1002l',
         '1003h', '1003l', '1004h', '1004l', '1005h', '1005l', '1006h', '1006l',
@@ -273,6 +273,14 @@ class AnsiParser
                 break;
             case 'T':
                 $this->doScrollDown($p[0] ?? 1);
+                break;
+	    case 's':
+                $this->state->savedCursorX = $this->state->cursorX;
+                $this->state->savedCursorY = $this->state->cursorY;
+                break;
+            case 'u':
+                $this->state->cursorX = $this->state->savedCursorX;
+                $this->state->cursorY = $this->state->savedCursorY;
                 break;
             default:
                 if (!in_array($command, self::WONT_IMPLEMENT_CSI)) {

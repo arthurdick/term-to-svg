@@ -374,4 +374,24 @@ class AnsiCommandsTest extends TestCase
         $this->assertEquals('g', end($buffer[0][6])['char']);
         $this->assertEquals('h', end($buffer[0][7])['char']);
     }
+    
+    public function testSaveCursorPosition(): void
+    {
+        $this->state->cursorX = 42;
+        $this->state->cursorY = 21;
+        $this->process("\x1b[s"); // Save cursor
+        $this->assertEquals(42, $this->state->savedCursorX);
+        $this->assertEquals(21, $this->state->savedCursorY);
+    }
+
+    public function testRestoreCursorPosition(): void
+    {
+        $this->state->cursorX = 10;
+        $this->state->cursorY = 5;
+        $this->process("\x1b[s"); // Save cursor
+        $this->process("\x1b[20;1H"); // Move cursor
+        $this->process("\x1b[u"); // Restore cursor
+        $this->assertEquals(10, $this->state->cursorX);
+        $this->assertEquals(5, $this->state->cursorY);
+    }
 }
