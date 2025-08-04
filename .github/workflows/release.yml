@@ -1,0 +1,61 @@
+# This workflow is responsible for building the PHAR and creating a GitHub release
+# when a new version tag is pushed.
+name: Release
+
+# This workflow is triggered on pushes to tags that look like a version number (e.g., v1.2.3)
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the repository's code so the workflow can access it.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up PHP. Version is determined by composer.json
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4' # As required by composer.json
+          extensions: mbstring
+          coverage: none # No need for code coverage in a release build
+
+      # Step 3: Get Composer cache directory to speed up dependency installation.
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-dir)" >> $GITHUB_OUTPUT
+
+      # Step 4: Cache Composer dependencies for faster builds.
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      # Step 5: Install dependencies.
+      # The --no-dev and --optimize-autoloader flags are best practice for production builds.
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader
+
+      # Step 6: Build the PHAR archive.
+      # The phar.readonly setting must be disabled to allow PHAR creation.
+      - name: Build PHAR archive
+        run: php -d phar.readonly=0 build.php
+
+      # Step 7: Create a GitHub Release and upload the PHAR file as an asset.
+      # This action uses the tag as the release name and the commit messages since the
+      # last tag as the release body.
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: term-to-svg.phar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
