@@ -88,7 +88,7 @@ class SvgGenerator
         }
 
         return <<<SVG
-<svg width="{$width}" height="{$height}" xmlns="http://www.w3.org/2000/svg" font-family='{$fontFamily}' font-size="{$fontSize}">
+<svg width="{$width}" height="{$height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family='{$fontFamily}' font-size="{$fontSize}">
     <title>Terminal Session Recording</title>
 {$cssStyles}
     <rect width="100%" height="100%" fill="{$bgColor}" />
@@ -191,7 +191,6 @@ SVG;
                         );
                     }
 
-                    // First, check if the chunk contains anything other than whitespace.
                     $trimmedForCheck = trim(str_replace('&#160;', ' ', $textChunk));
                     if ($trimmedForCheck !== '') {
                         $textX = $x * $charWidth;
@@ -203,7 +202,7 @@ SVG;
                         if ($style['italic']) {
                             $textCss .= 'font-style:italic;';
                         }
-                        if ($style['underline']) {
+                        if ($style['underline'] || !empty($style['link'])) {
                             $textCss .= 'text-decoration:underline;';
                         }
                         if ($style['strikethrough']) {
@@ -218,14 +217,13 @@ SVG;
 
                         $textClass = $this->getClassName($textCss);
 
-                        // Add xml:space="preserve" only when necessary to preserve whitespace.
                         $spacePreserveAttr = '';
                         if (str_starts_with($textChunk, ' ') || str_ends_with($textChunk, ' ') || strpos($textChunk, '  ') !== false || strpos($textChunk, '&#160;') !== false) {
                             $spacePreserveAttr = ' xml:space="preserve"';
                         }
 
-                        $textElements .= sprintf(
-                            '        <text class="%s" x="%.2F" y="%.2F"%s>%s%s</text>' . "\n",
+                        $textElement = sprintf(
+                            '<text class="%s" x="%.2F" y="%.2F"%s>%s%s</text>',
                             $textClass,
                             $textX,
                             $textY,
@@ -233,6 +231,16 @@ SVG;
                             $textChunk,
                             $visibilityAnims
                         );
+
+                        if (!empty($style['link'])) {
+                            $textElements .= sprintf(
+                                '        <a href="%s" target="_blank">%s</a>' . "\n",
+                                htmlspecialchars($style['link'], ENT_XML1),
+                                $textElement
+                            );
+                        } else {
+                            $textElements .= '        ' . $textElement . "\n";
+                        }
                     }
                 }
                 $x++;

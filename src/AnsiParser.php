@@ -26,6 +26,7 @@ class AnsiParser
         '2004h', '2004l',
     ];
     private const WONT_IMPLEMENT_ESC = [];
+    private const WONT_IMPLEMENT_OSC = [0, 1, 2, 9, 52, 777];
 
     /** @var array<int, string> The 16 standard ANSI color hex codes. */
     public const ANSI_16_COLORS = [
@@ -38,6 +39,8 @@ class AnsiParser
     private TerminalState $state;
     private array $config;
     private float $currentTime = 0.0;
+    private string $oscBuffer = '';
+
 
     /**
      * @param TerminalState $state The terminal state object to manipulate.
@@ -82,6 +85,7 @@ class AnsiParser
                         $isDecPrivate = false;
                         $state = self::STATE_CSI_PARAM;
                     } elseif ($char === ']') {
+                        $this->oscBuffer = '';
                         $state = self::STATE_OSC_STRING;
                     } elseif ($char === '(') {
                         $state = self::STATE_CHARSET;
@@ -125,10 +129,14 @@ class AnsiParser
                     break;
                 case self::STATE_OSC_STRING:
                     if ($char === "\x07") {
+                        $this->handleOscCommand($this->oscBuffer);
                         $state = self::STATE_GROUND;
                     } elseif ($char === "\x1b" && ($i + 1 < $charCount) && $characters[$i + 1] === '\\') {
-                        $i++;
+                        $this->handleOscCommand($this->oscBuffer);
+                        $i++; // Consume the backslash as well
                         $state = self::STATE_GROUND;
+                    } else {
+                        $this->oscBuffer .= $char;
                     }
                     break;
                 case self::STATE_CSI_PARAM:
@@ -207,6 +215,20 @@ class AnsiParser
         }
         $this->state->recordCursorState($this->currentTime);
     }
+
+    private function handleOscCommand(string $sequence): void
+    {
+        $parts = explode(';', $sequence);
+        $command = (int)array_shift($parts);
+
+        if ($command === 8) {
+            $uri = end($parts);
+            $this->state->currentStyle['link'] = $uri ?: null;
+        } elseif (in_array($command, self::WONT_IMPLEMENT_OSC)) {
+            $this->logWarning("Unsupported OSC command: {$command}");
+        }
+    }
+
 
     private function handleAnsiCommand(string $command, array $params): void
     {

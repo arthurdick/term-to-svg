@@ -100,6 +100,7 @@ class TerminalState
             'invisible' => false,
             'fg_hex' => null,
             'bg_hex' => null,
+            'link' => null,
         ];
     }
 
