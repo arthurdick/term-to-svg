@@ -93,8 +93,9 @@ class TerminalState
             'dim' => false,
             'italic' => false,
             'underline' => false,
-            'strikethrough' => false,
             'inverse' => false,
+            'strikethrough' => false,
+            'invisible' => false,
             'fg_hex' => null,
             'bg_hex' => null,
         ];

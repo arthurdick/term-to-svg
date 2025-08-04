@@ -209,6 +209,9 @@ SVG;
                         if ($style['dim']) {
                             $textCss .= 'opacity:0.5;';
                         }
+                        if ($style['invisible']) {
+                            $textCss .= 'opacity:0;';
+                        }
 
                         $textClass = $this->getClassName($textCss);
                         $spacePreserveAttr = '';

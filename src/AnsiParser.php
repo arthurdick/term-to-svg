@@ -379,6 +379,9 @@ class AnsiParser
             } elseif ($p === 7) {
                 $this->state->currentStyle['inverse'] = true;
                 $handled = true;
+            } elseif ($p === 8) {
+                $this->state->currentStyle['invisible'] = true;
+                $handled = true;
             } elseif ($p === 9) {
                 $this->state->currentStyle['strikethrough'] = true;
                 $handled = true;
@@ -394,6 +397,9 @@ class AnsiParser
                 $handled = true;
             } elseif ($p === 27) {
                 $this->state->currentStyle['inverse'] = false;
+                $handled = true;
+            } elseif ($p === 28) {
+                $this->state->currentStyle['invisible'] = false;
                 $handled = true;
             } elseif ($p === 29) {
                 $this->state->currentStyle['strikethrough'] = false;
