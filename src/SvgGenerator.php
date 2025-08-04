@@ -191,8 +191,9 @@ SVG;
                         );
                     }
 
-                    $trimmedChunk = trim(str_replace('&#160;', ' ', $textChunk));
-                    if ($trimmedChunk !== '') {
+                    // First, check if the chunk contains anything other than whitespace.
+                    $trimmedForCheck = trim(str_replace('&#160;', ' ', $textChunk));
+                    if ($trimmedForCheck !== '') {
                         $textX = $x * $charWidth;
                         $textY = ($y + 1) * $charHeight - ($charHeight - $this->config['font_size']) / 2;
                         $textCss = sprintf('fill:%s;', $fgHex);
@@ -216,10 +217,13 @@ SVG;
                         }
 
                         $textClass = $this->getClassName($textCss);
+
+                        // Add xml:space="preserve" only when necessary to preserve whitespace.
                         $spacePreserveAttr = '';
-                        if (str_starts_with($textChunk, ' ') || str_ends_with($textChunk, ' ')) {
+                        if (str_starts_with($textChunk, ' ') || str_ends_with($textChunk, ' ') || strpos($textChunk, '  ') !== false || strpos($textChunk, '&#160;') !== false) {
                             $spacePreserveAttr = ' xml:space="preserve"';
                         }
+
                         $textElements .= sprintf(
                             '        <text class="%s" x="%.2F" y="%.2F"%s>%s%s</text>' . "\n",
                             $textClass,
