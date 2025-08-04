@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArthurDick\TermToSvg;
 
 /**
@@ -274,7 +276,7 @@ class AnsiParser
             case 'T':
                 $this->doScrollDown($p[0] ?? 1);
                 break;
-	    case 's':
+            case 's':
                 $this->state->savedCursorX = $this->state->cursorX;
                 $this->state->savedCursorY = $this->state->cursorY;
                 break;

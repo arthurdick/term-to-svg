@@ -1,6 +1,8 @@
 #!/usr/bin/env php
 <?php
 
+declare(strict_types=1);
+
 /**
  * USAGE:
  * 1. Record a session: script --timing=rec.time rec.log

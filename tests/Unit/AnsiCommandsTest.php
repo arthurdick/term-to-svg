@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit;
 
 use ArthurDick\TermToSvg\AnsiParser;
@@ -374,7 +376,7 @@ class AnsiCommandsTest extends TestCase
         $this->assertEquals('g', end($buffer[0][6])['char']);
         $this->assertEquals('h', end($buffer[0][7])['char']);
     }
-    
+
     public function testSaveCursorPosition(): void
     {
         $this->state->cursorX = 42;
