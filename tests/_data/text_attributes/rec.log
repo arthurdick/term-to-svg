@@ -1,0 +1,15 @@
+Script started on 2025-08-04 06:31:01-06:00 [COMMAND="./text_demo.sh" TERM="xterm-256color" TTY="/dev/pts/1" COLUMNS="80" LINES="24"]
+Normal Text
+[1mBold Text(B[m
+[3mItalic Text(B[m
+[4mUnderlined Text(B[m
+[2mDim/Faint Text(B[m
+[7mReverse Video Text(B[m
+[7mStandout Text[27m
+This is [8mInvisible Text(B[m, but it's here.
+[9mStrikethrough Text[0m
+
+[1m[4mBold and Underlined Text(B[m
+[1m[2mBold and Dim Text(B[m
+
+Script done on 2025-08-04 06:31:01-06:00 [COMMAND_EXIT_CODE="0"]

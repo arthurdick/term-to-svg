@@ -37,7 +37,8 @@ class SnapshotTest extends TestCase
     {
         return [
             'simple text' => ['simple_text'],
-            'clear screen command' => ['clear_screen']
+            'clear screen command' => ['clear_screen'],
+            'text attributes' => ['text_attributes']
         ];
     }
 }

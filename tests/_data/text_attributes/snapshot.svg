@@ -1,0 +1,80 @@
+<svg width="672" height="406" xmlns="http://www.w3.org/2000/svg" font-family='Menlo, Monaco, "Courier New", monospace' font-size="14">
+    <title>Terminal Session Recording</title>
+    <style>
+      .c1 { fill:#e0e0e0; }
+      .c10 { fill:#e0e0e0;font-weight:bold;opacity:0.5; }
+      .c2 { fill:#e0e0e0;font-weight:bold; }
+      .c3 { fill:#e0e0e0;font-style:italic; }
+      .c4 { fill:#e0e0e0;text-decoration:underline; }
+      .c5 { fill:#e0e0e0;opacity:0.5; }
+      .c6 { fill:#1a1a1a; }
+      .c7 { fill:#e0e0e0;opacity:0; }
+      .c8 { fill:#e0e0e0;text-decoration:line-through; }
+      .c9 { fill:#e0e0e0;font-weight:bold;text-decoration:underline; }
+    </style>
+
+    <rect width="100%" height="100%" fill="#1a1a1a" />
+    <g id="master">
+        <animate id="loop" attributeName="visibility" from="hidden" to="visible" begin="0;loop.end" dur="5.026091s" />
+        <g id="main-screen" display="inline">
+        <set attributeName="display" to="inline" begin="loop.begin" />
+
+            <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
+                <set attributeName="visibility" to="visible" begin="loop.begin" />
+        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="loop.begin" fill="freeze" />
+        <rect class="c1" x="0.00" y="84.00" width="151.20" height="16.80"><set attributeName="visibility" to="visible" begin="loop.begin+0.0165s" /><set attributeName="visibility" to="hidden" begin="loop.begin" /></rect>
+        <rect class="c1" x="0.00" y="100.80" width="109.20" height="16.80"><set attributeName="visibility" to="visible" begin="loop.begin+0.0184s" /><set attributeName="visibility" to="hidden" begin="loop.begin" /></rect>
+        <text class="c1" x="0.00" y="15.40">Normal Text<set attributeName="visibility" to="visible" begin="loop.begin+0.0067s" /><set attributeName="visibility" to="hidden" begin="loop.begin" /></text>
+        <text class="c2" x="0.00" y="32.20">Bold Text<set attributeName="visibility" to="visible" begin="loop.begin+0.0087s" /><set attributeName="visibility" to="hidden" begin="loop.begin" /></text>
+        <text class="c3" x="0.00" y="49.00">Italic Text<set attributeName="visibility" to="visible" begin="loop.begin+0.0106s" /><set attributeName="visibility" to="hidden" begin="loop.begin" /></text>
+        <text class="c4" x="0.00" y="65.80">Underlined Text<set attributeName="visibility" to="visible" begin="loop.begin+0.0126s" /><set attributeName="visibility" to="hidden" begin="loop.begin" /></text>
+        <text class="c5" x="0.00" y="82.60">Dim/Faint Text<set attributeName="visibility" to="visible" begin="loop.begin+0.0145s" /><set attributeName="visibility" to="hidden" begin="loop.begin" /></text>
+        <text class="c6" x="0.00" y="99.40">Reverse Video Text<set attributeName="visibility" to="visible" begin="loop.begin+0.0165s" /><set attributeName="visibility" to="hidden" begin="loop.begin" /></text>
+        <text class="c6" x="0.00" y="116.20">Standout Text<set attributeName="visibility" to="visible" begin="loop.begin+0.0184s" /><set attributeName="visibility" to="hidden" begin="loop.begin" /></text>
+        <text class="c1" x="0.00" y="133.00" xml:space="preserve">This is <set attributeName="visibility" to="visible" begin="loop.begin+0.0204s" /><set attributeName="visibility" to="hidden" begin="loop.begin" /></text>
+        <text class="c7" x="67.20" y="133.00">Invisible Text<set attributeName="visibility" to="visible" begin="loop.begin+0.0204s" /><set attributeName="visibility" to="hidden" begin="loop.begin" /></text>
+        <text class="c1" x="184.80" y="133.00">, but it's here.<set attributeName="visibility" to="visible" begin="loop.begin+0.0204s" /><set attributeName="visibility" to="hidden" begin="loop.begin" /></text>
+        <text class="c8" x="0.00" y="149.80">Strikethrough Text<set attributeName="visibility" to="visible" begin="loop.begin+0.0204s" /><set attributeName="visibility" to="hidden" begin="loop.begin" /></text>
+        <text class="c9" x="0.00" y="183.40">Bold and Underlined Text<set attributeName="visibility" to="visible" begin="loop.begin+0.0232s" /><set attributeName="visibility" to="hidden" begin="loop.begin" /></text>
+        <text class="c10" x="0.00" y="200.20">Bold and Dim Text<set attributeName="visibility" to="visible" begin="loop.begin+0.0261s" /><set attributeName="visibility" to="hidden" begin="loop.begin" /></text>
+
+            </g>
+        </g>
+        <g id="alt-screen" display="none">
+        <set attributeName="display" to="none" begin="loop.begin" />
+
+            <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
+                <set attributeName="visibility" to="visible" begin="loop.begin" />
+        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="loop.begin" fill="freeze" />
+
+            </g>
+        </g>
+        <rect id="cursor" width="8.4" height="16.8" fill="#e0e0e0" opacity="0.7" visibility="visible">
+        <set attributeName="visibility" to="visible" begin="loop.begin+0.0000s" />
+        <set attributeName="x" to="0.00" begin="loop.begin+0.0067s" />
+        <set attributeName="y" to="16.80" begin="loop.begin+0.0067s" />
+        <set attributeName="x" to="0.00" begin="loop.begin+0.0087s" />
+        <set attributeName="y" to="33.60" begin="loop.begin+0.0087s" />
+        <set attributeName="x" to="0.00" begin="loop.begin+0.0106s" />
+        <set attributeName="y" to="50.40" begin="loop.begin+0.0106s" />
+        <set attributeName="x" to="0.00" begin="loop.begin+0.0126s" />
+        <set attributeName="y" to="67.20" begin="loop.begin+0.0126s" />
+        <set attributeName="x" to="0.00" begin="loop.begin+0.0145s" />
+        <set attributeName="y" to="84.00" begin="loop.begin+0.0145s" />
+        <set attributeName="x" to="0.00" begin="loop.begin+0.0165s" />
+        <set attributeName="y" to="100.80" begin="loop.begin+0.0165s" />
+        <set attributeName="x" to="0.00" begin="loop.begin+0.0184s" />
+        <set attributeName="y" to="117.60" begin="loop.begin+0.0184s" />
+        <set attributeName="x" to="0.00" begin="loop.begin+0.0204s" />
+        <set attributeName="y" to="168.00" begin="loop.begin+0.0204s" />
+        <set attributeName="x" to="0.00" begin="loop.begin+0.0232s" />
+        <set attributeName="y" to="184.80" begin="loop.begin+0.0232s" />
+        <set attributeName="x" to="0.00" begin="loop.begin+0.0261s" />
+        <set attributeName="y" to="201.60" begin="loop.begin+0.0261s" />
+        <set attributeName="x" to="0.00" begin="loop.begin"/>
+        <set attributeName="y" to="0.00" begin="loop.begin"/>
+        <set attributeName="visibility" to="visible" begin="loop.begin"/>
+
+        </rect>
+    </g>
+</svg>
