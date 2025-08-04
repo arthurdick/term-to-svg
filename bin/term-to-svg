@@ -43,6 +43,12 @@ if (Phar::running()) {
     }
 }
 
+// --- Check for mbstring extension ---
+if (!extension_loaded('mbstring')) {
+    fwrite(STDERR, "Error: The 'mbstring' PHP extension is required but not installed.\n");
+    exit(1);
+}
+
 
 // --- Main Execution ---
 
