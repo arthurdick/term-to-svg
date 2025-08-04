@@ -348,4 +348,30 @@ class AnsiCommandsTest extends TestCase
         $this->assertEquals('fg-default', $this->state->currentStyle['fg']);
         $this->assertEquals('bg-default', $this->state->currentStyle['bg']);
     }
+
+    /**
+     * Test CSI X (Erase Character).
+     */
+    public function testEraseCharacters(): void
+    {
+        $this->process("abcdefgh");
+        $this->state->cursorX = 2; // Cursor on 'c'
+        $this->process("\x1b[3X"); // Erase 3 characters (c, d, e)
+
+        $buffer = $this->state->mainBuffer;
+
+        // 'a' and 'b' should be unchanged
+        $this->assertEquals('a', end($buffer[0][0])['char']);
+        $this->assertEquals('b', end($buffer[0][1])['char']);
+
+        // 'c', 'd', 'e' should be replaced with blanks
+        $this->assertEquals('&#160;', end($buffer[0][2])['char']);
+        $this->assertEquals('&#160;', end($buffer[0][3])['char']);
+        $this->assertEquals('&#160;', end($buffer[0][4])['char']);
+
+        // 'f', 'g', 'h' should be unchanged
+        $this->assertEquals('f', end($buffer[0][5])['char']);
+        $this->assertEquals('g', end($buffer[0][6])['char']);
+        $this->assertEquals('h', end($buffer[0][7])['char']);
+    }
 }

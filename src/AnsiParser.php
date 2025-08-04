@@ -250,6 +250,9 @@ class AnsiParser
             case 'K':
                 $this->eraseInLine($p[0] ?? 0);
                 break;
+            case 'X':
+                $this->eraseCharacters($p[0] ?? 1);
+                break;
             case '@':
                 $this->insertCharacters($p[0] ?? 1);
                 break;
@@ -505,6 +508,16 @@ class AnsiParser
         }
 
         for ($x = $startX; $x < $endX; $x++) {
+            $this->writeBlankCharToHistory($x, $this->state->cursorY);
+        }
+    }
+
+    private function eraseCharacters(int $n = 1): void
+    {
+        $n = max(1, $n);
+        $endX = min($this->config['cols'], $this->state->cursorX + $n);
+
+        for ($x = $this->state->cursorX; $x < $endX; $x++) {
             $this->writeBlankCharToHistory($x, $this->state->cursorY);
         }
     }
