@@ -1,0 +1,14 @@
+Script started on 2025-08-05 15:36:05-06:00 [COMMAND="bash poster_script.sh" TERM="xterm-256color" TTY="/dev/pts/3" COLUMNS="80" LINES="24"]
+[2J[H$ echo "Hello, Main Screen!"
+Hello, Main Screen!
+$ ls -l
+total 0
+-rw-r--r-- 1 user user 0 Aug  5 15:30 file1.txt
+-rw-r--r-- 1 user user 0 Aug  5 15:30 file2.txt
+$ vim file1.txt[?1049h[HThis is the alternate screen.
+~
+~
+"file1.txt" 1L, 28B
+[?1049l$ Final command.
+
+Script done on 2025-08-05 15:36:11-06:00 [COMMAND_EXIT_CODE="0"]

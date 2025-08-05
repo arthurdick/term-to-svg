@@ -1,0 +1,13 @@
+<svg id="svgc1768074" width="672" height="406" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family='Menlo, Monaco, "Courier New", monospace' font-size="14" text-rendering="geometricPrecision">
+    <title>Terminal Session Recording</title>
+    <style>
+      .c1_svgc1768074 { fill:#e0e0e0; }
+    </style>
+
+    <rect width="100%" height="100%" fill="#1a1a1a" />
+    <g transform="translate(0, -0.00)">        <text class="c1_svgc1768074" x="0.00" y="15.40">This is the alternate screen.</text>
+        <text class="c1_svgc1768074" x="0.00" y="32.20">~</text>
+        <text class="c1_svgc1768074" x="0.00" y="49.00">~</text>
+        <text class="c1_svgc1768074" x="0.00" y="65.80">"file1.txt" 1L, 28B</text>
+</g><rect id="svgc1768074_cursor" width="8.40" height="16.80" fill="#e0e0e0" opacity="0.7" x="0.00" y="67.20" />
+</svg>
