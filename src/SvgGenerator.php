@@ -117,7 +117,7 @@ DEFS;
 {$cssStyles}
     <rect width="100%" height="100%" fill="{$bgColor}" />
     <g id="{$this->uniqueId}_master">
-        <animate id="{$this->uniqueId}_loop" class="loop-animation" attributeName="visibility" from="hidden" to="visible" begin="0;{$this->uniqueId}_loop.end" dur="{$loopDuration}s" />
+        <animate id="{$this->uniqueId}_loop" attributeName="visibility" from="hidden" to="visible" begin="0;{$this->uniqueId}_loop.end" dur="{$loopDuration}s" />
         <g id="{$this->uniqueId}_main-screen" display="inline">
 {$mainAnims}
             <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
@@ -538,3 +538,4 @@ SVG;
         return $this->cssRules[$rule];
     }
 }
+
