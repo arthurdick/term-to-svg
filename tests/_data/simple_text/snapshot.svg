@@ -1,44 +1,44 @@
-<svg id="svga6d1f28d4c2325bddb1e5a71ae53ac44" width="672" height="406" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family='Menlo, Monaco, "Courier New", monospace' font-size="14">
+<svg id="svga6d1f28d" width="672" height="406" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family='Menlo, Monaco, "Courier New", monospace' font-size="14">
     <title>Terminal Session Recording</title>
 
     <style>
-      .c1_svga6d1f28d4c2325bddb1e5a71ae53ac44 { fill:#e0e0e0; }
+      .c1_svga6d1f28d { fill:#e0e0e0; }
     </style>
 
     <rect width="100%" height="100%" fill="#1a1a1a" />
-    <g id="svga6d1f28d4c2325bddb1e5a71ae53ac44_master">
-        <animate id="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop" class="loop-animation" attributeName="visibility" from="hidden" to="visible" begin="0;svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.end" dur="10.203701s" />
-        <g id="svga6d1f28d4c2325bddb1e5a71ae53ac44_main-screen" display="inline">
-        <set attributeName="display" to="inline" begin="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.begin" />
+    <g id="svga6d1f28d_master">
+        <animate id="svga6d1f28d_loop" class="loop-animation" attributeName="visibility" from="hidden" to="visible" begin="0;svga6d1f28d_loop.end" dur="10.203701s" />
+        <g id="svga6d1f28d_main-screen" display="inline">
+        <set attributeName="display" to="inline" begin="svga6d1f28d_loop.begin" />
 
             <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
-                <set attributeName="visibility" to="visible" begin="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.begin" />
-        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.begin" fill="freeze" />
-        <text class="c1_svga6d1f28d4c2325bddb1e5a71ae53ac44" x="0.00" y="15.40">Hello<set attributeName="visibility" to="visible" begin="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.begin+0.5123s" /><set attributeName="visibility" to="hidden" begin="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.begin" /></text>
-        <text class="c1_svga6d1f28d4c2325bddb1e5a71ae53ac44" x="50.40" y="15.40">SVG!<set attributeName="visibility" to="visible" begin="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.begin+5.2037s" /><set attributeName="visibility" to="hidden" begin="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.begin" /></text>
+                <set attributeName="visibility" to="visible" begin="svga6d1f28d_loop.begin" />
+        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="svga6d1f28d_loop.begin" fill="freeze" />
+        <text class="c1_svga6d1f28d" x="0.00" y="15.40">Hello<set attributeName="visibility" to="visible" begin="svga6d1f28d_loop.begin+0.5123s" /><set attributeName="visibility" to="hidden" begin="svga6d1f28d_loop.begin" /></text>
+        <text class="c1_svga6d1f28d" x="50.40" y="15.40">SVG!<set attributeName="visibility" to="visible" begin="svga6d1f28d_loop.begin+5.2037s" /><set attributeName="visibility" to="hidden" begin="svga6d1f28d_loop.begin" /></text>
 
             </g>
         </g>
-        <g id="svga6d1f28d4c2325bddb1e5a71ae53ac44_alt-screen" display="none">
-        <set attributeName="display" to="none" begin="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.begin" />
+        <g id="svga6d1f28d_alt-screen" display="none">
+        <set attributeName="display" to="none" begin="svga6d1f28d_loop.begin" />
 
             <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
-                <set attributeName="visibility" to="visible" begin="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.begin" />
-        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.begin" fill="freeze" />
+                <set attributeName="visibility" to="visible" begin="svga6d1f28d_loop.begin" />
+        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="svga6d1f28d_loop.begin" fill="freeze" />
 
             </g>
         </g>
-        <rect id="svga6d1f28d4c2325bddb1e5a71ae53ac44_cursor" width="8.4" height="16.8" fill="#e0e0e0" opacity="0.7" visibility="visible">
-        <set attributeName="visibility" to="visible" begin="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.begin+0.0000s" />
-        <set attributeName="x" to="42.00" begin="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.begin+0.5123s" />
-        <set attributeName="y" to="0.00" begin="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.begin+0.5123s" />
-        <set attributeName="x" to="50.40" begin="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.begin+1.7469s" />
-        <set attributeName="y" to="0.00" begin="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.begin+1.7469s" />
-        <set attributeName="x" to="84.00" begin="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.begin+5.2037s" />
-        <set attributeName="y" to="0.00" begin="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.begin+5.2037s" />
-        <set attributeName="x" to="0.00" begin="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.begin"/>
-        <set attributeName="y" to="0.00" begin="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.begin"/>
-        <set attributeName="visibility" to="visible" begin="svga6d1f28d4c2325bddb1e5a71ae53ac44_loop.begin"/>
+        <rect id="svga6d1f28d_cursor" width="8.4" height="16.8" fill="#e0e0e0" opacity="0.7" visibility="visible">
+        <set attributeName="visibility" to="visible" begin="svga6d1f28d_loop.begin+0.0000s" />
+        <set attributeName="x" to="42.00" begin="svga6d1f28d_loop.begin+0.5123s" />
+        <set attributeName="y" to="0.00" begin="svga6d1f28d_loop.begin+0.5123s" />
+        <set attributeName="x" to="50.40" begin="svga6d1f28d_loop.begin+1.7469s" />
+        <set attributeName="y" to="0.00" begin="svga6d1f28d_loop.begin+1.7469s" />
+        <set attributeName="x" to="84.00" begin="svga6d1f28d_loop.begin+5.2037s" />
+        <set attributeName="y" to="0.00" begin="svga6d1f28d_loop.begin+5.2037s" />
+        <set attributeName="x" to="0.00" begin="svga6d1f28d_loop.begin"/>
+        <set attributeName="y" to="0.00" begin="svga6d1f28d_loop.begin"/>
+        <set attributeName="visibility" to="visible" begin="svga6d1f28d_loop.begin"/>
 
         </rect>
     </g>

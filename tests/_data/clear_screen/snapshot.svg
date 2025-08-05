@@ -1,42 +1,42 @@
-<svg id="svg1bc0b8db6d75e059e06dc700fd5641a9" width="672" height="406" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family='Menlo, Monaco, "Courier New", monospace' font-size="14">
+<svg id="svg1bc0b8db" width="672" height="406" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family='Menlo, Monaco, "Courier New", monospace' font-size="14">
     <title>Terminal Session Recording</title>
 
     <style>
-      .c1_svg1bc0b8db6d75e059e06dc700fd5641a9 { fill:#e0e0e0; }
+      .c1_svg1bc0b8db { fill:#e0e0e0; }
     </style>
 
     <rect width="100%" height="100%" fill="#1a1a1a" />
-    <g id="svg1bc0b8db6d75e059e06dc700fd5641a9_master">
-        <animate id="svg1bc0b8db6d75e059e06dc700fd5641a9_loop" class="loop-animation" attributeName="visibility" from="hidden" to="visible" begin="0;svg1bc0b8db6d75e059e06dc700fd5641a9_loop.end" dur="6.2s" />
-        <g id="svg1bc0b8db6d75e059e06dc700fd5641a9_main-screen" display="inline">
-        <set attributeName="display" to="inline" begin="svg1bc0b8db6d75e059e06dc700fd5641a9_loop.begin" />
+    <g id="svg1bc0b8db_master">
+        <animate id="svg1bc0b8db_loop" class="loop-animation" attributeName="visibility" from="hidden" to="visible" begin="0;svg1bc0b8db_loop.end" dur="6.2s" />
+        <g id="svg1bc0b8db_main-screen" display="inline">
+        <set attributeName="display" to="inline" begin="svg1bc0b8db_loop.begin" />
 
             <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
-                <set attributeName="visibility" to="visible" begin="svg1bc0b8db6d75e059e06dc700fd5641a9_loop.begin" />
-        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="svg1bc0b8db6d75e059e06dc700fd5641a9_loop.begin" fill="freeze" />
-        <text class="c1_svg1bc0b8db6d75e059e06dc700fd5641a9" x="0.00" y="15.40">Hello<set attributeName="visibility" to="visible" begin="svg1bc0b8db6d75e059e06dc700fd5641a9_loop.begin+0.5000s" /><set attributeName="visibility" to="hidden" begin="svg1bc0b8db6d75e059e06dc700fd5641a9_loop.begin+1.0000s" /><set attributeName="visibility" to="hidden" begin="svg1bc0b8db6d75e059e06dc700fd5641a9_loop.begin" /></text>
-        <text class="c1_svg1bc0b8db6d75e059e06dc700fd5641a9" x="42.00" y="15.40">Clear<set attributeName="visibility" to="visible" begin="svg1bc0b8db6d75e059e06dc700fd5641a9_loop.begin+1.2000s" /><set attributeName="visibility" to="hidden" begin="svg1bc0b8db6d75e059e06dc700fd5641a9_loop.begin" /></text>
+                <set attributeName="visibility" to="visible" begin="svg1bc0b8db_loop.begin" />
+        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="svg1bc0b8db_loop.begin" fill="freeze" />
+        <text class="c1_svg1bc0b8db" x="0.00" y="15.40">Hello<set attributeName="visibility" to="visible" begin="svg1bc0b8db_loop.begin+0.5000s" /><set attributeName="visibility" to="hidden" begin="svg1bc0b8db_loop.begin+1.0000s" /><set attributeName="visibility" to="hidden" begin="svg1bc0b8db_loop.begin" /></text>
+        <text class="c1_svg1bc0b8db" x="42.00" y="15.40">Clear<set attributeName="visibility" to="visible" begin="svg1bc0b8db_loop.begin+1.2000s" /><set attributeName="visibility" to="hidden" begin="svg1bc0b8db_loop.begin" /></text>
 
             </g>
         </g>
-        <g id="svg1bc0b8db6d75e059e06dc700fd5641a9_alt-screen" display="none">
-        <set attributeName="display" to="none" begin="svg1bc0b8db6d75e059e06dc700fd5641a9_loop.begin" />
+        <g id="svg1bc0b8db_alt-screen" display="none">
+        <set attributeName="display" to="none" begin="svg1bc0b8db_loop.begin" />
 
             <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
-                <set attributeName="visibility" to="visible" begin="svg1bc0b8db6d75e059e06dc700fd5641a9_loop.begin" />
-        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="svg1bc0b8db6d75e059e06dc700fd5641a9_loop.begin" fill="freeze" />
+                <set attributeName="visibility" to="visible" begin="svg1bc0b8db_loop.begin" />
+        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="svg1bc0b8db_loop.begin" fill="freeze" />
 
             </g>
         </g>
-        <rect id="svg1bc0b8db6d75e059e06dc700fd5641a9_cursor" width="8.4" height="16.8" fill="#e0e0e0" opacity="0.7" visibility="visible">
-        <set attributeName="visibility" to="visible" begin="svg1bc0b8db6d75e059e06dc700fd5641a9_loop.begin+0.0000s" />
-        <set attributeName="x" to="42.00" begin="svg1bc0b8db6d75e059e06dc700fd5641a9_loop.begin+0.5000s" />
-        <set attributeName="y" to="0.00" begin="svg1bc0b8db6d75e059e06dc700fd5641a9_loop.begin+0.5000s" />
-        <set attributeName="x" to="84.00" begin="svg1bc0b8db6d75e059e06dc700fd5641a9_loop.begin+1.2000s" />
-        <set attributeName="y" to="0.00" begin="svg1bc0b8db6d75e059e06dc700fd5641a9_loop.begin+1.2000s" />
-        <set attributeName="x" to="0.00" begin="svg1bc0b8db6d75e059e06dc700fd5641a9_loop.begin"/>
-        <set attributeName="y" to="0.00" begin="svg1bc0b8db6d75e059e06dc700fd5641a9_loop.begin"/>
-        <set attributeName="visibility" to="visible" begin="svg1bc0b8db6d75e059e06dc700fd5641a9_loop.begin"/>
+        <rect id="svg1bc0b8db_cursor" width="8.4" height="16.8" fill="#e0e0e0" opacity="0.7" visibility="visible">
+        <set attributeName="visibility" to="visible" begin="svg1bc0b8db_loop.begin+0.0000s" />
+        <set attributeName="x" to="42.00" begin="svg1bc0b8db_loop.begin+0.5000s" />
+        <set attributeName="y" to="0.00" begin="svg1bc0b8db_loop.begin+0.5000s" />
+        <set attributeName="x" to="84.00" begin="svg1bc0b8db_loop.begin+1.2000s" />
+        <set attributeName="y" to="0.00" begin="svg1bc0b8db_loop.begin+1.2000s" />
+        <set attributeName="x" to="0.00" begin="svg1bc0b8db_loop.begin"/>
+        <set attributeName="y" to="0.00" begin="svg1bc0b8db_loop.begin"/>
+        <set attributeName="visibility" to="visible" begin="svg1bc0b8db_loop.begin"/>
 
         </rect>
     </g>
