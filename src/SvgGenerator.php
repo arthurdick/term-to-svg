@@ -538,4 +538,3 @@ SVG;
         return $this->cssRules[$rule];
     }
 }
-
