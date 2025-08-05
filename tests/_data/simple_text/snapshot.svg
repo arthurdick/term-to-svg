@@ -7,7 +7,7 @@
 
     <rect width="100%" height="100%" fill="#1a1a1a" />
     <g id="svga6d1f28d_master">
-        <animate id="svga6d1f28d_loop" class="loop-animation" attributeName="visibility" from="hidden" to="visible" begin="0;svga6d1f28d_loop.end" dur="10.203701s" />
+        <animate id="svga6d1f28d_loop" attributeName="visibility" from="hidden" to="visible" begin="0;svga6d1f28d_loop.end" dur="10.203701s" />
         <g id="svga6d1f28d_main-screen" display="inline">
         <set attributeName="display" to="inline" begin="svga6d1f28d_loop.begin" />
 

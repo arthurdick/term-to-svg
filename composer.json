@@ -41,6 +41,7 @@
     ],
     "scripts": {
         "test": "phpunit",
+        "test:update-snapshots": "php scripts/update_snapshots.php",
         "fix": "php-cs-fixer fix",
         "build": [
             "echo 'Temporarily moving dev dependencies...'",

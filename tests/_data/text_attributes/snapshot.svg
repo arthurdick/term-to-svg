@@ -16,7 +16,7 @@
 
     <rect width="100%" height="100%" fill="#1a1a1a" />
     <g id="svg83ce12b4_master">
-        <animate id="svg83ce12b4_loop" class="loop-animation" attributeName="visibility" from="hidden" to="visible" begin="0;svg83ce12b4_loop.end" dur="5.026091s" />
+        <animate id="svg83ce12b4_loop" attributeName="visibility" from="hidden" to="visible" begin="0;svg83ce12b4_loop.end" dur="5.026091s" />
         <g id="svg83ce12b4_main-screen" display="inline">
         <set attributeName="display" to="inline" begin="svg83ce12b4_loop.begin" />
 
