@@ -7,7 +7,7 @@ declare(strict_types=1);
  * USAGE:
  * 1. Record a session: script --timing=rec.time rec.log
  * 2. Run commands in the new shell, then type `exit`.
- * 3. Convert to SVG: ./term-to-svg rec.log rec.time output.svg
+ * 3. Convert to SVG: ./term-to-svg -t rec.log -i rec.time -o output.svg
  */
 
 use ArthurDick\TermToSvg\Config;
@@ -49,41 +49,102 @@ if (!extension_loaded('mbstring')) {
     exit(1);
 }
 
-
 // --- Main Execution ---
 
+function print_help()
+{
+    echo "Usage: term-to-svg [options]\n";
+    echo "\n";
+    echo "Options:\n";
+    echo "  -t, --typescript_file <file>  Path to the typescript file (required).\n";
+    echo "  -i, --timing_file <file>      Path to the timing file (required).\n";
+    echo "  -o, --output_file <file>      Path to the output SVG file (required).\n";
+    echo "  --rows <number>           Number of terminal rows.\n";
+    echo "  --cols <number>           Number of terminal columns.\n";
+    echo "  --font_size <number>      Font size.\n";
+    echo "  --line_height_factor <float> Line height factor.\n";
+    echo "  --font_width_factor <float> Font width factor.\n";
+    echo "  --font_family <string>    Font family.\n";
+    echo "  --default_fg <hex>        Default foreground color.\n";
+    echo "  --default_bg <hex>        Default background color.\n";
+    echo "  --animation_pause_seconds <number> Animation pause in seconds at the end.\n";
+    echo "  --interactive             Enable interactive player controls.\n";
+    echo "  -v, --version             Display the version number.\n";
+    echo "  --help                    Display this help message.\n";
+    exit(0);
+}
+
+$short_options = "vt:i:o:";
+$long_options = [
+    "typescript_file:",
+    "timing_file:",
+    "output_file:",
+    "rows:",
+    "cols:",
+    "font_size:",
+    "line_height_factor:",
+    "font_width_factor:",
+    "font_family:",
+    "default_fg:",
+    "default_bg:",
+    "animation_pause_seconds:",
+    "interactive",
+    "version",
+    "help",
+];
+
+$options = getopt($short_options, $long_options);
+
+if (isset($options['help'])) {
+    print_help();
+}
+
 // Handle version flag
-if ($argc > 1 && in_array($argv[1], ['-v', '--version'])) {
+if (isset($options['v']) || isset($options['version'])) {
     echo 'term-to-svg version ' . TerminalToSvgConverter::VERSION . "\n";
     exit(0);
 }
 
-if ($argc < 4) {
-    echo "Usage: term-to-svg <typescript_file> <timing_file> <output_svg_file>\n";
-    echo "       term-to-svg --version\n";
+$options['typescript_file'] = $options['t'] ?? $options['typescript_file'] ?? null;
+$options['timing_file'] = $options['i'] ?? $options['timing_file'] ?? null;
+$options['output_file'] = $options['o'] ?? $options['output_file'] ?? null;
+
+
+if (!$options['typescript_file'] || !$options['timing_file'] || !$options['output_file']) {
+    echo "Error: --typescript_file (-t), --timing_file (-i), and --output_file (-o) are required options.\n";
+    echo "Use --help for more information.\n";
     exit(1);
 }
 
 // Resolve arguments to absolute paths to ensure they can be found when run from the PHAR
-$typescriptFile = realpath($argv[1]);
-$timingFile = realpath($argv[2]);
+$typescriptFile = realpath($options['typescript_file']);
+$timingFile = realpath($options['timing_file']);
 // The output file path can be relative, so we don't use realpath on it.
-$outputFile = $argv[3];
+$outputFile = $options['output_file'];
 
 
 if ($typescriptFile === false || !is_readable($typescriptFile)) {
-    echo "Error: Typescript file not found or is not readable: {$argv[1]}\n";
+    echo "Error: Typescript file not found or is not readable: {$options['typescript_file']}\n";
     exit(1);
 }
 
 if ($timingFile === false || !is_readable($timingFile)) {
-    echo "Error: Timing file not found or is not readable: {$argv[2]}\n";
+    echo "Error: Timing file not found or is not readable: {$options['timing_file']}\n";
     exit(1);
 }
 
 try {
+    // Get default config and override with command-line options
+    $config = Config::DEFAULTS;
+    foreach ($long_options as $long_opt) {
+        $opt = rtrim($long_opt, ':');
+        if (isset($options[$opt])) {
+            $config[$opt] = $options[$opt];
+        }
+    }
+
     // Use the new Config class for default settings
-    $converter = new TerminalToSvgConverter($typescriptFile, $timingFile, Config::DEFAULTS);
+    $converter = new TerminalToSvgConverter($typescriptFile, $timingFile, $config);
     $svgContent = $converter->convert();
     file_put_contents($outputFile, $svgContent);
     echo "✅ Successfully generated animated SVG: {$outputFile}\n";

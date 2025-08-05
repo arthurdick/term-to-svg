@@ -12,7 +12,7 @@ Unlike GIF animations, SVG files are vector-based, resulting in sharper visuals 
 
   * **High Fidelity Playback**: Accurately interprets ANSI escape codes for cursor movement, color changes, inverse video, character/line manipulation, scroll regions, and screen clearing to reproduce your terminal session as precisely as possible.
   * **Animated SVG Output**: Generates a single SVG file that animates the terminal session, making it ideal for web embedding. The animations are powered by SMIL (Synchronized Multimedia Integration Language).
-  * **Configurable**: Supports configuration for terminal dimensions, font size, font family, and default colors.
+  * **Configurable**: Supports configuration for terminal dimensions, font size, font family, and default colors via command-line flags.
   * **Automatic Geometry Detection**: Can automatically detect terminal dimensions from the `script` log file if available.
   * **Lightweight**: A lightweight PHP application with no external runtime dependencies.
 
@@ -35,7 +35,7 @@ This method provides a single, executable file, but **requires PHP to be install
     ```
 3.  **Run:** You can now run the tool directly.
     ```bash
-    ./term-to-svg.phar my_session.log my_session.time output.svg
+    ./term-to-svg.phar -t my_session.log -i my_session.time -o output.svg
     ```
 
 #### Making it Globally Available (Optional)
@@ -53,11 +53,9 @@ To run `term-to-svg` from any directory without typing `./term-to-svg.phar`, you
 
 If it's not found, ensure `/usr/local/bin` is in your `PATH`. You can check with `echo $PATH`. If it's missing, add it to your shell's startup file (e.g., `~/.bashrc`, `~/.zshrc`):
 
-````
 ```bash
 export PATH="/usr/local/bin:$PATH"
 ```
-````
 
 ### Method 2: Global Install with Composer
 
@@ -70,7 +68,7 @@ export PATH="/usr/local/bin:$PATH"
 2.  **Update PATH:** Make sure your Composer `bin` directory is in your system's `PATH`.
 3.  **Run:**
     ```bash
-    term-to-svg my_session.log my_session.time output.svg
+    term-to-svg -t my_session.log -i my_session.time -o output.svg
     ```
 
 ### Method 3: From Source
@@ -79,7 +77,7 @@ export PATH="/usr/local/bin:$PATH"
 
 1.  **Clone:** Clone the repository to your local machine.
     ```bash
-    git clone https://github.com/arthurdick/term-to-svg.git
+    git clone [https://github.com/arthurdick/term-to-svg.git](https://github.com/arthurdick/term-to-svg.git)
     cd term-to-svg
     ```
 2.  **Install Dependencies:**
@@ -88,7 +86,7 @@ export PATH="/usr/local/bin:$PATH"
     ```
 3.  **Run:** Execute the script using PHP.
     ```bash
-    php bin/term-to-svg my_session.log my_session.time output.svg
+    php bin/term-to-svg -t my_session.log -i my_session.time -o output.svg
     ```
 
 -----
@@ -110,34 +108,30 @@ You will now have two files: `rec.log` (the terminal output) and `rec.time` (the
 
 ## Configuration
 
-To customize the output, you can create your own executable script. The default configuration is available as a public constant in the `ArthurDick\TermToSvg\Config` class.
+You can customize the output by using command-line flags. Run `term-to-svg --help` to see all available options.
 
-Example custom script:
+```
+Usage: term-to-svg [options]
 
-```php
-#!/usr/bin/env php
-<?php
-
-use ArthurDick\TermToSvg\Config;
-use ArthurDick\TermToSvg\TerminalToSvgConverter;
-
-require_once __DIR__ . '/vendor/autoload.php';
-
-// 1. Get default config
-$config = Config::DEFAULTS;
-
-// 2. Modify it
-$config['font_family'] = 'Fira Code, monospace';
-$config['font_size'] = 16;
-$config['default_bg'] = '#282a36'; // Dracula theme
-
-// 3. Run the converter with your custom config
-$converter = new TerminalToSvgConverter($argv[1], $argv[2], $config);
-$svgContent = $converter->convert();
-file_put_contents($argv[3], $svgContent);
+Options:
+  -t, --typescript_file <file>  Path to the typescript file (required).
+  -i, --timing_file <file>      Path to the timing file (required).
+  -o, --output_file <file>      Path to the output SVG file (required).
+  --rows <number>           Number of terminal rows.
+  --cols <number>           Number of terminal columns.
+  --font_size <number>      Font size.
+  --line_height_factor <float> Line height factor.
+  --font_width_factor <float> Font width factor.
+  --font_family <string>    Font family.
+  --default_fg <hex>        Default foreground color.
+  --default_bg <hex>        Default background color.
+  --animation_pause_seconds <number> Animation pause in seconds at the end.
+  --interactive             Enable interactive player controls.
+  -v, --version             Display the version number.
+  --help                    Display this help message.
 ```
 
-**Note on Geometry Detection**: If your `rec.log` file was generated with a `script` version that includes `COLUMNS` and `LINES` information in its first line (e.g., `COLUMNS="80" LINES="24"`), the script will automatically use these dimensions, overriding the `rows` and `cols` in your configuration.
+**Note on Geometry Detection**: If your `rec.log` file was generated with a `script` version that includes `COLUMNS` and `LINES` information in its first line (e.g., `COLUMNS="80" LINES="24"`), the script will automatically use these dimensions, overriding the `--rows` and `--cols` flags.
 
 -----
 
@@ -151,7 +145,7 @@ file_put_contents($argv[3], $svgContent);
 
 ## Contributing
 
-Contributions are welcome\! If you find a bug or have a feature request, please open an issue or submit a pull request.
+Contributions are welcome! If you find a bug or have a feature request, please open an issue or submit a pull request.
 
 ## License
 
