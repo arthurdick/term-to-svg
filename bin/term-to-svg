@@ -137,9 +137,15 @@ try {
     // Get default config and override with command-line options
     $config = Config::DEFAULTS;
     foreach ($long_options as $long_opt) {
+        $isFlag = !str_ends_with($long_opt, ':');
         $opt = rtrim($long_opt, ':');
+
         if (isset($options[$opt])) {
-            $config[$opt] = $options[$opt];
+            if ($isFlag) {
+                $config[$opt] = true;
+            } else {
+                $config[$opt] = $options[$opt];
+            }
         }
     }
 
