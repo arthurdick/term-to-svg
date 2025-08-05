@@ -461,7 +461,7 @@ SVG;
                         $bgClass = $this->getClassName($bgRule);
 
                         $rectElements .= sprintf(
-                            '        <rect class="%s" x="%.2F" y="%.2F" width="%.2F" height="%.2F">%s</rect>' . "\n",
+                            '<rect class="%s" x="%.2F" y="%.2F" width="%.2F" height="%.2F">%s</rect>',
                             $bgClass,
                             $rectX,
                             $rectY,
@@ -514,12 +514,12 @@ SVG;
 
                         if (!empty($style['link'])) {
                             $textElements .= sprintf(
-                                '        <a href="%s" target="_blank">%s</a>' . "\n",
+                                '<a href="%s" target="_blank">%s</a>',
                                 htmlspecialchars($style['link'], ENT_XML1),
                                 $textElement
                             );
                         } else {
-                            $textElements .= '        ' . $textElement . "\n";
+                            $textElements .= $textElement;
                         }
                     }
                 }
@@ -585,7 +585,7 @@ SVG;
                     $rectY = $y * $charHeight;
                     $bgRule = sprintf('fill:%s;', $bgHex);
                     $bgClass = $this->getClassName($bgRule);
-                    $rectElements .= sprintf('        <rect class="%s" x="%.2F" y="%.2F" width="%.2F" height="%.2F" />' . "\n", $bgClass, $rectX, $rectY, $chunkWidth, $charHeight);
+                    $rectElements .= sprintf('<rect class="%s" x="%.2F" y="%.2F" width="%.2F" height="%.2F" />', $bgClass, $rectX, $rectY, $chunkWidth, $charHeight);
                 }
 
                 if (trim(str_replace('&#160;', ' ', $textChunk)) !== '') {
@@ -617,9 +617,9 @@ SVG;
                     $textElement = sprintf('<text class="%s" x="%.2F" y="%.2F"%s>%s</text>', $textClass, $textX, $textY, $spacePreserveAttr, $textChunk);
 
                     if (!empty($style['link'])) {
-                        $textElements .= sprintf('        <a href="%s" target="_blank">%s</a>' . "\n", htmlspecialchars($style['link'], ENT_XML1), $textElement);
+                        $textElements .= sprintf('<a href="%s" target="_blank">%s</a>', htmlspecialchars($style['link'], ENT_XML1), $textElement);
                     } else {
-                        $textElements .= '        ' . $textElement . "\n";
+                        $textElements .= $textElement;
                     }
                 }
 
