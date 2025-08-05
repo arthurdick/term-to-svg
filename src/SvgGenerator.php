@@ -241,6 +241,7 @@ SVG;
                     this.isScrubbing = false;
                     if (this.isPlaying) {
                         this.svg.unpauseAnimations();
+                        requestAnimationFrame(() => this.animationLoop());
                     }
                 },
 
