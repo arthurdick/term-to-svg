@@ -25,5 +25,6 @@ class Config
         'default_fg' => '#e0e0e0', // Default text color
         'default_bg' => '#1a1a1a', // Terminal background color
         'animation_pause_seconds' => 5,
+        'interactive' => false,
     ];
 }

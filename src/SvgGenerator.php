@@ -42,9 +42,14 @@ class SvgGenerator
         $svgWidth = $charWidth * $this->config['cols'];
         $svgHeight = ($charHeight * $this->config['rows']) + ($this->config['font_size'] * 0.2);
 
+        $interactiveControls = '';
+        if ($this->config['interactive']) {
+            $interactiveControls = $this->getInteractiveControls($svgHeight, $svgWidth, $this->totalDuration);
+            $svgHeight += 50;
+        }
+
         list($mainText, $mainRects, $mainScroll) = $this->renderBuffer($this->state->mainBuffer, $this->state->mainScrollEvents, $charHeight, $charWidth);
         list($altText, $altRects, $altScroll) = $this->renderBuffer($this->state->altBuffer, $this->state->altScrollEvents, $charHeight, $charWidth);
-
         $cursorAnims = $this->generateCursorAnimations($charWidth, $charHeight);
         $mainAnims = '';
         $altAnims = '';
@@ -62,10 +67,11 @@ class SvgGenerator
         $mainAnims .= '        <set attributeName="display" to="inline" begin="loop.begin" />' . "\n";
         $altAnims .= '        <set attributeName="display" to="none" begin="loop.begin" />' . "\n";
 
-        return $this->getSvgTemplate($svgWidth, $svgHeight, $mainText, $mainRects, $mainScroll, $altText, $altRects, $altScroll, $mainAnims, $altAnims, $cursorAnims);
+        return $this->getSvgTemplate($svgWidth, $svgHeight, $mainText, $mainRects, $mainScroll, $altText, $altRects, $altScroll, $mainAnims, $altAnims, $cursorAnims, $interactiveControls);
     }
 
-    private function getSvgTemplate(float $width, float $height, string $mainText, string $mainRects, string $mainScroll, string $altText, string $altRects, string $altScroll, string $mainAnims, string $altAnims, string $cursorAnims): string
+
+    private function getSvgTemplate(float $width, float $height, string $mainText, string $mainRects, string $mainScroll, string $altText, string $altRects, string $altScroll, string $mainAnims, string $altAnims, string $cursorAnims, string $interactiveControls): string
     {
         $fontFamily = $this->config['font_family'];
         $fontSize = $this->config['font_size'];
@@ -73,9 +79,10 @@ class SvgGenerator
         $fgColor = $this->config['default_fg'];
         $cursorWidth = $this->config['font_size'] * 0.6;
         $cursorHeight = $this->config['font_size'] * $this->config['line_height_factor'];
+        
         $loopDuration = $this->totalDuration + $this->config['animation_pause_seconds'];
-        $resetScroll = '        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="loop.begin" fill="freeze" />' . "\n";
 
+        $resetScroll = '        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="loop.begin" fill="freeze" />' . "\n";
         $cssStyles = '';
         if (!empty($this->cssRules)) {
             $cssStyles .= "    <style>\n";
@@ -87,13 +94,24 @@ class SvgGenerator
             $cssStyles .= "    </style>\n";
         }
 
+        $playerDefs = '';
+        if ($this->config['interactive']) {
+            $playerDefs = <<<DEFS
+    <defs>
+        <g id="play-icon"><path d="M4 2 L12 8 L4 14 Z" fill="white" /></g>
+        <g id="pause-icon"><path d="M4 2 H6 V14 H4 Z M10 2 H12 V14 H10 Z" fill="white" /></g>
+    </defs>
+DEFS;
+        }
+
         return <<<SVG
 <svg width="{$width}" height="{$height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family='{$fontFamily}' font-size="{$fontSize}">
     <title>Terminal Session Recording</title>
+{$playerDefs}
 {$cssStyles}
     <rect width="100%" height="100%" fill="{$bgColor}" />
     <g id="master">
-        <animate id="loop" attributeName="visibility" from="hidden" to="visible" begin="0;loop.end" dur="{$loopDuration}s" />
+        <animate id="loop" class="loop-animation" attributeName="visibility" from="hidden" to="visible" begin="0;loop.end" dur="{$loopDuration}s" />
         <g id="main-screen" display="inline">
 {$mainAnims}
             <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
@@ -112,8 +130,147 @@ class SvgGenerator
 {$cursorAnims}
         </rect>
     </g>
+    {$interactiveControls}
 </svg>
 SVG;
+    }
+
+
+    private function getInteractiveControls(float $y, float $width, float $totalDuration): string
+    {
+        $barHeight = 50;
+        $buttonWidth = 40;
+        $padding = 10;
+        $animationPauseSeconds = $this->config['animation_pause_seconds'];
+        $scrubBarStartX = $padding + $buttonWidth + $padding;
+        $timeDisplayWidth = 120;
+        $scrubBarWidth = $width - $scrubBarStartX - $timeDisplayWidth - $padding;
+        $iconTranslateX = $padding + 12;
+        $iconTranslateY = $padding + 7;
+        $timeDisplayTextX = $scrubBarStartX + $scrubBarWidth + $padding;
+        $initialTimeText = sprintf("0.00s / %.2fs", $totalDuration);
+        
+        $scriptTemplate = <<<JS
+//<![CDATA[
+        (function() {
+            const scriptTag = document.currentScript;
+            const svg = scriptTag.ownerSVGElement;
+            const controls = scriptTag.previousElementSibling;
+            
+            const playPauseBtn = controls.querySelector('.play-pause-btn');
+            const playerIcon = controls.querySelector('.player-icon');
+            const timeDisplay = controls.querySelector('.time-display');
+            const scrubThumb = controls.querySelector('.scrub-thumb');
+
+            const totalDuration = %.4F;
+            const animationPause = %.4F;
+            const loopDuration = totalDuration + animationPause;
+            const scrubBarWidth = %.4F;
+            const scrubBarStartX = %.4F;
+
+            let isPlaying = true;
+            let isScrubbing = false;
+
+            function updatePlayerVisuals() {
+                const masterTime = svg.getCurrentTime();
+                // Use the modulo operator to find the time within the current loop cycle.
+                const effectiveTime = masterTime %% loopDuration;
+                // Clamp the display time to the actual animation duration (not the pause).
+                const displayTime = Math.min(effectiveTime, totalDuration);
+                
+                let percentage = displayTime / totalDuration;
+                const thumbX = scrubBarStartX + (percentage * scrubBarWidth);
+
+                scrubThumb.setAttribute('x', thumbX);
+                timeDisplay.textContent = `\${displayTime.toFixed(2)}s / \${totalDuration.toFixed(2)}s`;
+                
+                // Show play icon during the pause phase after the animation ends.
+                if (effectiveTime > totalDuration && isPlaying) {
+                    playerIcon.setAttribute('href', '#play-icon');
+                } else if (isPlaying) {
+                    playerIcon.setAttribute('href', '#pause-icon');
+                }
+            }
+
+            function animationLoop() {
+                if (!isPlaying) return;
+                if (!isScrubbing) {
+                    updatePlayerVisuals();
+                }
+                requestAnimationFrame(animationLoop);
+            }
+
+            playPauseBtn.addEventListener('click', () => {
+                isPlaying = !isPlaying;
+                if (isPlaying) {
+                    svg.unpauseAnimations();
+                    playerIcon.setAttribute('href', '#pause-icon');
+                    requestAnimationFrame(animationLoop);
+                } else {
+                    svg.pauseAnimations();
+                    playerIcon.setAttribute('href', '#play-icon');
+                }
+            });
+
+            function handleScrub(e) {
+                const clickX = e.clientX - svg.getBoundingClientRect().left;
+                let percentage = (clickX - scrubBarStartX) / scrubBarWidth;
+                percentage = Math.max(0, Math.min(1, percentage));
+                // When scrubbing, we set the time on the master timeline.
+                // To ensure it doesn't jump into a pause, we find the current loop number
+                // and add the scrubbed time to the start of that loop.
+                const currentLoop = Math.floor(svg.getCurrentTime() / loopDuration);
+                const time = (currentLoop * loopDuration) + (percentage * totalDuration);
+                svg.setCurrentTime(time);
+                updatePlayerVisuals();
+            }
+
+            controls.addEventListener('mousedown', (e) => {
+                const targetClass = e.target.getAttribute('class');
+                if (targetClass && (targetClass.includes('scrub-bar-track') || targetClass.includes('scrub-thumb'))) {
+                    isScrubbing = true;
+                    if(isPlaying) svg.pauseAnimations();
+                    handleScrub(e);
+                }
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isScrubbing) return;
+                handleScrub(e);
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (!isScrubbing) return;
+                isScrubbing = false;
+                if (isPlaying) {
+                    svg.unpauseAnimations();
+                }
+            });
+
+            window.addEventListener('load', () => {
+                requestAnimationFrame(animationLoop);
+            }, { once: true });
+        })();
+//]]>
+JS;
+        $script = sprintf($scriptTemplate, $totalDuration, $animationPauseSeconds, $scrubBarWidth, $scrubBarStartX);
+
+        $playerTemplate = <<<SVG
+    <g transform="translate(0, %.2F)" style="font-family: sans-serif; font-size: 14px;">
+        <rect class="player-background" x="0" y="0" width="%.2F" height="%.2F" fill="#222" stroke="#444" stroke-width="1" />
+        <g class="play-pause-btn" style="cursor: pointer;">
+            <rect x="%.2F" y="%.2F" width="%.2F" height="30" fill="#444" rx="5" />
+            <use class="player-icon" href="#pause-icon" transform="translate(%.2F, %.2F)" />
+        </g>
+        <g class="scrub-bar" style="cursor: pointer;">
+            <rect class="scrub-bar-track" x="%.2F" y="20" width="%.2F" height="10" fill="#111" rx="5" />
+            <rect class="scrub-thumb" x="%.2F" y="18" width="10" height="14" fill="#666" rx="3" />
+        </g>
+        <text class="time-display" x="%.2F" y="29" fill="white" text-anchor="start">%s</text>
+    </g>
+    <script>%s</script>
+SVG;
+        return sprintf($playerTemplate, $y, $width, $barHeight, $padding, $padding, $buttonWidth, $iconTranslateX, $iconTranslateY, $scrubBarStartX, $scrubBarWidth, $scrubBarStartX, $timeDisplayTextX, $initialTimeText, $script);
     }
 
     private function renderBuffer(array $buffer, array $scrollEvents, float $charHeight, float $charWidth): array

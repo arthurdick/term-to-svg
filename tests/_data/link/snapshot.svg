@@ -1,12 +1,13 @@
 <svg width="672" height="406" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family='Menlo, Monaco, "Courier New", monospace' font-size="14">
     <title>Terminal Session Recording</title>
+
     <style>
       .c1 { fill:#e0e0e0;text-decoration:underline; }
     </style>
 
     <rect width="100%" height="100%" fill="#1a1a1a" />
     <g id="master">
-        <animate id="loop" attributeName="visibility" from="hidden" to="visible" begin="0;loop.end" dur="5.002853s" />
+        <animate id="loop" class="loop-animation" attributeName="visibility" from="hidden" to="visible" begin="0;loop.end" dur="5.002853s" />
         <g id="main-screen" display="inline">
         <set attributeName="display" to="inline" begin="loop.begin" />
 
@@ -36,4 +37,5 @@
 
         </rect>
     </g>
+    
 </svg>

@@ -40,7 +40,8 @@ class SnapshotTest extends TestCase
         return [
             'simple text' => ['simple_text'],
             'clear screen command' => ['clear_screen'],
-            'text attributes' => ['text_attributes']
+            'text attributes' => ['text_attributes'],
+            'link' => ['link'],
         ];
     }
 }
