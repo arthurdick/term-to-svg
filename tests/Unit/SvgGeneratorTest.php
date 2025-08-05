@@ -41,9 +41,9 @@ class SvgGeneratorTest extends TestCase
         $this->assertStringContainsString(sprintf('width="%d"', $expectedWidth), $svg);
         $this->assertStringContainsString(sprintf('height="%d"', $expectedHeight), $svg);
         $this->assertStringContainsString('</svg>', $svg);
-        $this->assertStringContainsString('<g id="main-screen"', $svg);
-        $this->assertStringContainsString('<g id="alt-screen"', $svg);
-        $this->assertStringContainsString('<rect id="cursor"', $svg);
+        $this->assertMatchesRegularExpression('/<g id="svg[a-f0-9]+_main-screen"/', $svg);
+        $this->assertMatchesRegularExpression('/<g id="svg[a-f0-9]+_alt-screen"/', $svg);
+        $this->assertMatchesRegularExpression('/<rect id="svg[a-f0-9]+_cursor"/', $svg);
     }
 
     public function testTextElementGeneration(): void
@@ -64,12 +64,12 @@ class SvgGeneratorTest extends TestCase
 
         $expectedY = ($this->charHeight) - ($this->charHeight - $this->config['font_size']) / 2;
         $expectedRegex = sprintf(
-            '/<text class="c1" x="0.00" y="%.2F">Hi<set attributeName="visibility" to="visible" begin="loop.begin\+0.1000s" \/><set attributeName="visibility" to="hidden" begin="loop.begin" \/><\/text>/',
+            '/<text class="c1_svg[a-f0-9]+" x="0.00" y="%.2F">Hi<set attributeName="visibility" to="visible" begin="svg[a-f0-9]+_loop.begin\+0.1000s" \/><set attributeName="visibility" to="hidden" begin="svg[a-f0-9]+_loop.begin" \/><\/text>/',
             $expectedY
         );
 
         $this->assertMatchesRegularExpression($expectedRegex, $svg);
-        $this->assertStringContainsString(".c1 { fill:#e0e0e0; }", $svg);
+        $this->assertMatchesRegularExpression('/\.c1_svg[a-f0-9]+ \{ fill:#e0e0e0; \}/', $svg);
     }
 
     public function testRectElementForBackgroundGeneration(): void
@@ -89,7 +89,7 @@ class SvgGeneratorTest extends TestCase
         $expectedX = 2 * $this->charWidth;
         $expectedY = 1 * $this->charHeight;
         $expectedRegex = sprintf(
-            '/<rect class="c1" x="%.2F" y="%.2F" width="%.2F" height="%.2F"><set attributeName="visibility" to="visible" begin="loop.begin\+0.2000s" \/><set attributeName="visibility" to="hidden" begin="loop.begin" \/><\/rect>/',
+            '/<rect class="c1_svg[a-f0-9]+" x="%.2F" y="%.2F" width="%.2F" height="%.2F"><set attributeName="visibility" to="visible" begin="svg[a-f0-9]+_loop.begin\+0.2000s" \/><set attributeName="visibility" to="hidden" begin="svg[a-f0-9]+_loop.begin" \/><\/rect>/',
             $expectedX,
             $expectedY,
             $this->charWidth,
@@ -97,7 +97,7 @@ class SvgGeneratorTest extends TestCase
         );
 
         $this->assertMatchesRegularExpression($expectedRegex, $svg);
-        $this->assertStringContainsString(".c1 { fill:#cc0000; }", $svg);
+        $this->assertMatchesRegularExpression('/\.c1_svg[a-f0-9]+ \{ fill:#cc0000; \}/', $svg);
     }
 
     public function testCursorAnimationGeneration(): void
@@ -114,14 +114,14 @@ class SvgGeneratorTest extends TestCase
         $expectedX = 5 * $this->charWidth;
         $expectedY = 2 * $this->charHeight;
 
-        $this->assertStringContainsString(sprintf('<set attributeName="x" to="%.2F" begin="loop.begin+0.5000s" />', $expectedX), $svg);
-        $this->assertStringContainsString(sprintf('<set attributeName="y" to="%.2F" begin="loop.begin+0.5000s" />', $expectedY), $svg);
-        $this->assertStringContainsString('<set attributeName="visibility" to="hidden" begin="loop.begin+0.8000s" />', $svg);
+        $this->assertMatchesRegularExpression(sprintf('/<set attributeName="x" to="%.2F" begin="svg[a-f0-9]+_loop.begin\+0.5000s" \/>/', $expectedX), $svg);
+        $this->assertMatchesRegularExpression(sprintf('/<set attributeName="y" to="%.2F" begin="svg[a-f0-9]+_loop.begin\+0.5000s" \/>/', $expectedY), $svg);
+        $this->assertMatchesRegularExpression('/<set attributeName="visibility" to="hidden" begin="svg[a-f0-9]+_loop.begin\+0.8000s" \/>/', $svg);
 
-        // Test reset animations - The initial visibility should be based on the first visibility event in the log
-        $this->assertStringContainsString('<set attributeName="x" to="0.00" begin="loop.begin"/>', $svg);
-        $this->assertStringContainsString('<set attributeName="y" to="0.00" begin="loop.begin"/>', $svg);
-        $this->assertStringContainsString('<set attributeName="visibility" to="hidden" begin="loop.begin"/>', $svg);
+        // Test reset animations
+        $this->assertMatchesRegularExpression('/<set attributeName="x" to="0.00" begin="svg[a-f0-9]+_loop.begin"\/>/', $svg);
+        $this->assertMatchesRegularExpression('/<set attributeName="y" to="0.00" begin="svg[a-f0-9]+_loop.begin"\/>/', $svg);
+        $this->assertMatchesRegularExpression('/<set attributeName="visibility" to="hidden" begin="svg[a-f0-9]+_loop.begin"\/>/', $svg);
     }
 
     public function testScreenSwitchAnimation(): void
@@ -134,13 +134,13 @@ class SvgGeneratorTest extends TestCase
         $generator = $this->createGenerator();
         $svg = $generator->generate();
 
-        $this->assertStringContainsString('<g id="main-screen" display="inline">', $svg);
-        $this->assertStringContainsString('<set attributeName="display" to="none" begin="loop.begin+0.3000s" />', $svg);
-        $this->assertStringContainsString('<set attributeName="display" to="inline" begin="loop.begin+0.9000s" />', $svg);
+        $this->assertMatchesRegularExpression('/<g id="svg[a-f0-9]+_main-screen" display="inline">/', $svg);
+        $this->assertMatchesRegularExpression('/<set attributeName="display" to="none" begin="svg[a-f0-9]+_loop.begin\+0.3000s" \/>/', $svg);
+        $this->assertMatchesRegularExpression('/<set attributeName="display" to="inline" begin="svg[a-f0-9]+_loop.begin\+0.9000s" \/>/', $svg);
 
-        $this->assertStringContainsString('<g id="alt-screen" display="none">', $svg);
-        $this->assertStringContainsString('<set attributeName="display" to="inline" begin="loop.begin+0.3000s" />', $svg);
-        $this->assertStringContainsString('<set attributeName="display" to="none" begin="loop.begin+0.9000s" />', $svg);
+        $this->assertMatchesRegularExpression('/<g id="svg[a-f0-9]+_alt-screen" display="none">/', $svg);
+        $this->assertMatchesRegularExpression('/<set attributeName="display" to="inline" begin="svg[a-f0-9]+_loop.begin\+0.3000s" \/>/', $svg);
+        $this->assertMatchesRegularExpression('/<set attributeName="display" to="none" begin="svg[a-f0-9]+_loop.begin\+0.9000s" \/>/', $svg);
     }
 
     public function testCssClassGeneration(): void
@@ -158,13 +158,13 @@ class SvgGeneratorTest extends TestCase
         $generator = $this->createGenerator();
         $svg = $generator->generate();
 
-        $this->assertStringContainsString(".c1 { fill:#e0e0e0; }", $svg);
-        $this->assertStringContainsString('<text class="c1"', $svg);
+        $this->assertMatchesRegularExpression('/\.c1_svg[a-f0-9]+ \{ fill:#e0e0e0; \}/', $svg);
+        $this->assertMatchesRegularExpression('/<text class="c1_svg[a-f0-9]+"/', $svg);
 
-        $this->assertStringContainsString(".c2 { fill:#e0e0e0;font-weight:bold; }", $svg);
-        $this->assertStringContainsString('<text class="c2"', $svg);
+        $this->assertMatchesRegularExpression('/\.c2_svg[a-f0-9]+ \{ fill:#e0e0e0;font-weight:bold; \}/', $svg);
+        $this->assertMatchesRegularExpression('/<text class="c2_svg[a-f0-9]+"/', $svg);
 
-        $this->assertStringContainsString(".c3 { fill:#cc0000; }", $svg);
-        $this->assertStringContainsString('<text class="c3"', $svg);
+        $this->assertMatchesRegularExpression('/\.c3_svg[a-f0-9]+ \{ fill:#cc0000; \}/', $svg);
+        $this->assertMatchesRegularExpression('/<text class="c3_svg[a-f0-9]+"/', $svg);
     }
 }
