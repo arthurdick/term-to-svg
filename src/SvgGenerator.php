@@ -74,31 +74,81 @@ class SvgGenerator
         return $this->getSvgTemplate($svgWidth, $svgHeight, $mainText, $mainRects, $mainScroll, $altText, $altRects, $altScroll, $mainAnims, $altAnims, $cursorAnims, $interactiveControls);
     }
 
+    /**
+     * Renders a non-animated SVG of the terminal at a specific time.
+     *
+     * @param float $time The time at which to capture the poster frame.
+     * @return string The generated SVG content.
+     */
+    public function generatePoster(float $time): string
+    {
+        $charHeight = $this->config['font_size'] * $this->config['line_height_factor'];
+        $charWidth = $this->config['font_size'] * $this->config['font_width_factor'];
+        $svgWidth = $charWidth * $this->config['cols'];
+        $svgHeight = ($charHeight * $this->config['rows']) + ($this->config['font_size'] * 0.2);
+
+        $isAltScreenActive = false;
+        foreach ($this->state->screenSwitchEvents as $event) {
+            if ($event['time'] > $time) {
+                break;
+            }
+            $isAltScreenActive = ($event['type'] === 'to_alt');
+        }
+
+        $activeBuffer = $isAltScreenActive ? $this->state->altBuffer : $this->state->mainBuffer;
+        $activeScrollEvents = $isAltScreenActive ? $this->state->altScrollEvents : $this->state->mainScrollEvents;
+
+        $scrollOffset = 0;
+        foreach ($activeScrollEvents as $event) {
+            if ($event['time'] <= $time) {
+                $scrollOffset++;
+            }
+        }
+
+        $transform = sprintf('transform="translate(0, -%.2F)"', $scrollOffset * $charHeight);
+        list($textElements, $rectElements) = $this->renderPosterFrame($activeBuffer, $time, $charHeight, $charWidth);
+        $posterContent = "<g {$transform}>" . $rectElements . $textElements . '</g>';
+
+        $cursorX = 0;
+        $cursorY = 0;
+        $cursorVisible = true;
+        foreach ($this->state->cursorEvents as $event) {
+            if ($event['time'] > $time) {
+                break;
+            }
+            if (isset($event['x'])) {
+                $cursorX = $event['x'];
+                $cursorY = $event['y'];
+            }
+            if (isset($event['visible'])) {
+                $cursorVisible = $event['visible'];
+            }
+        }
+
+        $cursorRect = '';
+        if ($cursorVisible) {
+            $cursorRect = sprintf(
+                '<rect id="%s_cursor" width="%.2F" height="%.2F" fill="%s" opacity="0.7" x="%.2F" y="%.2F" />',
+                $this->uniqueId,
+                $this->config['font_size'] * 0.6,
+                $charHeight,
+                $this->config['default_fg'],
+                $cursorX * $charWidth,
+                $cursorY * $charHeight
+            );
+        }
+
+        $content = $posterContent . $cursorRect;
+        return $this->_getSvgWrapper($svgWidth, $svgHeight, $content);
+    }
 
     private function getSvgTemplate(float $width, float $height, string $mainText, string $mainRects, string $mainScroll, string $altText, string $altRects, string $altScroll, string $mainAnims, string $altAnims, string $cursorAnims, string $interactiveControls): string
     {
-        $fontFamily = $this->config['font_family'];
-        $fontSize = $this->config['font_size'];
-        $bgColor = $this->config['default_bg'];
         $fgColor = $this->config['default_fg'];
         $cursorWidth = $this->config['font_size'] * 0.6;
         $cursorHeight = $this->config['font_size'] * $this->config['line_height_factor'];
-
         $loopDuration = $this->totalDuration + $this->config['animation_pause_seconds'];
-
         $resetScroll = sprintf('        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="%s_loop.begin" fill="freeze" />' . "\n", $this->uniqueId);
-        $cssStyles = '';
-        if (!empty($this->cssRules)) {
-            $cssStyles .= "    <style>\n";
-            $flippedRules = array_flip($this->cssRules);
-            ksort($flippedRules);
-            foreach ($flippedRules as $className => $rule) {
-                // Adjust class name to remove the unique ID for the style definition
-                $baseClassName = substr($className, 0, strrpos($className, '_'));
-                $cssStyles .= "      .{$className} { {$rule} }\n";
-            }
-            $cssStyles .= "    </style>\n";
-        }
 
         $playerDefs = '';
         if ($this->config['interactive']) {
@@ -110,12 +160,9 @@ class SvgGenerator
 DEFS;
         }
 
-        return <<<SVG
-<svg id="{$this->uniqueId}" width="{$width}" height="{$height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family='{$fontFamily}' font-size="{$fontSize}">
-    <title>Terminal Session Recording</title>
-{$playerDefs}
-{$cssStyles}
-    <rect width="100%" height="100%" fill="{$bgColor}" />
+        $animatedContent = <<<XML
+    {$playerDefs}
+    <rect width="100%" height="100%" fill="{$this->config['default_bg']}" />
     <g id="{$this->uniqueId}_master">
         <animate id="{$this->uniqueId}_loop" attributeName="visibility" from="hidden" to="visible" begin="0;{$this->uniqueId}_loop.end" dur="{$loopDuration}s" />
         <g id="{$this->uniqueId}_main-screen" display="inline">
@@ -137,8 +184,9 @@ DEFS;
         </rect>
     </g>
     {$interactiveControls}
-</svg>
-SVG;
+XML;
+
+        return $this->_getSvgWrapper($width, $height, $animatedContent);
     }
 
 
@@ -278,6 +326,72 @@ JS;
     <script>%s</script>
 SVG;
         return sprintf($playerTemplate, $y, $width, $barHeight, $padding, $padding, $buttonWidth, $iconTranslateX, $iconTranslateY, $scrubBarStartX, $scrubBarWidth, $scrubBarStartX, $timeDisplayTextX, $initialTimeText, $script);
+    }
+
+    private function getPosterSvgTemplate(float $width, float $height, string $content, string $cursor): string
+    {
+        $fontFamily = $this->config['font_family'];
+        $fontSize = $this->config['font_size'];
+        $bgColor = $this->config['default_bg'];
+
+        $cssStyles = '';
+        if (!empty($this->cssRules)) {
+            $cssStyles .= "    <style>\n";
+            $sortedRules = $this->cssRules;
+            ksort($sortedRules);
+            foreach ($sortedRules as $rule => $className) {
+                $cssStyles .= "      .{$className} { {$rule} }\n";
+            }
+            $cssStyles .= "    </style>\n";
+        }
+
+        return <<<SVG
+<svg id="{$this->uniqueId}" width="{$width}" height="{$height}" xmlns="http://www.w3.org/2000/svg" font-family='{$fontFamily}' font-size="{$fontSize}" text-rendering="geometricPrecision">
+    <title>Terminal Session Recording</title>
+{$cssStyles}
+    <rect width="100%" height="100%" fill="{$bgColor}" />
+    {$content}
+    {$cursor}
+</svg>
+SVG;
+    }
+
+    /**
+ * Wraps the given content in the main SVG structure.
+ */
+    private function _getSvgWrapper(float $width, float $height, string $content): string
+    {
+        $fontFamily = $this->config['font_family'];
+        $fontSize = $this->config['font_size'];
+        $cssStyles = $this->_generateCssStyles();
+        $bgColor = $this->config['default_bg'];
+
+        return <<<SVG
+<svg id="{$this->uniqueId}" width="{$width}" height="{$height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family='{$fontFamily}' font-size="{$fontSize}" text-rendering="geometricPrecision">
+    <title>Terminal Session Recording</title>
+{$cssStyles}
+    <rect width="100%" height="100%" fill="{$bgColor}" />
+    {$content}
+</svg>
+SVG;
+    }
+
+    /**
+     * Generates the <style> block from the collected CSS rules.
+     */
+    private function _generateCssStyles(): string
+    {
+        if (empty($this->cssRules)) {
+            return '';
+        }
+        $cssStyles = "    <style>\n";
+        $sortedRules = $this->cssRules;
+        ksort($sortedRules);
+        foreach ($sortedRules as $rule => $className) {
+            $cssStyles .= "      .{$className} { {$rule} }\n";
+        }
+        $cssStyles .= "    </style>\n";
+        return $cssStyles;
     }
 
     private function renderBuffer(array $buffer, array $scrollEvents, float $charHeight, float $charWidth): array
@@ -428,6 +542,101 @@ SVG;
         }
 
         return [$textElements, $rectElements, $scrollAnimations];
+    }
+
+    private function renderPosterFrame(array &$buffer, float $time, float $charHeight, float $charWidth): array
+    {
+        $rectElements = '';
+        $textElements = '';
+
+        foreach ($buffer as $y => $row) {
+            $x = 0;
+            while ($x < $this->config['cols']) {
+                $firstActiveCell = $this->findActiveCell($row[$x] ?? [], $time);
+                if ($firstActiveCell === null) {
+                    $x++;
+                    continue;
+                }
+
+                $textChunk = '';
+                $style = $firstActiveCell['style'];
+                $current_x = $x;
+
+                while ($current_x < $this->config['cols']) {
+                    $cellToCompare = $this->findActiveCell($row[$current_x] ?? [], $time);
+                    if ($cellToCompare !== null && $cellToCompare['style'] === $style) {
+                        $textChunk .= $cellToCompare['char'];
+                        $current_x++;
+                    } else {
+                        break;
+                    }
+                }
+
+                $fgHex = $this->getHexForColor('fg', $style);
+                $bgHex = $this->getHexForColor('bg', $style);
+                if (!empty($style['inverse'])) {
+                    list($fgHex, $bgHex) = [$bgHex, $fgHex];
+                }
+
+                $chunkWidth = ($current_x - $x) * $charWidth;
+
+                if ($bgHex !== $this->config['default_bg']) {
+                    $rectX = $x * $charWidth;
+                    $rectY = $y * $charHeight;
+                    $bgRule = sprintf('fill:%s;', $bgHex);
+                    $bgClass = $this->getClassName($bgRule);
+                    $rectElements .= sprintf('        <rect class="%s" x="%.2F" y="%.2F" width="%.2F" height="%.2F" />' . "\n", $bgClass, $rectX, $rectY, $chunkWidth, $charHeight);
+                }
+
+                if (trim(str_replace('&#160;', ' ', $textChunk)) !== '') {
+                    $textX = $x * $charWidth;
+                    $textY = ($y + 1) * $charHeight - ($charHeight - $this->config['font_size']) / 2;
+                    $textCss = sprintf('fill:%s;', $fgHex);
+                    if ($style['bold']) {
+                        $textCss .= 'font-weight:bold;';
+                    }
+                    if ($style['italic']) {
+                        $textCss .= 'font-style:italic;';
+                    }
+                    if ($style['underline'] || !empty($style['link'])) {
+                        $textCss .= 'text-decoration:underline;';
+                    }
+                    if ($style['strikethrough']) {
+                        $textCss .= 'text-decoration:line-through;';
+                    }
+                    if ($style['dim']) {
+                        $textCss .= 'opacity:0.5;';
+                    }
+                    if ($style['invisible']) {
+                        $textCss .= 'opacity:0;';
+                    }
+
+                    $textClass = $this->getClassName($textCss);
+                    $spacePreserveAttr = (str_starts_with($textChunk, ' ') || str_ends_with($textChunk, ' ') || strpos($textChunk, '  ') !== false || strpos($textChunk, '&#160;') !== false) ? ' xml:space="preserve"' : '';
+
+                    $textElement = sprintf('<text class="%s" x="%.2F" y="%.2F"%s>%s</text>', $textClass, $textX, $textY, $spacePreserveAttr, $textChunk);
+
+                    if (!empty($style['link'])) {
+                        $textElements .= sprintf('        <a href="%s" target="_blank">%s</a>' . "\n", htmlspecialchars($style['link'], ENT_XML1), $textElement);
+                    } else {
+                        $textElements .= '        ' . $textElement . "\n";
+                    }
+                }
+
+                $x = $current_x;
+            }
+        }
+        return [$textElements, $rectElements];
+    }
+
+    private function findActiveCell(array $lifespans, float $time): ?array
+    {
+        foreach (array_reverse($lifespans) as $cell) {
+            if ($cell['startTime'] <= $time && (!isset($cell['endTime']) || $cell['endTime'] > $time)) {
+                return $cell;
+            }
+        }
+        return null;
     }
 
     private function generateCursorAnimations(float $charWidth, float $charHeight): string

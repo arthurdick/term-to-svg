@@ -80,7 +80,12 @@ class TerminalToSvgConverter
         }
 
         $generator = new SvgGenerator($this->state, $this->config, $this->currentTime);
-        return $generator->generate();
+        if ($this->config['poster_at'] !== null) {
+            $time = $this->config['poster_at'] === 'end' ? $this->currentTime : (float)$this->config['poster_at'];
+            return $generator->generatePoster($time);
+        } else {
+            return $generator->generate();
+        }
     }
 
     private function parseTimingFile(string $path): array

@@ -26,5 +26,6 @@ class Config
         'default_bg' => '#1a1a1a', // Terminal background color
         'animation_pause_seconds' => 5,
         'interactive' => false,
+        'poster_at' => null,
     ];
 }

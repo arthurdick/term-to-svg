@@ -68,6 +68,7 @@ function print_help()
     echo "  --default_fg <hex>        Default foreground color.\n";
     echo "  --default_bg <hex>        Default background color.\n";
     echo "  --animation_pause_seconds <number> Animation pause in seconds at the end.\n";
+    echo "  --poster-at <time|end>    Generate a non-animated SVG of a single frame at a specific time or at the end.\n";
     echo "  --interactive             Enable interactive player controls.\n";
     echo "  -v, --version             Display the version number.\n";
     echo "  --help                    Display this help message.\n";
@@ -88,11 +89,11 @@ $long_options = [
     "default_fg:",
     "default_bg:",
     "animation_pause_seconds:",
+    "poster_at:",
     "interactive",
     "version",
     "help",
 ];
-
 $options = getopt($short_options, $long_options);
 
 if (isset($options['help'])) {
@@ -108,7 +109,6 @@ if (isset($options['v']) || isset($options['version'])) {
 $options['typescript_file'] = $options['t'] ?? $options['typescript_file'] ?? null;
 $options['timing_file'] = $options['i'] ?? $options['timing_file'] ?? null;
 $options['output_file'] = $options['o'] ?? $options['output_file'] ?? null;
-
 
 if (!$options['typescript_file'] || !$options['timing_file'] || !$options['output_file']) {
     echo "Error: --typescript_file (-t), --timing_file (-i), and --output_file (-o) are required options.\n";
@@ -139,7 +139,6 @@ try {
     foreach ($long_options as $long_opt) {
         $isFlag = !str_ends_with($long_opt, ':');
         $opt = rtrim($long_opt, ':');
-
         if (isset($options[$opt])) {
             if ($isFlag) {
                 $config[$opt] = true;
@@ -153,7 +152,11 @@ try {
     $converter = new TerminalToSvgConverter($typescriptFile, $timingFile, $config);
     $svgContent = $converter->convert();
     file_put_contents($outputFile, $svgContent);
-    echo "✅ Successfully generated animated SVG: {$outputFile}\n";
+    if ($config['poster_at'] !== null) {
+        echo "✅ Successfully generated SVG poster: {$outputFile}\n";
+    } else {
+        echo "✅ Successfully generated animated SVG: {$outputFile}\n";
+    }
 } catch (Exception $e) {
     echo "❌ An error occurred: " . $e->getMessage() . "\n";
     exit(1);
