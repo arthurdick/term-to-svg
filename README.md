@@ -126,9 +126,10 @@ Options:
   --default_fg <hex>        Default foreground color.
   --default_bg <hex>        Default background color.
   --animation_pause_seconds <number> Animation pause in seconds at the end.
+  --poster-at <time|end>    Generate a non-animated SVG of a single frame at a specific time or at the end.
   --interactive             Enable interactive player controls.
   -v, --version             Display the version number.
-  --help                    Display this help message.
+  -h, --help                Display this help message.
 ```
 
 **Note on Geometry Detection**: If your `rec.log` file was generated with a `script` version that includes `COLUMNS` and `LINES` information in its first line (e.g., `COLUMNS="80" LINES="24"`), the script will automatically use these dimensions, overriding the `--rows` and `--cols` flags.

@@ -71,11 +71,11 @@ function print_help()
     echo "  --poster-at <time|end>    Generate a non-animated SVG of a single frame at a specific time or at the end.\n";
     echo "  --interactive             Enable interactive player controls.\n";
     echo "  -v, --version             Display the version number.\n";
-    echo "  --help                    Display this help message.\n";
+    echo "  -h, --help                Display this help message.\n";
     exit(0);
 }
 
-$short_options = "vt:i:o:";
+$short_options = "vht:i:o:";
 $long_options = [
     "typescript_file:",
     "timing_file:",
@@ -96,11 +96,10 @@ $long_options = [
 ];
 $options = getopt($short_options, $long_options);
 
-if (isset($options['help'])) {
+if (isset($options['h']) || isset($options['help'])) {
     print_help();
 }
 
-// Handle version flag
 if (isset($options['v']) || isset($options['version'])) {
     echo 'term-to-svg version ' . TerminalToSvgConverter::VERSION . "\n";
     exit(0);
