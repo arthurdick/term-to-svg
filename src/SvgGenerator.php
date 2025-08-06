@@ -427,8 +427,6 @@ SVG;
                         $current_x++;
                     }
 
-                    $textChunk = rtrim($textChunk);
-
                     if ($textChunk === '') {
                         continue;
                     }
@@ -473,53 +471,56 @@ SVG;
                         );
                     }
 
-                    $textX = $x * $charWidth;
-                    $textY = ($y + 1) * $charHeight - ($charHeight - $this->config['font_size']) / 2;
-                    $textCss = sprintf('fill:%s;', $fgHex);
-                    if ($style['bold']) {
-                        $textCss .= 'font-weight:bold;';
-                    }
-                    if ($style['italic']) {
-                        $textCss .= 'font-style:italic;';
-                    }
-                    if ($style['underline'] || !empty($style['link'])) {
-                        $textCss .= 'text-decoration:underline;';
-                    }
-                    if ($style['strikethrough']) {
-                        $textCss .= 'text-decoration:line-through;';
-                    }
-                    if ($style['dim']) {
-                        $textCss .= 'opacity:0.5;';
-                    }
-                    if ($style['invisible']) {
-                        $textCss .= 'opacity:0;';
-                    }
+                    $trimmedTextChunk = rtrim($textChunk);
+                    if ($trimmedTextChunk !== '') {
+                        $textX = $x * $charWidth;
+                        $textY = ($y + 1) * $charHeight - ($charHeight - $this->config['font_size']) / 2;
+                        $textCss = sprintf('fill:%s;', $fgHex);
+                        if ($style['bold']) {
+                            $textCss .= 'font-weight:bold;';
+                        }
+                        if ($style['italic']) {
+                            $textCss .= 'font-style:italic;';
+                        }
+                        if ($style['underline'] || !empty($style['link'])) {
+                            $textCss .= 'text-decoration:underline;';
+                        }
+                        if ($style['strikethrough']) {
+                            $textCss .= 'text-decoration:line-through;';
+                        }
+                        if ($style['dim']) {
+                            $textCss .= 'opacity:0.5;';
+                        }
+                        if ($style['invisible']) {
+                            $textCss .= 'opacity:0;';
+                        }
 
-                    $textClass = $this->getClassName($textCss);
+                        $textClass = $this->getClassName($textCss);
 
-                    $spacePreserveAttr = '';
-                    if (str_starts_with($textChunk, ' ') || str_ends_with($textChunk, ' ') || strpos($textChunk, '  ') !== false) {
-                        $spacePreserveAttr = ' xml:space="preserve"';
-                    }
+                        $spacePreserveAttr = '';
+                        if (str_starts_with($textChunk, ' ') || str_ends_with($textChunk, ' ') || strpos($textChunk, '  ') !== false) {
+                            $spacePreserveAttr = ' xml:space="preserve"';
+                        }
 
-                    $textElement = sprintf(
-                        '<text class="%s" x="%.2F" y="%.2F"%s>%s%s</text>',
-                        $textClass,
-                        $textX,
-                        $textY,
-                        $spacePreserveAttr,
-                        $textChunk,
-                        $visibilityAnims
-                    );
-
-                    if (!empty($style['link'])) {
-                        $textElements .= sprintf(
-                            '<a href="%s" target="_blank">%s</a>',
-                            htmlspecialchars($style['link'], ENT_XML1),
-                            $textElement
+                        $textElement = sprintf(
+                            '<text class="%s" x="%.2F" y="%.2F"%s>%s%s</text>',
+                            $textClass,
+                            $textX,
+                            $textY,
+                            $spacePreserveAttr,
+                            $trimmedTextChunk,
+                            $visibilityAnims
                         );
-                    } else {
-                        $textElements .= $textElement;
+
+                        if (!empty($style['link'])) {
+                            $textElements .= sprintf(
+                                '<a href="%s" target="_blank">%s</a>',
+                                htmlspecialchars($style['link'], ENT_XML1),
+                                $textElement
+                            );
+                        } else {
+                            $textElements .= $textElement;
+                        }
                     }
                 }
                 $x++;
@@ -571,8 +572,6 @@ SVG;
                     }
                 }
 
-                $textChunk = rtrim($textChunk);
-
                 if ($textChunk !== '') {
                     $fgHex = $this->getHexForColor('fg', $style);
                     $bgHex = $this->getHexForColor('bg', $style);
@@ -590,41 +589,44 @@ SVG;
                         $rectElements .= sprintf('<rect class="%s" x="%.2F" y="%.2F" width="%.2F" height="%.2F" />', $bgClass, $rectX, $rectY, $chunkWidth, $charHeight);
                     }
 
-                    $textX = $x * $charWidth;
-                    $textY = ($y + 1) * $charHeight - ($charHeight - $this->config['font_size']) / 2;
-                    $textCss = sprintf('fill:%s;', $fgHex);
-                    if ($style['bold']) {
-                        $textCss .= 'font-weight:bold;';
-                    }
-                    if ($style['italic']) {
-                        $textCss .= 'font-style:italic;';
-                    }
-                    if ($style['underline'] || !empty($style['link'])) {
-                        $textCss .= 'text-decoration:underline;';
-                    }
-                    if ($style['strikethrough']) {
-                        $textCss .= 'text-decoration:line-through;';
-                    }
-                    if ($style['dim']) {
-                        $textCss .= 'opacity:0.5;';
-                    }
-                    if ($style['invisible']) {
-                        $textCss .= 'opacity:0;';
-                    }
+                    $trimmedTextChunk = rtrim($textChunk);
+                    if ($trimmedTextChunk !== '') {
+                        $textX = $x * $charWidth;
+                        $textY = ($y + 1) * $charHeight - ($charHeight - $this->config['font_size']) / 2;
+                        $textCss = sprintf('fill:%s;', $fgHex);
+                        if ($style['bold']) {
+                            $textCss .= 'font-weight:bold;';
+                        }
+                        if ($style['italic']) {
+                            $textCss .= 'font-style:italic;';
+                        }
+                        if ($style['underline'] || !empty($style['link'])) {
+                            $textCss .= 'text-decoration:underline;';
+                        }
+                        if ($style['strikethrough']) {
+                            $textCss .= 'text-decoration:line-through;';
+                        }
+                        if ($style['dim']) {
+                            $textCss .= 'opacity:0.5;';
+                        }
+                        if ($style['invisible']) {
+                            $textCss .= 'opacity:0;';
+                        }
 
-                    $textClass = $this->getClassName($textCss);
+                        $textClass = $this->getClassName($textCss);
 
-                    $spacePreserveAttr = '';
-                    if (str_starts_with($textChunk, ' ') || str_ends_with($textChunk, ' ') || strpos($textChunk, '  ') !== false) {
-                        $spacePreserveAttr = ' xml:space="preserve"';
-                    }
+                        $spacePreserveAttr = '';
+                        if (str_starts_with($textChunk, ' ') || str_ends_with($textChunk, ' ') || strpos($textChunk, '  ') !== false) {
+                            $spacePreserveAttr = ' xml:space="preserve"';
+                        }
 
-                    $textElement = sprintf('<text class="%s" x="%.2F" y="%.2F"%s>%s</text>', $textClass, $textX, $textY, $spacePreserveAttr, $textChunk);
+                        $textElement = sprintf('<text class="%s" x="%.2F" y="%.2F"%s>%s</text>', $textClass, $textX, $textY, $spacePreserveAttr, $trimmedTextChunk);
 
-                    if (!empty($style['link'])) {
-                        $textElements .= sprintf('<a href="%s" target="_blank">%s</a>', htmlspecialchars($style['link'], ENT_XML1), $textElement);
-                    } else {
-                        $textElements .= $textElement;
+                        if (!empty($style['link'])) {
+                            $textElements .= sprintf('<a href="%s" target="_blank">%s</a>', htmlspecialchars($style['link'], ENT_XML1), $textElement);
+                        } else {
+                            $textElements .= $textElement;
+                        }
                     }
                 }
 
