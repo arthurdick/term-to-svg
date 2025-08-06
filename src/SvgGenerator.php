@@ -474,7 +474,7 @@ SVG;
 
                     if ($textChunk !== '') {
                         $textX = $x * $charWidth;
-                        $textY = ($y + 1) * $charHeight - ($charHeight - $this->config['font_size']) / 2;
+                        $textY = $y * $charHeight + $this->config['font_size'];
                         $textCss = sprintf('fill:%s;', $fgHex);
                         if ($style['bold']) {
                             $textCss .= 'font-weight:bold;';
@@ -592,7 +592,7 @@ SVG;
                     $trimmedTextChunk = rtrim($textChunk);
                     if ($trimmedTextChunk !== '') {
                         $textX = $x * $charWidth;
-                        $textY = ($y + 1) * $charHeight - ($charHeight - $this->config['font_size']) / 2;
+                        $textY = $y * $charHeight + $this->config['font_size'];
                         $textCss = sprintf('fill:%s;', $fgHex);
                         if ($style['bold']) {
                             $textCss .= 'font-weight:bold;';
