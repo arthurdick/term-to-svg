@@ -427,6 +427,8 @@ SVG;
                         $current_x++;
                     }
 
+                    $textChunk = rtrim($textChunk);
+
                     if ($textChunk === '') {
                         continue;
                     }
@@ -471,56 +473,53 @@ SVG;
                         );
                     }
 
-                    $trimmedForCheck = trim(str_replace('&#160;', ' ', $textChunk));
-                    if ($trimmedForCheck !== '') {
-                        $textX = $x * $charWidth;
-                        $textY = ($y + 1) * $charHeight - ($charHeight - $this->config['font_size']) / 2;
-                        $textCss = sprintf('fill:%s;', $fgHex);
-                        if ($style['bold']) {
-                            $textCss .= 'font-weight:bold;';
-                        }
-                        if ($style['italic']) {
-                            $textCss .= 'font-style:italic;';
-                        }
-                        if ($style['underline'] || !empty($style['link'])) {
-                            $textCss .= 'text-decoration:underline;';
-                        }
-                        if ($style['strikethrough']) {
-                            $textCss .= 'text-decoration:line-through;';
-                        }
-                        if ($style['dim']) {
-                            $textCss .= 'opacity:0.5;';
-                        }
-                        if ($style['invisible']) {
-                            $textCss .= 'opacity:0;';
-                        }
+                    $textX = $x * $charWidth;
+                    $textY = ($y + 1) * $charHeight - ($charHeight - $this->config['font_size']) / 2;
+                    $textCss = sprintf('fill:%s;', $fgHex);
+                    if ($style['bold']) {
+                        $textCss .= 'font-weight:bold;';
+                    }
+                    if ($style['italic']) {
+                        $textCss .= 'font-style:italic;';
+                    }
+                    if ($style['underline'] || !empty($style['link'])) {
+                        $textCss .= 'text-decoration:underline;';
+                    }
+                    if ($style['strikethrough']) {
+                        $textCss .= 'text-decoration:line-through;';
+                    }
+                    if ($style['dim']) {
+                        $textCss .= 'opacity:0.5;';
+                    }
+                    if ($style['invisible']) {
+                        $textCss .= 'opacity:0;';
+                    }
 
-                        $textClass = $this->getClassName($textCss);
+                    $textClass = $this->getClassName($textCss);
 
-                        $spacePreserveAttr = '';
-                        if (str_starts_with($textChunk, ' ') || str_ends_with($textChunk, ' ') || strpos($textChunk, '  ') !== false || strpos($textChunk, '&#160;') !== false) {
-                            $spacePreserveAttr = ' xml:space="preserve"';
-                        }
+                    $spacePreserveAttr = '';
+                    if (str_starts_with($textChunk, ' ') || str_ends_with($textChunk, ' ') || strpos($textChunk, '  ') !== false) {
+                        $spacePreserveAttr = ' xml:space="preserve"';
+                    }
 
-                        $textElement = sprintf(
-                            '<text class="%s" x="%.2F" y="%.2F"%s>%s%s</text>',
-                            $textClass,
-                            $textX,
-                            $textY,
-                            $spacePreserveAttr,
-                            $textChunk,
-                            $visibilityAnims
+                    $textElement = sprintf(
+                        '<text class="%s" x="%.2F" y="%.2F"%s>%s%s</text>',
+                        $textClass,
+                        $textX,
+                        $textY,
+                        $spacePreserveAttr,
+                        $textChunk,
+                        $visibilityAnims
+                    );
+
+                    if (!empty($style['link'])) {
+                        $textElements .= sprintf(
+                            '<a href="%s" target="_blank">%s</a>',
+                            htmlspecialchars($style['link'], ENT_XML1),
+                            $textElement
                         );
-
-                        if (!empty($style['link'])) {
-                            $textElements .= sprintf(
-                                '<a href="%s" target="_blank">%s</a>',
-                                htmlspecialchars($style['link'], ENT_XML1),
-                                $textElement
-                            );
-                        } else {
-                            $textElements .= $textElement;
-                        }
+                    } else {
+                        $textElements .= $textElement;
                     }
                 }
                 $x++;
@@ -572,23 +571,25 @@ SVG;
                     }
                 }
 
-                $fgHex = $this->getHexForColor('fg', $style);
-                $bgHex = $this->getHexForColor('bg', $style);
-                if (!empty($style['inverse'])) {
-                    list($fgHex, $bgHex) = [$bgHex, $fgHex];
-                }
+                $textChunk = rtrim($textChunk);
 
-                $chunkWidth = ($current_x - $x) * $charWidth;
+                if ($textChunk !== '') {
+                    $fgHex = $this->getHexForColor('fg', $style);
+                    $bgHex = $this->getHexForColor('bg', $style);
+                    if (!empty($style['inverse'])) {
+                        list($fgHex, $bgHex) = [$bgHex, $fgHex];
+                    }
 
-                if ($bgHex !== $this->config['default_bg']) {
-                    $rectX = $x * $charWidth;
-                    $rectY = $y * $charHeight;
-                    $bgRule = sprintf('fill:%s;', $bgHex);
-                    $bgClass = $this->getClassName($bgRule);
-                    $rectElements .= sprintf('<rect class="%s" x="%.2F" y="%.2F" width="%.2F" height="%.2F" />', $bgClass, $rectX, $rectY, $chunkWidth, $charHeight);
-                }
+                    $chunkWidth = ($current_x - $x) * $charWidth;
 
-                if (trim(str_replace('&#160;', ' ', $textChunk)) !== '') {
+                    if ($bgHex !== $this->config['default_bg']) {
+                        $rectX = $x * $charWidth;
+                        $rectY = $y * $charHeight;
+                        $bgRule = sprintf('fill:%s;', $bgHex);
+                        $bgClass = $this->getClassName($bgRule);
+                        $rectElements .= sprintf('<rect class="%s" x="%.2F" y="%.2F" width="%.2F" height="%.2F" />', $bgClass, $rectX, $rectY, $chunkWidth, $charHeight);
+                    }
+
                     $textX = $x * $charWidth;
                     $textY = ($y + 1) * $charHeight - ($charHeight - $this->config['font_size']) / 2;
                     $textCss = sprintf('fill:%s;', $fgHex);
@@ -612,7 +613,11 @@ SVG;
                     }
 
                     $textClass = $this->getClassName($textCss);
-                    $spacePreserveAttr = (str_starts_with($textChunk, ' ') || str_ends_with($textChunk, ' ') || strpos($textChunk, '  ') !== false || strpos($textChunk, '&#160;') !== false) ? ' xml:space="preserve"' : '';
+
+                    $spacePreserveAttr = '';
+                    if (str_starts_with($textChunk, ' ') || str_ends_with($textChunk, ' ') || strpos($textChunk, '  ') !== false) {
+                        $spacePreserveAttr = ' xml:space="preserve"';
+                    }
 
                     $textElement = sprintf('<text class="%s" x="%.2F" y="%.2F"%s>%s</text>', $textClass, $textX, $textY, $spacePreserveAttr, $textChunk);
 

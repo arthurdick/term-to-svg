@@ -382,7 +382,7 @@ class AnsiParser
 
     private function writeBlankCharToHistory(int $x, int $y): void
     {
-        $this->writeCharToHistoryAt($x, $y, '&#160;', $this->state->currentStyle);
+        $this->writeCharToHistoryAt($x, $y, ' ', $this->state->currentStyle);
     }
 
     private function setGraphicsMode(array $params): void
