@@ -472,8 +472,7 @@ SVG;
                         );
                     }
 
-                    $trimmedTextChunk = rtrim($textChunk);
-                    if ($trimmedTextChunk !== '') {
+                    if ($textChunk !== '') {
                         $textX = $x * $charWidth;
                         $textY = ($y + 1) * $charHeight - ($charHeight - $this->config['font_size']) / 2;
                         $textCss = sprintf('fill:%s;', $fgHex);
@@ -509,7 +508,7 @@ SVG;
                             $textX,
                             $textY,
                             $spacePreserveAttr,
-                            $trimmedTextChunk,
+                            $textChunk,
                             $visibilityAnims
                         );
 

@@ -379,12 +379,6 @@ class AnsiParser
         ];
     }
 
-
-    private function writeBlankCharToHistory(int $x, int $y): void
-    {
-        $this->writeCharToHistoryAt($x, $y, ' ', $this->state->currentStyle);
-    }
-
     private function setGraphicsMode(array $params): void
     {
         if (empty($params)) {
@@ -504,54 +498,48 @@ class AnsiParser
 
     private function eraseInDisplay(int $mode): void
     {
-        if ($mode === 0) {
+        $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
+        if ($mode === 0) { // From cursor to end of screen
             $this->eraseInLine(0);
             for ($y = $this->state->cursorY + 1; $y <= $this->state->scrollBottom; $y++) {
-                $this->clearLine($y);
+                $this->endLifespanForLine($y + $scrollOffset, 0);
             }
-        } elseif ($mode === 1) {
+        } elseif ($mode === 1) { // From start of screen to cursor
             for ($y = $this->state->scrollTop; $y < $this->state->cursorY; $y++) {
-                $this->clearLine($y);
+                $this->endLifespanForLine($y + $scrollOffset, 0);
             }
             $this->eraseInLine(1);
-        } elseif ($mode === 2 || $mode === 3) {
+        } elseif ($mode === 2 || $mode === 3) { // Entire screen
             for ($y = $this->state->scrollTop; $y <= $this->state->scrollBottom; $y++) {
-                $this->clearLine($y);
+                $this->endLifespanForLine($y + $scrollOffset, 0);
             }
-        }
-    }
-
-    private function clearLine(int $y): void
-    {
-        for ($x = 0; $x < $this->config['cols']; $x++) {
-            $this->writeBlankCharToHistory($x, $y);
         }
     }
 
     private function eraseInLine(int $mode): void
     {
+        $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
+        $y = $this->state->cursorY + $scrollOffset;
         $startX = 0;
-        $endX = $this->config['cols'];
+        $count = $this->config['cols'];
 
-        if ($mode === 0) {
+        if ($mode === 0) { // From cursor to end of line
             $startX = $this->state->cursorX;
-        } elseif ($mode === 1) {
-            $endX = $this->state->cursorX + 1;
+            $count = $this->config['cols'] - $startX;
+        } elseif ($mode === 1) { // From start of line to cursor
+            $startX = 0;
+            $count = $this->state->cursorX + 1;
         }
 
-        for ($x = $startX; $x < $endX; $x++) {
-            $this->writeBlankCharToHistory($x, $this->state->cursorY);
-        }
+        $this->endLifespanForLine($y, $startX, $count);
     }
 
     private function eraseCharacters(int $n = 1): void
     {
         $n = max(1, $n);
-        $endX = min($this->config['cols'], $this->state->cursorX + $n);
-
-        for ($x = $this->state->cursorX; $x < $endX; $x++) {
-            $this->writeBlankCharToHistory($x, $this->state->cursorY);
-        }
+        $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
+        $y = $this->state->cursorY + $scrollOffset;
+        $this->endLifespanForLine($y, $this->state->cursorX, $n);
     }
 
     private function deleteCharacters(int $n = 1): void
@@ -567,6 +555,7 @@ class AnsiParser
             return;
         }
 
+        // Shift characters from right to left
         for ($x = $x_start; $x < $cols; $x++) {
             $x_source = $x + $n;
             $this->endLifespanForLine($y, $x, 1);
@@ -597,6 +586,7 @@ class AnsiParser
             return;
         }
 
+        // Shift characters to the right
         for ($x = $cols - 1; $x >= $x_start + $n; $x--) {
             $x_source = $x - $n;
             if (isset($buffer[$y][$x_source]) && !empty($buffer[$y][$x_source])) {
@@ -611,13 +601,13 @@ class AnsiParser
                     ];
                 }
             } else {
-                unset($buffer[$y][$x]);
+                // If the source is empty, ensure the destination is also empty
+                $this->endLifespanForLine($y, $x, 1);
             }
         }
 
-        for ($i = 0; $i < $n; $i++) {
-            $this->writeBlankCharToHistory($x_start + $i, $this->state->cursorY);
-        }
+        // Clear the space that was opened up
+        $this->endLifespanForLine($y, $x_start, $n);
     }
 
     private function setScrollRegion(array $params): void
@@ -646,6 +636,7 @@ class AnsiParser
             return;
         }
 
+        // End lifespan for lines that are pushed out of the scroll region
         for ($i = 0; $i < $n; $i++) {
             $y_to_kill = $this->state->scrollBottom - $i;
             if ($y_to_kill >= $this->state->cursorY) {
@@ -653,18 +644,17 @@ class AnsiParser
             }
         }
 
+        // Shift existing lines down
         for ($y = $this->state->scrollBottom; $y >= $this->state->cursorY + $n; $y--) {
             $src_y = $y - $n + $scrollOffset;
             $dest_y = $y + $scrollOffset;
             $buffer[$dest_y] = $buffer[$src_y] ?? [];
         }
 
+        // Insert new empty lines
         for ($y = $this->state->cursorY; $y < $this->state->cursorY + $n; $y++) {
             $absY = $y + $scrollOffset;
             $buffer[$absY] = [];
-            for ($x = 0; $x < $this->config['cols']; $x++) {
-                $this->writeBlankCharToHistory($x, $y);
-            }
         }
     }
 
@@ -677,22 +667,22 @@ class AnsiParser
             return;
         }
 
+        // End lifespan for the deleted lines
         for ($i = 0; $i < $n; $i++) {
             $this->endLifespanForLine($this->state->cursorY + $i + $scrollOffset, 0);
         }
 
+        // Shift subsequent lines up
         for ($y = $this->state->cursorY; $y <= $this->state->scrollBottom - $n; $y++) {
             $src_y = $y + $n + $scrollOffset;
             $dest_y = $y + $scrollOffset;
             $buffer[$dest_y] = $buffer[$src_y] ?? [];
         }
 
+        // Add new empty lines at the bottom of the scroll region
         for ($y = $this->state->scrollBottom - $n + 1; $y <= $this->state->scrollBottom; $y++) {
             $absY = $y + $scrollOffset;
             $buffer[$absY] = [];
-            for ($x = 0; $x < $this->config['cols']; $x++) {
-                $this->writeBlankCharToHistory($x, $y);
-            }
         }
     }
 
@@ -701,32 +691,32 @@ class AnsiParser
         $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
 
         for ($i = 0; $i < $n; $i++) {
+            // Take a snapshot of the region *before* modification
             $regionSnapshot = [];
             for ($y = $this->state->scrollTop; $y <= $this->state->scrollBottom; $y++) {
                 $absY = $y + $scrollOffset;
                 $regionSnapshot[$y] = $this->state->getActiveBuffer()[$absY] ?? [];
             }
 
+            // End the lifespan of everything currently in the scroll region
             for ($y = $this->state->scrollTop; $y <= $this->state->scrollBottom; $y++) {
                 $this->endLifespanForLine($y + $scrollOffset, 0);
             }
 
-            for ($y = $this->state->scrollTop + 1; $y <= $this->state->scrollBottom; $y++) {
-                $sourceRow = $regionSnapshot[$y] ?? [];
-                $destY = $y - 1;
+            // Shift lines up using the snapshot
+            for ($y = $this->state->scrollTop; $y < $this->state->scrollBottom; $y++) {
+                $sourceRow = $regionSnapshot[$y + 1] ?? [];
+                $destY = $y;
                 foreach ($sourceRow as $x => $lifespans) {
                     if (empty($lifespans)) {
                         continue;
                     }
                     $cell = end($lifespans);
+                    // If cell was active, write it to its new position
                     if (!isset($cell['endTime']) || $cell['endTime'] > $this->currentTime) {
                         $this->writeCharToHistoryAt($x, $destY, $cell['char'], $cell['style']);
                     }
                 }
-            }
-
-            for ($x = 0; $x < $this->config['cols']; $x++) {
-                $this->writeBlankCharToHistory($x, $this->state->scrollBottom);
             }
         }
     }
@@ -738,19 +728,19 @@ class AnsiParser
         $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
 
         for ($i = 0; $i < $n; $i++) {
+            // End lifespan for the line at the bottom of the region
             $this->endLifespanForLine($this->state->scrollBottom + $scrollOffset, 0);
 
+            // Shift lines down
             for ($y = $this->state->scrollBottom; $y > $this->state->scrollTop; $y--) {
                 $src_y = $y - 1 + $scrollOffset;
                 $dest_y = $y + $scrollOffset;
                 $buffer[$dest_y] = $buffer[$src_y] ?? [];
             }
 
+            // The top line of the scroll region is now a new, empty line
             $top_y = $this->state->scrollTop;
             $buffer[$top_y + $scrollOffset] = [];
-            for ($x = 0; $x < $this->config['cols']; $x++) {
-                $this->writeBlankCharToHistory($x, $top_y);
-            }
         }
     }
 
