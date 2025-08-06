@@ -38,8 +38,7 @@ class SvgGeneratorTest extends TestCase
         $expectedHeight = (int)(($this->config['rows'] * $this->charHeight) + ($this->config['font_size'] * 0.2));
 
         $this->assertStringStartsWith('<svg', $svg);
-        $this->assertStringContainsString(sprintf('width="%d"', $expectedWidth), $svg);
-        $this->assertStringContainsString(sprintf('height="%d"', $expectedHeight), $svg);
+        $this->assertStringContainsString(sprintf('viewBox="0 0 %d %d"', $expectedWidth, $expectedHeight), $svg);
         $this->assertStringContainsString('</svg>', $svg);
         $this->assertMatchesRegularExpression('/<g id="svg[a-f0-9]+_main-screen"/', $svg);
         $this->assertMatchesRegularExpression('/<g id="svg[a-f0-9]+_alt-screen"/', $svg);

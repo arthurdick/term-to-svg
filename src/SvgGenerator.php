@@ -357,8 +357,8 @@ SVG;
     }
 
     /**
- * Wraps the given content in the main SVG structure.
- */
+     * Wraps the given content in the main SVG structure.
+     */
     private function _getSvgWrapper(float $width, float $height, string $content): string
     {
         $fontFamily = $this->config['font_family'];
@@ -366,8 +366,9 @@ SVG;
         $cssStyles = $this->_generateCssStyles();
         $bgColor = $this->config['default_bg'];
 
+        // The viewBox defines the internal coordinate system, allowing the SVG to scale.
         return <<<SVG
-<svg id="{$this->uniqueId}" width="{$width}" height="{$height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family='{$fontFamily}' font-size="{$fontSize}" text-rendering="geometricPrecision">
+<svg id="{$this->uniqueId}" viewBox="0 0 {$width} {$height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family='{$fontFamily}' font-size="{$fontSize}" text-rendering="geometricPrecision">
     <title>Terminal Session Recording</title>
 {$cssStyles}
     <rect width="100%" height="100%" fill="{$bgColor}" />
