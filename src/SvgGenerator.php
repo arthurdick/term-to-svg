@@ -647,15 +647,29 @@ SVG;
     private function generateCursorAnimations(float $charWidth, float $charHeight): string
     {
         $anims = '';
+        $lastX = null;
+        $lastY = null;
+        $lastVisibility = null;
+
         foreach ($this->state->cursorEvents as $event) {
             if (isset($event['visible'])) {
                 $to = $event['visible'] ? 'visible' : 'hidden';
-                $anims .= sprintf('        <set attributeName="visibility" to="%s" begin="%s_loop.begin+%.4fs" />' . "\n", $to, $this->uniqueId, $event['time']);
+                if ($to !== $lastVisibility) {
+                    $anims .= sprintf('        <set attributeName="visibility" to="%s" begin="%s_loop.begin+%.4fs" />' . "\n", $to, $this->uniqueId, $event['time']);
+                    $lastVisibility = $to;
+                }
             } else {
                 $toX = $event['x'] * $charWidth;
                 $toY = $event['y'] * $charHeight;
-                $anims .= sprintf('        <set attributeName="x" to="%.2F" begin="%s_loop.begin+%.4fs" />' . "\n", $toX, $this->uniqueId, $event['time']);
-                $anims .= sprintf('        <set attributeName="y" to="%.2F" begin="%s_loop.begin+%.4fs" />' . "\n", $toY, $this->uniqueId, $event['time']);
+
+                if ($toX !== $lastX) {
+                    $anims .= sprintf('        <set attributeName="x" to="%.2F" begin="%s_loop.begin+%.4fs" />' . "\n", $toX, $this->uniqueId, $event['time']);
+                    $lastX = $toX;
+                }
+                if ($toY !== $lastY) {
+                    $anims .= sprintf('        <set attributeName="y" to="%.2F" begin="%s_loop.begin+%.4fs" />' . "\n", $toY, $this->uniqueId, $event['time']);
+                    $lastY = $toY;
+                }
             }
         }
 
