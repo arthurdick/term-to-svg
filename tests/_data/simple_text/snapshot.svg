@@ -15,7 +15,7 @@
             <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
                 <set attributeName="visibility" to="visible" begin="svgfe7d2d68_loop.begin" />
         <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="svgfe7d2d68_loop.begin" fill="freeze" />
-<text class="c1_svgfe7d2d68" x="0.00" y="15.40">Hello<set attributeName="visibility" to="visible" begin="svgfe7d2d68_loop.begin+0.5123s" /><set attributeName="visibility" to="hidden" begin="svgfe7d2d68_loop.begin" /></text><text class="c1_svgfe7d2d68" x="50.40" y="15.40">SVG!<set attributeName="visibility" to="visible" begin="svgfe7d2d68_loop.begin+5.2037s" /><set attributeName="visibility" to="hidden" begin="svgfe7d2d68_loop.begin" /></text>
+<text class="c1_svgfe7d2d68" x="0.00" y="15.40">Hello<set attributeName="visibility" to="visible" begin="svgfe7d2d68_loop.begin+0.5123s" /><set attributeName="visibility" to="hidden" begin="svgfe7d2d68_loop.begin" /></text><text class="c1_svgfe7d2d68" x="42.00" y="15.40" xml:space="preserve"> <set attributeName="visibility" to="visible" begin="svgfe7d2d68_loop.begin+1.7469s" /><set attributeName="visibility" to="hidden" begin="svgfe7d2d68_loop.begin" /></text><text class="c1_svgfe7d2d68" x="50.40" y="15.40">SVG!<set attributeName="visibility" to="visible" begin="svgfe7d2d68_loop.begin+5.2037s" /><set attributeName="visibility" to="hidden" begin="svgfe7d2d68_loop.begin" /></text>
             </g>
         </g>
         <g id="svgfe7d2d68_alt-screen" display="none">

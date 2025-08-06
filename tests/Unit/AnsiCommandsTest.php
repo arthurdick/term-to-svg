@@ -195,7 +195,7 @@ class AnsiCommandsTest extends TestCase
 
     public function testInsertLines(): void
     {
-        $this->process("line1\nline2\nline3");
+        $this->process("line1\r\nline2\r\nline3");
         $this->state->cursorY = 1; // On line2
         $this->process("\x1b[2L"); // Insert 2 lines
 
