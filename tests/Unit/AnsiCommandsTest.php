@@ -51,7 +51,7 @@ class AnsiCommandsTest extends TestCase
                 $this->assertArrayHasKey($y, $buffer);
                 $this->assertArrayHasKey($x, $buffer[$y]);
                 $lastCellState = end($buffer[$y][$x]);
-                $this->assertEquals('&#160;', $lastCellState['char']);
+                $this->assertEquals(' ', $lastCellState['char']);
             }
         }
     }
@@ -135,7 +135,7 @@ class AnsiCommandsTest extends TestCase
         $buffer = $this->state->mainBuffer;
         for ($x = 5; $x < 9; $x++) {
             $lastCellState = end($buffer[0][$x]);
-            $this->assertEquals('&#160;', $lastCellState['char']);
+            $this->assertEquals(' ', $lastCellState['char']);
         }
     }
 
@@ -155,8 +155,8 @@ class AnsiCommandsTest extends TestCase
         $this->state->cursorX = 2; // cursor on 'c'
         $this->process("\x1b[2@"); // insert 2 chars
         $buffer = $this->state->mainBuffer;
-        $this->assertEquals('&#160;', end($buffer[0][2])['char']);
-        $this->assertEquals('&#160;', end($buffer[0][3])['char']);
+        $this->assertEquals(' ', end($buffer[0][2])['char']);
+        $this->assertEquals(' ', end($buffer[0][3])['char']);
         $this->assertEquals('c', end($buffer[0][4])['char']);
         $this->assertEquals('d', end($buffer[0][5])['char']);
     }
@@ -174,8 +174,8 @@ class AnsiCommandsTest extends TestCase
         $this->process("\x1b[2L");
         $buffer = $this->state->mainBuffer;
         for ($x = 0; $x < 80; $x++) {
-            $this->assertEquals('&#160;', end($buffer[10][$x])['char']);
-            $this->assertEquals('&#160;', end($buffer[11][$x])['char']);
+            $this->assertEquals(' ', end($buffer[10][$x])['char']);
+            $this->assertEquals(' ', end($buffer[11][$x])['char']);
         }
     }
 
@@ -250,7 +250,7 @@ class AnsiCommandsTest extends TestCase
 
         // Check that the last line of the scroll region is now blank where text used to be
         for ($x = 0; $x < 6; $x++) {
-            $this->assertEquals('&#160;', end($buffer[6][$x])['char']);
+            $this->assertEquals(' ', end($buffer[6][$x])['char']);
         }
     }
 
@@ -375,9 +375,9 @@ class AnsiCommandsTest extends TestCase
         $this->assertEquals('b', end($buffer[0][1])['char']);
 
         // 'c', 'd', 'e' should be replaced with blanks
-        $this->assertEquals('&#160;', end($buffer[0][2])['char']);
-        $this->assertEquals('&#160;', end($buffer[0][3])['char']);
-        $this->assertEquals('&#160;', end($buffer[0][4])['char']);
+        $this->assertEquals(' ', end($buffer[0][2])['char']);
+        $this->assertEquals(' ', end($buffer[0][3])['char']);
+        $this->assertEquals(' ', end($buffer[0][4])['char']);
 
         // 'f', 'g', 'h' should be unchanged
         $this->assertEquals('f', end($buffer[0][5])['char']);
