@@ -631,93 +631,60 @@ class AnsiParser
     {
         $buffer = &$this->state->getActiveBuffer();
         $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
+        $cursorY = $this->state->cursorY;
+        $scrollBottom = $this->state->scrollBottom;
 
-        if ($this->state->cursorY < $this->state->scrollTop || $this->state->cursorY > $this->state->scrollBottom) {
+        if ($cursorY > $scrollBottom) {
             return;
         }
 
-        // End lifespan for lines that are pushed out of the scroll region
-        for ($i = 0; $i < $n; $i++) {
-            $y_to_kill = $this->state->scrollBottom - $i;
-            if ($y_to_kill >= $this->state->cursorY) {
-                $this->endLifespanForLine($y_to_kill + $scrollOffset, 0);
-            }
-        }
+        // Create an array of N new, empty lines to insert.
+        $newLines = array_fill(0, $n, []);
 
-        // Shift existing lines down
-        for ($y = $this->state->scrollBottom; $y >= $this->state->cursorY + $n; $y--) {
-            $src_y = $y - $n + $scrollOffset;
-            $dest_y = $y + $scrollOffset;
-            $buffer[$dest_y] = $buffer[$src_y] ?? [];
-        }
-
-        // Insert new empty lines
-        for ($y = $this->state->cursorY; $y < $this->state->cursorY + $n; $y++) {
-            $absY = $y + $scrollOffset;
-            $buffer[$absY] = [];
-        }
+        // Use array_splice to insert the new lines. This is an atomic and safe operation.
+        // It correctly shifts all subsequent elements down.
+        array_splice($buffer, $cursorY + $scrollOffset, 0, $newLines);
     }
 
     private function deleteLines(int $n): void
     {
         $buffer = &$this->state->getActiveBuffer();
         $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
+        $cursorY = $this->state->cursorY;
+        $scrollBottom = $this->state->scrollBottom;
 
-        if ($this->state->cursorY < $this->state->scrollTop || $this->state->cursorY > $this->state->scrollBottom) {
+        if ($cursorY > $scrollBottom) {
             return;
         }
 
-        // End lifespan for the deleted lines
-        for ($i = 0; $i < $n; $i++) {
-            $this->endLifespanForLine($this->state->cursorY + $i + $scrollOffset, 0);
-        }
+        // Use array_splice to remove N lines starting from the cursor position.
+        // It correctly shifts all subsequent elements up.
+        array_splice($buffer, $cursorY + $scrollOffset, $n);
 
-        // Shift subsequent lines up
-        for ($y = $this->state->cursorY; $y <= $this->state->scrollBottom - $n; $y++) {
-            $src_y = $y + $n + $scrollOffset;
-            $dest_y = $y + $scrollOffset;
-            $buffer[$dest_y] = $buffer[$src_y] ?? [];
-        }
-
-        // Add new empty lines at the bottom of the scroll region
-        for ($y = $this->state->scrollBottom - $n + 1; $y <= $this->state->scrollBottom; $y++) {
-            $absY = $y + $scrollOffset;
-            $buffer[$absY] = [];
-        }
+        // Add new empty lines at the bottom of the buffer to maintain screen size.
+        $newEmptyLines = array_fill(0, $n, []);
+        array_splice($buffer, $scrollBottom + $scrollOffset - $n + 1, 0, $newEmptyLines);
     }
 
     private function doScrollUp(int $n): void
     {
+        $buffer = &$this->state->getActiveBuffer();
         $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
 
         for ($i = 0; $i < $n; $i++) {
-            // Take a snapshot of the region *before* modification
-            $regionSnapshot = [];
-            for ($y = $this->state->scrollTop; $y <= $this->state->scrollBottom; $y++) {
-                $absY = $y + $scrollOffset;
-                $regionSnapshot[$y] = $this->state->getActiveBuffer()[$absY] ?? [];
-            }
+            // End lifespan for the line that scrolls out of the top of the region
+            $this->endLifespanForLine($this->state->scrollTop + $scrollOffset, 0);
 
-            // End the lifespan of everything currently in the scroll region
-            for ($y = $this->state->scrollTop; $y <= $this->state->scrollBottom; $y++) {
-                $this->endLifespanForLine($y + $scrollOffset, 0);
-            }
-
-            // Shift lines up using the snapshot
+            // Shift all lines within the scroll region up by one
             for ($y = $this->state->scrollTop; $y < $this->state->scrollBottom; $y++) {
-                $sourceRow = $regionSnapshot[$y + 1] ?? [];
-                $destY = $y;
-                foreach ($sourceRow as $x => $lifespans) {
-                    if (empty($lifespans)) {
-                        continue;
-                    }
-                    $cell = end($lifespans);
-                    // If cell was active, write it to its new position
-                    if (!isset($cell['endTime']) || $cell['endTime'] > $this->currentTime) {
-                        $this->writeCharToHistoryAt($x, $destY, $cell['char'], $cell['style']);
-                    }
-                }
+                $src_y = $y + 1 + $scrollOffset;
+                $dest_y = $y + $scrollOffset;
+                $buffer[$dest_y] = $buffer[$src_y] ?? [];
             }
+
+            // The bottom line of the scroll region is now a new, empty line
+            $bottom_y = $this->state->scrollBottom;
+            $buffer[$bottom_y + $scrollOffset] = [];
         }
     }
 

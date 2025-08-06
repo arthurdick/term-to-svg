@@ -37,6 +37,27 @@ class AnsiCommandsTest extends TestCase
     }
 
     /**
+     * Finds the active cell at a given coordinate in the main buffer.
+     * An active cell is one whose startTime is before or at the current time,
+     * and whose endTime is not set or is after the current time.
+     */
+    private function findActiveCellAt(int $y, int $x): ?array
+    {
+        $buffer = $this->state->mainBuffer;
+        if (!isset($buffer[$y][$x]) || empty($buffer[$y][$x])) {
+            return null;
+        }
+
+        foreach (array_reverse($buffer[$y][$x]) as $cell) {
+            if ($cell['startTime'] <= $this->time && (!isset($cell['endTime']) || $cell['endTime'] > $this->time)) {
+                return $cell;
+            }
+        }
+        return null;
+    }
+
+
+    /**
      * Test CSI J (Erase in Display) with parameter 2 (clear entire screen).
      */
     public function testEraseInDisplayClearsEntireScreen(): void
@@ -44,16 +65,9 @@ class AnsiCommandsTest extends TestCase
         $this->process("Hello\nWorld");
         $this->process("\x1b[2J"); // ESC[2J
 
-        $buffer = $this->state->mainBuffer;
-
-        for ($y = 0; $y < 24; $y++) {
-            for ($x = 0; $x < 80; $x++) {
-                $this->assertArrayHasKey($y, $buffer);
-                $this->assertArrayHasKey($x, $buffer[$y]);
-                $lastCellState = end($buffer[$y][$x]);
-                $this->assertEquals(' ', $lastCellState['char']);
-            }
-        }
+        // 'H' at (0,0) and 'W' at (1,0) should now be inactive.
+        $this->assertNull($this->findActiveCellAt(0, 0));
+        $this->assertNull($this->findActiveCellAt(1, 0));
     }
 
     public function testCursorForwardMovesCursor(): void
@@ -130,12 +144,16 @@ class AnsiCommandsTest extends TestCase
     public function testEraseInLineFromCursorToEnd(): void
     {
         $this->process("some text");
-        $this->state->cursorX = 5;
+        $this->state->cursorX = 5; // On the 't' of 'text'
         $this->process("\x1b[0K");
-        $buffer = $this->state->mainBuffer;
+
+        // "some " should be untouched
+        $this->assertEquals('s', $this->findActiveCellAt(0, 0)['char']);
+        $this->assertEquals(' ', $this->findActiveCellAt(0, 4)['char']);
+
+        // "text" should be erased
         for ($x = 5; $x < 9; $x++) {
-            $lastCellState = end($buffer[0][$x]);
-            $this->assertEquals(' ', $lastCellState['char']);
+            $this->assertNull($this->findActiveCellAt(0, $x));
         }
     }
 
@@ -143,10 +161,14 @@ class AnsiCommandsTest extends TestCase
     {
         $this->process("abcdef");
         $this->state->cursorX = 2; // cursor on 'c'
-        $this->process("\x1b[2P"); // delete 2 chars
-        $buffer = $this->state->mainBuffer;
-        $this->assertEquals('e', end($buffer[0][2])['char']);
-        $this->assertEquals('f', end($buffer[0][3])['char']);
+        $this->process("\x1b[2P"); // delete 2 chars ('c', 'd')
+
+        $this->assertEquals('a', $this->findActiveCellAt(0, 0)['char']);
+        $this->assertEquals('b', $this->findActiveCellAt(0, 1)['char']);
+        $this->assertEquals('e', $this->findActiveCellAt(0, 2)['char']);
+        $this->assertEquals('f', $this->findActiveCellAt(0, 3)['char']);
+        $this->assertNull($this->findActiveCellAt(0, 4));
+        $this->assertNull($this->findActiveCellAt(0, 5));
     }
 
     public function testInsertCharacters(): void
@@ -154,12 +176,15 @@ class AnsiCommandsTest extends TestCase
         $this->process("abcdef");
         $this->state->cursorX = 2; // cursor on 'c'
         $this->process("\x1b[2@"); // insert 2 chars
-        $buffer = $this->state->mainBuffer;
-        $this->assertEquals(' ', end($buffer[0][2])['char']);
-        $this->assertEquals(' ', end($buffer[0][3])['char']);
-        $this->assertEquals('c', end($buffer[0][4])['char']);
-        $this->assertEquals('d', end($buffer[0][5])['char']);
+
+        $this->assertEquals('a', $this->findActiveCellAt(0, 0)['char']);
+        $this->assertEquals('b', $this->findActiveCellAt(0, 1)['char']);
+        $this->assertNull($this->findActiveCellAt(0, 2));
+        $this->assertNull($this->findActiveCellAt(0, 3));
+        $this->assertEquals('c', $this->findActiveCellAt(0, 4)['char']);
+        $this->assertEquals('d', $this->findActiveCellAt(0, 5)['char']);
     }
+
 
     public function testSetScrollRegion(): void
     {
@@ -170,35 +195,40 @@ class AnsiCommandsTest extends TestCase
 
     public function testInsertLines(): void
     {
-        $this->state->cursorY = 10;
-        $this->process("\x1b[2L");
-        $buffer = $this->state->mainBuffer;
-        for ($x = 0; $x < 80; $x++) {
-            $this->assertEquals(' ', end($buffer[10][$x])['char']);
-            $this->assertEquals(' ', end($buffer[11][$x])['char']);
-        }
+        $this->process("line1\nline2\nline3");
+        $this->state->cursorY = 1; // On line2
+        $this->process("\x1b[2L"); // Insert 2 lines
+
+        $this->assertEquals('l', $this->findActiveCellAt(0, 0)['char']); // line1 is untouched
+        $this->assertNull($this->findActiveCellAt(1, 0)); // New line
+        $this->assertNull($this->findActiveCellAt(2, 0)); // New line
+        $this->assertEquals('l', $this->findActiveCellAt(3, 0)['char']); // line2 is shifted down
     }
 
     public function testDeleteLines(): void
     {
         $this->process("line1\r\nline2\r\nline3");
         $this->state->cursorY = 1;
-        $this->process("\x1b[1M");
-        $buffer = $this->state->mainBuffer;
-        $this->assertEquals('l', end($buffer[1][0])['char']);
-        $this->assertEquals('i', end($buffer[1][1])['char']);
-        $this->assertEquals('n', end($buffer[1][2])['char']);
-        $this->assertEquals('e', end($buffer[1][3])['char']);
-        $this->assertEquals('3', end($buffer[1][4])['char']);
+        $this->process("\x1b[1M"); // Delete line at cursor (line2)
+
+        // Assert that line 1 is untouched.
+        $this->assertEquals('l', $this->findActiveCellAt(0, 0)['char']);
+        // Assert that line 3 has moved up to line 2's original position.
+        $this->assertEquals('l', $this->findActiveCellAt(1, 0)['char']);
+        $this->assertEquals('3', $this->findActiveCellAt(1, 4)['char']);
+        // Assert that the line where line 3 used to be is now empty.
+        $this->assertNull($this->findActiveCellAt(2, 0));
     }
+
 
     public function testScrollUp(): void
     {
         $this->process("line1\r\nline2");
         $this->process("\x1b[1S");
-        $buffer = $this->state->mainBuffer;
-        $this->assertEquals('l', end($buffer[0][0])['char']);
-        $this->assertEquals('2', end($buffer[0][4])['char']);
+
+        $this->assertEquals('l', $this->findActiveCellAt(0, 0)['char']);
+        $this->assertEquals('2', $this->findActiveCellAt(0, 4)['char']);
+        $this->assertNull($this->findActiveCellAt(1, 0)); // Line 2 should be empty
     }
 
     public function testScrollUpInRegionMovesTextCorrectly(): void
@@ -226,32 +256,22 @@ class AnsiCommandsTest extends TestCase
         // Move cursor to the bottom of the scroll region and trigger a scroll
         $this->process("\x1b[7;1H\n");
 
-        // -- Assert --
-        $buffer = $this->state->mainBuffer;
 
+        // -- Assert --
         // Check that the header is untouched
-        $this->assertEquals('H', end($buffer[0][0])['char']);
+        $this->assertEquals('H', $this->findActiveCellAt(0, 0)['char']);
 
         // Check that the footer is untouched
-        $this->assertEquals('F', end($buffer[9][0])['char']);
+        $this->assertEquals('F', $this->findActiveCellAt(9, 0)['char']);
 
-        // Check that "Line 3" is gone (scrolled out of view)
-        // The old cell's lifespan should have ended. The original character is at index 0 of the history.
-        $this->assertArrayHasKey('endTime', $buffer[2][0][0]);
-        $this->assertNotNull($buffer[2][0][0]['endTime']);
+        // Check that "Line 3" is gone (scrolled out of view) and "Line 4" has moved up to its place (row 2)
+        $this->assertEquals('4', $this->findActiveCellAt(2, 5)['char']);
 
-        // Check that "Line 4" has moved up to row 2. The character '4' is at index 5.
-        $this->assertEquals('4', end($buffer[2][5])['char']);
-        $this->assertEquals($this->time, end($buffer[2][5])['startTime']);
+        // Check that "Line 7" has moved up to row 5.
+        $this->assertEquals('7', $this->findActiveCellAt(5, 5)['char']);
 
-        // Check that "Line 7" has moved up to row 5. The character '7' is at index 5.
-        $this->assertEquals('7', end($buffer[5][5])['char']);
-        $this->assertEquals($this->time, end($buffer[5][5])['startTime']);
-
-        // Check that the last line of the scroll region is now blank where text used to be
-        for ($x = 0; $x < 6; $x++) {
-            $this->assertEquals(' ', end($buffer[6][$x])['char']);
-        }
+        // Check that the last line of the scroll region is now blank
+        $this->assertNull($this->findActiveCellAt(6, 0));
     }
 
 
@@ -259,9 +279,10 @@ class AnsiCommandsTest extends TestCase
     {
         $this->process("line1\nline2");
         $this->process("\x1b[1T");
-        $buffer = $this->state->mainBuffer;
-        $this->assertEquals('l', end($buffer[1][0])['char']);
-        $this->assertEquals('1', end($buffer[1][4])['char']);
+
+        $this->assertNull($this->findActiveCellAt(0, 0));
+        $this->assertEquals('l', $this->findActiveCellAt(1, 0)['char']);
+        $this->assertEquals('1', $this->findActiveCellAt(1, 4)['char']);
     }
 
     public function testAlternateScreenBuffer(): void
@@ -368,21 +389,19 @@ class AnsiCommandsTest extends TestCase
         $this->state->cursorX = 2; // Cursor on 'c'
         $this->process("\x1b[3X"); // Erase 3 characters (c, d, e)
 
-        $buffer = $this->state->mainBuffer;
-
         // 'a' and 'b' should be unchanged
-        $this->assertEquals('a', end($buffer[0][0])['char']);
-        $this->assertEquals('b', end($buffer[0][1])['char']);
+        $this->assertEquals('a', $this->findActiveCellAt(0, 0)['char']);
+        $this->assertEquals('b', $this->findActiveCellAt(0, 1)['char']);
 
-        // 'c', 'd', 'e' should be replaced with blanks
-        $this->assertEquals(' ', end($buffer[0][2])['char']);
-        $this->assertEquals(' ', end($buffer[0][3])['char']);
-        $this->assertEquals(' ', end($buffer[0][4])['char']);
+        // 'c', 'd', 'e' should be erased
+        $this->assertNull($this->findActiveCellAt(0, 2));
+        $this->assertNull($this->findActiveCellAt(0, 3));
+        $this->assertNull($this->findActiveCellAt(0, 4));
 
         // 'f', 'g', 'h' should be unchanged
-        $this->assertEquals('f', end($buffer[0][5])['char']);
-        $this->assertEquals('g', end($buffer[0][6])['char']);
-        $this->assertEquals('h', end($buffer[0][7])['char']);
+        $this->assertEquals('f', $this->findActiveCellAt(0, 5)['char']);
+        $this->assertEquals('g', $this->findActiveCellAt(0, 6)['char']);
+        $this->assertEquals('h', $this->findActiveCellAt(0, 7)['char']);
     }
 
     public function testSaveCursorPosition(): void
