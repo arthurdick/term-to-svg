@@ -109,8 +109,19 @@ $options['typescript_file'] = $options['t'] ?? $options['typescript_file'] ?? nu
 $options['timing_file'] = $options['i'] ?? $options['timing_file'] ?? null;
 $options['output_file'] = $options['o'] ?? $options['output_file'] ?? null;
 
-if (!$options['typescript_file'] || !$options['timing_file'] || !$options['output_file']) {
-    echo "Error: --typescript_file (-t), --timing_file (-i), and --output_file (-o) are required options.\n";
+$missing_options = [];
+if (empty($options['typescript_file'])) {
+    $missing_options[] = '--typescript_file (-t)';
+}
+if (empty($options['timing_file'])) {
+    $missing_options[] = '--timing_file (-i)';
+}
+if (empty($options['output_file'])) {
+    $missing_options[] = '--output_file (-o)';
+}
+
+if (!empty($missing_options)) {
+    echo "Error: Missing required option(s): " . implode(', ', $missing_options) . "\n";
     echo "Use --help for more information.\n";
     exit(1);
 }
