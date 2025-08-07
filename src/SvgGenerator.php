@@ -29,7 +29,7 @@ class SvgGenerator
         $this->state = $state;
         $this->config = $config;
         $this->totalDuration = $totalDuration;
-        
+
         // Use the provided ID from config, otherwise generate a dynamic one.
         if (!empty($this->config['id'])) {
             $this->uniqueId = $this->config['id'];

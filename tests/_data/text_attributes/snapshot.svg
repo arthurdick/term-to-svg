@@ -1,57 +1,57 @@
-<svg id="svg9026bcf2" viewBox="0 0 672 406" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family='Menlo, Monaco, "Courier New", monospace' font-size="14" text-rendering="geometricPrecision">
+<svg id="t" viewBox="0 0 672 406" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family='Menlo, Monaco, "Courier New", monospace' font-size="14" text-rendering="geometricPrecision">
     <title>Terminal Session Recording</title>
     <style>
-      .c6_svg9026bcf2 { fill:#1a1a1a; }
-      .c1_svg9026bcf2 { fill:#e0e0e0; }
-      .c3_svg9026bcf2 { fill:#e0e0e0;font-style:italic; }
-      .c2_svg9026bcf2 { fill:#e0e0e0;font-weight:bold; }
-      .c10_svg9026bcf2 { fill:#e0e0e0;font-weight:bold;opacity:0.5; }
-      .c9_svg9026bcf2 { fill:#e0e0e0;font-weight:bold;text-decoration:underline; }
-      .c5_svg9026bcf2 { fill:#e0e0e0;opacity:0.5; }
-      .c7_svg9026bcf2 { fill:#e0e0e0;opacity:0; }
-      .c8_svg9026bcf2 { fill:#e0e0e0;text-decoration:line-through; }
-      .c4_svg9026bcf2 { fill:#e0e0e0;text-decoration:underline; }
+      .c6_t { fill:#1a1a1a; }
+      .c1_t { fill:#e0e0e0; }
+      .c3_t { fill:#e0e0e0;font-style:italic; }
+      .c2_t { fill:#e0e0e0;font-weight:bold; }
+      .c10_t { fill:#e0e0e0;font-weight:bold;opacity:0.5; }
+      .c9_t { fill:#e0e0e0;font-weight:bold;text-decoration:underline; }
+      .c5_t { fill:#e0e0e0;opacity:0.5; }
+      .c7_t { fill:#e0e0e0;opacity:0; }
+      .c8_t { fill:#e0e0e0;text-decoration:line-through; }
+      .c4_t { fill:#e0e0e0;text-decoration:underline; }
     </style>
 
     <rect width="100%" height="100%" fill="#1a1a1a" />
         
     <rect width="100%" height="100%" fill="#1a1a1a" />
-    <g id="svg9026bcf2_master">
-        <animate id="svg9026bcf2_loop" attributeName="visibility" from="hidden" to="visible" begin="0;svg9026bcf2_loop.end" dur="5.026091s" />
-        <g id="svg9026bcf2_main-screen" display="inline">
-        <set attributeName="display" to="inline" begin="svg9026bcf2_loop.begin" />
+    <g id="t_master">
+        <animate id="t_loop" attributeName="visibility" from="hidden" to="visible" begin="0;t_loop.end" dur="5.026091s" />
+        <g id="t_main-screen" display="inline">
+        <set attributeName="display" to="inline" begin="t_loop.begin" />
 
             <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
-                <set attributeName="visibility" to="visible" begin="svg9026bcf2_loop.begin" />
-        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="svg9026bcf2_loop.begin" fill="freeze" />
-<rect class="c1_svg9026bcf2" x="0.00" y="84.00" width="151.20" height="16.80"><set attributeName="visibility" to="visible" begin="svg9026bcf2_loop.begin+0.0165s" /><set attributeName="visibility" to="hidden" begin="svg9026bcf2_loop.begin" /></rect><rect class="c1_svg9026bcf2" x="0.00" y="100.80" width="109.20" height="16.80"><set attributeName="visibility" to="visible" begin="svg9026bcf2_loop.begin+0.0184s" /><set attributeName="visibility" to="hidden" begin="svg9026bcf2_loop.begin" /></rect><text class="c1_svg9026bcf2" x="0.00" y="14.00">Normal Text<set attributeName="visibility" to="visible" begin="svg9026bcf2_loop.begin+0.0067s" /><set attributeName="visibility" to="hidden" begin="svg9026bcf2_loop.begin" /></text><text class="c2_svg9026bcf2" x="0.00" y="30.80">Bold Text<set attributeName="visibility" to="visible" begin="svg9026bcf2_loop.begin+0.0087s" /><set attributeName="visibility" to="hidden" begin="svg9026bcf2_loop.begin" /></text><text class="c3_svg9026bcf2" x="0.00" y="47.60">Italic Text<set attributeName="visibility" to="visible" begin="svg9026bcf2_loop.begin+0.0106s" /><set attributeName="visibility" to="hidden" begin="svg9026bcf2_loop.begin" /></text><text class="c4_svg9026bcf2" x="0.00" y="64.40">Underlined Text<set attributeName="visibility" to="visible" begin="svg9026bcf2_loop.begin+0.0126s" /><set attributeName="visibility" to="hidden" begin="svg9026bcf2_loop.begin" /></text><text class="c5_svg9026bcf2" x="0.00" y="81.20">Dim/Faint Text<set attributeName="visibility" to="visible" begin="svg9026bcf2_loop.begin+0.0145s" /><set attributeName="visibility" to="hidden" begin="svg9026bcf2_loop.begin" /></text><text class="c6_svg9026bcf2" x="0.00" y="98.00">Reverse Video Text<set attributeName="visibility" to="visible" begin="svg9026bcf2_loop.begin+0.0165s" /><set attributeName="visibility" to="hidden" begin="svg9026bcf2_loop.begin" /></text><text class="c6_svg9026bcf2" x="0.00" y="114.80">Standout Text<set attributeName="visibility" to="visible" begin="svg9026bcf2_loop.begin+0.0184s" /><set attributeName="visibility" to="hidden" begin="svg9026bcf2_loop.begin" /></text><text class="c1_svg9026bcf2" x="0.00" y="131.60" xml:space="preserve">This is <set attributeName="visibility" to="visible" begin="svg9026bcf2_loop.begin+0.0204s" /><set attributeName="visibility" to="hidden" begin="svg9026bcf2_loop.begin" /></text><text class="c7_svg9026bcf2" x="67.20" y="131.60">Invisible Text<set attributeName="visibility" to="visible" begin="svg9026bcf2_loop.begin+0.0204s" /><set attributeName="visibility" to="hidden" begin="svg9026bcf2_loop.begin" /></text><text class="c1_svg9026bcf2" x="184.80" y="131.60">, but it's here.<set attributeName="visibility" to="visible" begin="svg9026bcf2_loop.begin+0.0204s" /><set attributeName="visibility" to="hidden" begin="svg9026bcf2_loop.begin" /></text><text class="c8_svg9026bcf2" x="0.00" y="148.40">Strikethrough Text<set attributeName="visibility" to="visible" begin="svg9026bcf2_loop.begin+0.0204s" /><set attributeName="visibility" to="hidden" begin="svg9026bcf2_loop.begin" /></text><text class="c9_svg9026bcf2" x="0.00" y="182.00">Bold and Underlined Text<set attributeName="visibility" to="visible" begin="svg9026bcf2_loop.begin+0.0232s" /><set attributeName="visibility" to="hidden" begin="svg9026bcf2_loop.begin" /></text><text class="c10_svg9026bcf2" x="0.00" y="198.80">Bold and Dim Text<set attributeName="visibility" to="visible" begin="svg9026bcf2_loop.begin+0.0261s" /><set attributeName="visibility" to="hidden" begin="svg9026bcf2_loop.begin" /></text>
+                <set attributeName="visibility" to="visible" begin="t_loop.begin" />
+        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="t_loop.begin" fill="freeze" />
+<rect class="c1_t" x="0.00" y="84.00" width="151.20" height="16.80"><set attributeName="visibility" to="visible" begin="t_loop.begin+0.0165s" /><set attributeName="visibility" to="hidden" begin="t_loop.begin" /></rect><rect class="c1_t" x="0.00" y="100.80" width="109.20" height="16.80"><set attributeName="visibility" to="visible" begin="t_loop.begin+0.0184s" /><set attributeName="visibility" to="hidden" begin="t_loop.begin" /></rect><text class="c1_t" x="0.00" y="14.00">Normal Text<set attributeName="visibility" to="visible" begin="t_loop.begin+0.0067s" /><set attributeName="visibility" to="hidden" begin="t_loop.begin" /></text><text class="c2_t" x="0.00" y="30.80">Bold Text<set attributeName="visibility" to="visible" begin="t_loop.begin+0.0087s" /><set attributeName="visibility" to="hidden" begin="t_loop.begin" /></text><text class="c3_t" x="0.00" y="47.60">Italic Text<set attributeName="visibility" to="visible" begin="t_loop.begin+0.0106s" /><set attributeName="visibility" to="hidden" begin="t_loop.begin" /></text><text class="c4_t" x="0.00" y="64.40">Underlined Text<set attributeName="visibility" to="visible" begin="t_loop.begin+0.0126s" /><set attributeName="visibility" to="hidden" begin="t_loop.begin" /></text><text class="c5_t" x="0.00" y="81.20">Dim/Faint Text<set attributeName="visibility" to="visible" begin="t_loop.begin+0.0145s" /><set attributeName="visibility" to="hidden" begin="t_loop.begin" /></text><text class="c6_t" x="0.00" y="98.00">Reverse Video Text<set attributeName="visibility" to="visible" begin="t_loop.begin+0.0165s" /><set attributeName="visibility" to="hidden" begin="t_loop.begin" /></text><text class="c6_t" x="0.00" y="114.80">Standout Text<set attributeName="visibility" to="visible" begin="t_loop.begin+0.0184s" /><set attributeName="visibility" to="hidden" begin="t_loop.begin" /></text><text class="c1_t" x="0.00" y="131.60" xml:space="preserve">This is <set attributeName="visibility" to="visible" begin="t_loop.begin+0.0204s" /><set attributeName="visibility" to="hidden" begin="t_loop.begin" /></text><text class="c7_t" x="67.20" y="131.60">Invisible Text<set attributeName="visibility" to="visible" begin="t_loop.begin+0.0204s" /><set attributeName="visibility" to="hidden" begin="t_loop.begin" /></text><text class="c1_t" x="184.80" y="131.60">, but it's here.<set attributeName="visibility" to="visible" begin="t_loop.begin+0.0204s" /><set attributeName="visibility" to="hidden" begin="t_loop.begin" /></text><text class="c8_t" x="0.00" y="148.40">Strikethrough Text<set attributeName="visibility" to="visible" begin="t_loop.begin+0.0204s" /><set attributeName="visibility" to="hidden" begin="t_loop.begin" /></text><text class="c9_t" x="0.00" y="182.00">Bold and Underlined Text<set attributeName="visibility" to="visible" begin="t_loop.begin+0.0232s" /><set attributeName="visibility" to="hidden" begin="t_loop.begin" /></text><text class="c10_t" x="0.00" y="198.80">Bold and Dim Text<set attributeName="visibility" to="visible" begin="t_loop.begin+0.0261s" /><set attributeName="visibility" to="hidden" begin="t_loop.begin" /></text>
             </g>
         </g>
-        <g id="svg9026bcf2_alt-screen" display="none">
-        <set attributeName="display" to="none" begin="svg9026bcf2_loop.begin" />
+        <g id="t_alt-screen" display="none">
+        <set attributeName="display" to="none" begin="t_loop.begin" />
 
             <g class="terminal-screen" transform="translate(0, 0)" visibility="hidden" text-rendering="geometricPrecision">
-                <set attributeName="visibility" to="visible" begin="svg9026bcf2_loop.begin" />
-        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="svg9026bcf2_loop.begin" fill="freeze" />
+                <set attributeName="visibility" to="visible" begin="t_loop.begin" />
+        <animateTransform attributeName="transform" type="translate" to="0,0" dur="0.001s" begin="t_loop.begin" fill="freeze" />
 
             </g>
         </g>
-        <rect id="svg9026bcf2_cursor" width="8.4" height="16.8" fill="#e0e0e0" opacity="0.7" visibility="visible">
-        <set attributeName="visibility" to="visible" begin="svg9026bcf2_loop.begin+0.0000s" />
-        <set attributeName="x" to="0.00" begin="svg9026bcf2_loop.begin+0.0067s" />
-        <set attributeName="y" to="16.80" begin="svg9026bcf2_loop.begin+0.0067s" />
-        <set attributeName="y" to="33.60" begin="svg9026bcf2_loop.begin+0.0087s" />
-        <set attributeName="y" to="50.40" begin="svg9026bcf2_loop.begin+0.0106s" />
-        <set attributeName="y" to="67.20" begin="svg9026bcf2_loop.begin+0.0126s" />
-        <set attributeName="y" to="84.00" begin="svg9026bcf2_loop.begin+0.0145s" />
-        <set attributeName="y" to="100.80" begin="svg9026bcf2_loop.begin+0.0165s" />
-        <set attributeName="y" to="117.60" begin="svg9026bcf2_loop.begin+0.0184s" />
-        <set attributeName="y" to="168.00" begin="svg9026bcf2_loop.begin+0.0204s" />
-        <set attributeName="y" to="184.80" begin="svg9026bcf2_loop.begin+0.0232s" />
-        <set attributeName="y" to="201.60" begin="svg9026bcf2_loop.begin+0.0261s" />
-        <set attributeName="x" to="0.00" begin="svg9026bcf2_loop.begin"/>
-        <set attributeName="y" to="0.00" begin="svg9026bcf2_loop.begin"/>
-        <set attributeName="visibility" to="visible" begin="svg9026bcf2_loop.begin"/>
+        <rect id="t_cursor" width="8.4" height="16.8" fill="#e0e0e0" opacity="0.7" visibility="visible">
+        <set attributeName="visibility" to="visible" begin="t_loop.begin+0.0000s" />
+        <set attributeName="x" to="0.00" begin="t_loop.begin+0.0067s" />
+        <set attributeName="y" to="16.80" begin="t_loop.begin+0.0067s" />
+        <set attributeName="y" to="33.60" begin="t_loop.begin+0.0087s" />
+        <set attributeName="y" to="50.40" begin="t_loop.begin+0.0106s" />
+        <set attributeName="y" to="67.20" begin="t_loop.begin+0.0126s" />
+        <set attributeName="y" to="84.00" begin="t_loop.begin+0.0145s" />
+        <set attributeName="y" to="100.80" begin="t_loop.begin+0.0165s" />
+        <set attributeName="y" to="117.60" begin="t_loop.begin+0.0184s" />
+        <set attributeName="y" to="168.00" begin="t_loop.begin+0.0204s" />
+        <set attributeName="y" to="184.80" begin="t_loop.begin+0.0232s" />
+        <set attributeName="y" to="201.60" begin="t_loop.begin+0.0261s" />
+        <set attributeName="x" to="0.00" begin="t_loop.begin"/>
+        <set attributeName="y" to="0.00" begin="t_loop.begin"/>
+        <set attributeName="visibility" to="visible" begin="t_loop.begin"/>
 
         </rect>
     </g>

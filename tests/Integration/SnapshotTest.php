@@ -30,7 +30,7 @@ class SnapshotTest extends TestCase
 
         $config = Config::DEFAULTS;
         $config['id'] = 't';
-        
+
         $converter = new TerminalToSvgConverter($typescriptFile, $timingFile, $config);
         $svgContent = trim($converter->convert());
 
