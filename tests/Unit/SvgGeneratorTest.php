@@ -71,6 +71,23 @@ class SvgGeneratorTest extends TestCase
         $this->assertMatchesRegularExpression('/\.c1_svg[a-f0-9]+ \{ fill:#e0e0e0; \}/', $svg);
     }
 
+    public function testBlinkingTextElementGeneration(): void
+    {
+        $styleWithBlink = $this->state->currentStyle;
+        $styleWithBlink['blink'] = true;
+
+        $this->state->mainBuffer[0][0][] = [
+            'char' => 'B',
+            'style' => $styleWithBlink,
+            'startTime' => 0.1,
+        ];
+
+        $generator = $this->createGenerator();
+        $svg = $generator->generate();
+
+        $this->assertMatchesRegularExpression('/<animate attributeName="visibility" from="visible" to="hidden" dur="1s" repeatCount="indefinite" begin="svg[a-f0-9]+_loop.begin\+0.1000s" \/>/', $svg);
+    }
+
     public function testRectElementForBackgroundGeneration(): void
     {
         $styleWithBg = $this->state->currentStyle;

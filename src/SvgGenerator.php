@@ -504,7 +504,11 @@ SVG;
 
                         $blinkAnims = '';
                         if ($style['blink']) {
-                            $blinkAnims = '<animate attributeName="visibility" from="visible" to="hidden" dur="1s" repeatCount="indefinite" />';
+                            $blinkAnims = sprintf(
+                                '<animate attributeName="visibility" from="visible" to="hidden" dur="1s" repeatCount="indefinite" begin="%s_loop.begin+%.4fs" />',
+                                $this->uniqueId,
+                                $cell['startTime']
+                            );
                         }
 
                         $spacePreserveAttr = '';
