@@ -497,19 +497,25 @@ SVG;
 
                         $textClass = $this->getClassName($textCss);
 
+                        $blinkAnims = '';
+                        if ($style['blink']) {
+                            $blinkAnims = '<animate attributeName="visibility" from="visible" to="hidden" dur="1s" repeatCount="indefinite" />';
+                        }
+
                         $spacePreserveAttr = '';
                         if (str_starts_with($textChunk, ' ') || str_ends_with($textChunk, ' ') || strpos($textChunk, '  ') !== false) {
                             $spacePreserveAttr = ' xml:space="preserve"';
                         }
 
                         $textElement = sprintf(
-                            '<text class="%s" x="%.2F" y="%.2F"%s>%s%s</text>',
+                            '<text class="%s" x="%.2F" y="%.2F"%s>%s%s%s</text>',
                             $textClass,
                             $textX,
                             $textY,
                             $spacePreserveAttr,
                             $textChunk,
-                            $visibilityAnims
+                            $visibilityAnims,
+                            $blinkAnims
                         );
 
                         if (!empty($style['link'])) {

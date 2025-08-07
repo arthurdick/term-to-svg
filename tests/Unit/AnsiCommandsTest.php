@@ -347,6 +347,14 @@ class AnsiCommandsTest extends TestCase
         $this->assertFalse($this->state->currentStyle['inverse']);
     }
 
+    public function testSetGraphicsModeBlink(): void
+    {
+        $this->process("\x1b[5m");
+        $this->assertTrue($this->state->currentStyle['blink']);
+        $this->process("\x1b[25m");
+        $this->assertFalse($this->state->currentStyle['blink']);
+    }
+
     public function testSetGraphicsModeBold(): void
     {
         $this->process("\x1b[1m");

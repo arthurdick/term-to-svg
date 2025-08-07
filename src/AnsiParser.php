@@ -405,6 +405,9 @@ class AnsiParser
             } elseif ($p === 4) {
                 $this->state->currentStyle['underline'] = true;
                 $handled = true;
+            } elseif ($p === 5) {
+                $this->state->currentStyle['blink'] = true;
+                $handled = true;
             } elseif ($p === 7) {
                 $this->state->currentStyle['inverse'] = true;
                 $handled = true;
@@ -423,6 +426,9 @@ class AnsiParser
                 $handled = true;
             } elseif ($p === 24) {
                 $this->state->currentStyle['underline'] = false;
+                $handled = true;
+            } elseif ($p === 25) {
+                $this->state->currentStyle['blink'] = false;
                 $handled = true;
             } elseif ($p === 27) {
                 $this->state->currentStyle['inverse'] = false;

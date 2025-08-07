@@ -98,6 +98,7 @@ class TerminalState
             'inverse' => false,
             'strikethrough' => false,
             'invisible' => false,
+            'blink' => false,
             'fg_hex' => null,
             'bg_hex' => null,
             'link' => null,
