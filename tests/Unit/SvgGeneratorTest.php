@@ -61,7 +61,7 @@ class SvgGeneratorTest extends TestCase
         $generator = $this->createGenerator();
         $svg = $generator->generate();
 
-        $expectedY = ($this->charHeight) - ($this->charHeight - $this->config['font_size']) / 2;
+        $expectedY = ($this->charHeight) - ($this->charHeight - $this->config['font_size']);
         $expectedRegex = sprintf(
             '/<text class="c1_svg[a-f0-9]+" x="0.00" y="%.2F">Hi<set attributeName="visibility" to="visible" begin="svg[a-f0-9]+_loop.begin\+0.1000s" \/><set attributeName="visibility" to="hidden" begin="svg[a-f0-9]+_loop.begin" \/><\/text>/',
             $expectedY
