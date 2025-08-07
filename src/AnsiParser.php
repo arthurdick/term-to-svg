@@ -669,22 +669,36 @@ class AnsiParser
     private function doScrollUp(int $n): void
     {
         $buffer = &$this->state->getActiveBuffer();
-        $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
+        $scrollOffset = $this->state->getActiveScrollOffsetRef();
 
         for ($i = 0; $i < $n; $i++) {
-            // End lifespan for the line that scrolls out of the top of the region
+            // End the lifespan of the top line in the scroll region
             $this->endLifespanForLine($this->state->scrollTop + $scrollOffset, 0);
 
-            // Shift all lines within the scroll region up by one
+            // Shift lines up within the scroll region
             for ($y = $this->state->scrollTop; $y < $this->state->scrollBottom; $y++) {
-                $src_y = $y + 1 + $scrollOffset;
-                $dest_y = $y + $scrollOffset;
-                $buffer[$dest_y] = $buffer[$src_y] ?? [];
+                $srcY = $y + 1 + $scrollOffset;
+                $destY = $y + $scrollOffset;
+
+                // End the lifespan of the destination line before overwriting
+                $this->endLifespanForLine($destY, 0);
+
+                if (isset($buffer[$srcY])) {
+                    foreach ($buffer[$srcY] as $x => $lifespans) {
+                        $lastCell = end($lifespans);
+                        if ($lastCell && (!isset($lastCell['endTime']) || $lastCell['endTime'] > $this->currentTime)) {
+                            $buffer[$destY][$x][] = [
+                                'char' => $lastCell['char'],
+                                'style' => $lastCell['style'],
+                                'startTime' => $this->currentTime,
+                            ];
+                        }
+                    }
+                }
             }
 
-            // The bottom line of the scroll region is now a new, empty line
-            $bottom_y = $this->state->scrollBottom;
-            $buffer[$bottom_y + $scrollOffset] = [];
+            // Clear the last line of the scroll region
+            $this->endLifespanForLine($this->state->scrollBottom + $scrollOffset, 0);
         }
     }
 
@@ -692,7 +706,7 @@ class AnsiParser
     private function doScrollDown(int $n): void
     {
         $buffer = &$this->state->getActiveBuffer();
-        $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
+        $scrollOffset = $this->state->getActiveScrollOffsetRef();
 
         for ($i = 0; $i < $n; $i++) {
             // End lifespan for the line at the bottom of the region
@@ -700,14 +714,28 @@ class AnsiParser
 
             // Shift lines down
             for ($y = $this->state->scrollBottom; $y > $this->state->scrollTop; $y--) {
-                $src_y = $y - 1 + $scrollOffset;
-                $dest_y = $y + $scrollOffset;
-                $buffer[$dest_y] = $buffer[$src_y] ?? [];
+                $srcY = $y - 1 + $scrollOffset;
+                $destY = $y + $scrollOffset;
+
+                // End the lifespan of the destination line before overwriting
+                $this->endLifespanForLine($destY, 0);
+
+                if (isset($buffer[$srcY])) {
+                    foreach ($buffer[$srcY] as $x => $lifespans) {
+                        $lastCell = end($lifespans);
+                        if ($lastCell && (!isset($lastCell['endTime']) || $lastCell['endTime'] > $this->currentTime)) {
+                            $buffer[$destY][$x][] = [
+                                'char' => $lastCell['char'],
+                                'style' => $lastCell['style'],
+                                'startTime' => $this->currentTime,
+                            ];
+                        }
+                    }
+                }
             }
 
             // The top line of the scroll region is now a new, empty line
-            $top_y = $this->state->scrollTop;
-            $buffer[$top_y + $scrollOffset] = [];
+            $this->endLifespanForLine($this->state->scrollTop + $scrollOffset, 0);
         }
     }
 
