@@ -16,6 +16,7 @@ class Config
      * @var array<string, mixed> Default configuration values.
      */
     public const DEFAULTS = [
+        'id' => null,
         'rows' => 24,
         'cols' => 80,
         'font_size' => 14,

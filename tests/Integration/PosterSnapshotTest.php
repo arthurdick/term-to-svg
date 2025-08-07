@@ -28,6 +28,7 @@ class PosterSnapshotTest extends TestCase
         $expected = trim(file_get_contents($snapshotFile));
 
         $config = Config::DEFAULTS;
+        $config['id'] = 't';
         $config['poster_at'] = $time;
 
         $converter = new TerminalToSvgConverter($typescriptFile, $timingFile, $config);

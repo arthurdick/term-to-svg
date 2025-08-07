@@ -42,6 +42,7 @@ foreach ($testCaseDirs as $fileInfo) {
             foreach ($posterTests as $time => $filename) {
                 echo "  - Generating poster at time '{$time}' -> {$filename}\n";
                 $config = Config::DEFAULTS;
+                $config['id'] = 't';
                 $config['poster_at'] = $time;
                 $converter = new TerminalToSvgConverter($typescriptFile, $timingFile, $config);
                 $svgContent = $converter->convert();
@@ -50,7 +51,9 @@ foreach ($testCaseDirs as $fileInfo) {
         } else {
             echo "Processing animated snapshot for {$testCaseName}...\n";
             $snapshotFile = $caseDir . '/snapshot.svg';
-            $converter = new TerminalToSvgConverter($typescriptFile, $timingFile, Config::DEFAULTS);
+            $config = Config::DEFAULTS;
+            $config['id'] = 't';
+            $converter = new TerminalToSvgConverter($typescriptFile, $timingFile, $config);
             $svgContent = $converter->convert();
             file_put_contents($snapshotFile, trim($svgContent));
         }

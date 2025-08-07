@@ -28,8 +28,10 @@ class SnapshotTest extends TestCase
 
         $expected = trim(file_get_contents($snapshotFile));
 
-        // Use the new Config class for default settings
-        $converter = new TerminalToSvgConverter($typescriptFile, $timingFile, Config::DEFAULTS);
+        $config = Config::DEFAULTS;
+        $config['id'] = 't';
+        
+        $converter = new TerminalToSvgConverter($typescriptFile, $timingFile, $config);
         $svgContent = trim($converter->convert());
 
         $this->assertEquals($expected, $svgContent, "Generated SVG does not match snapshot for test case: $testCaseName");

@@ -80,6 +80,7 @@ $long_options = [
     "typescript_file:",
     "timing_file:",
     "output_file:",
+    "id:",
     "rows:",
     "cols:",
     "font_size:",

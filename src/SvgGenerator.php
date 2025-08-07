@@ -29,8 +29,13 @@ class SvgGenerator
         $this->state = $state;
         $this->config = $config;
         $this->totalDuration = $totalDuration;
-        // Generate a unique, deterministic ID from the terminal state upon initialization.
-        $this->uniqueId = 'svg' . substr(md5(serialize($state)), 0, 8);
+        
+        // Use the provided ID from config, otherwise generate a dynamic one.
+        if (!empty($this->config['id'])) {
+            $this->uniqueId = $this->config['id'];
+        } else {
+            $this->uniqueId = 'svg' . substr(md5(serialize($state)), 0, 8);
+        }
     }
 
     /**
