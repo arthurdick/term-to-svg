@@ -1,0 +1,42 @@
+<svg id="t" viewBox="0 0 672 406" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family='Menlo, Monaco, "Courier New", monospace' font-size="14" text-rendering="geometricPrecision">
+    <title>Terminal Session Recording</title>
+    <style>
+            .c1_t { fill:#e0e0e0;text-decoration:underline; }
+
+            .v1_t {
+        animation: 5.002853s steps(1, end) infinite t-v1_t-anim;
+        visibility: hidden;
+      }
+      @keyframes t-v1_t-anim {
+        0.0000% { visibility: hidden; } 0.0570% { visibility: visible; }
+      }      #t_cursor { animation: 5.002853s steps(1, end) infinite t-cursor-pos, 5.002853s steps(1, end) infinite t-cursor-vis; }
+      #t_main-screen { animation: 5.002853s steps(1, end) infinite t-main-screen; opacity: 1; pointer-events: auto; }
+      #t_alt-screen { animation: 5.002853s steps(1, end) infinite t-alt-screen; opacity: 0; pointer-events: none; }
+      #t_main-scroll { animation: 5.002853s steps(1, end) infinite t-main-scroll; }
+      #t_alt-scroll { animation: 5.002853s steps(1, end) infinite t-alt-scroll; }
+      @keyframes t-cursor-pos { 0.0000% { transform: translate(0.00px, 0.00px); } 0.0570% { transform: translate(0.00px, 16.80px); } }
+      @keyframes t-cursor-vis { 0.0000% { visibility: visible; } }
+      @keyframes t-main-screen { 0% { opacity: 1; pointer-events: auto; } }
+      @keyframes t-alt-screen { 0% { opacity: 0; pointer-events: none; } }
+      @keyframes t-main-scroll {  }
+      @keyframes t-alt-scroll {  }
+    </style>
+    <rect width="100%" height="100%" fill="#1a1a1a" />
+        
+    <rect width="100%" height="100%" fill="#1a1a1a" />
+    <g id="t_master">
+        <g id="t_main-screen">
+            <g class="terminal-screen" id="t_main-scroll" text-rendering="geometricPrecision">
+                <a href="https://example.org" target="_blank"><text class="c1_t v1_t " x="0.00" y="14.00">This is a link</text></a>
+            </g>
+        </g>
+        <g id="t_alt-screen">
+            <g class="terminal-screen" id="t_alt-scroll" text-rendering="geometricPrecision">
+                
+            </g>
+        </g>
+        <rect id="t_cursor" width="8.4" height="16.8" fill="#e0e0e0" opacity="0.7">
+        </rect>
+    </g>
+    
+</svg>

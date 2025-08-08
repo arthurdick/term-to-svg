@@ -1,0 +1,105 @@
+<svg id="t" viewBox="0 0 672 406" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family='Menlo, Monaco, "Courier New", monospace' font-size="14" text-rendering="geometricPrecision">
+    <title>Terminal Session Recording</title>
+    <style>
+            .c6_t { fill:#1a1a1a; }
+      .c1_t { fill:#e0e0e0; }
+      .c3_t { fill:#e0e0e0;font-style:italic; }
+      .c2_t { fill:#e0e0e0;font-weight:bold; }
+      .c10_t { fill:#e0e0e0;font-weight:bold;opacity:0.5; }
+      .c9_t { fill:#e0e0e0;font-weight:bold;text-decoration:underline; }
+      .c5_t { fill:#e0e0e0;opacity:0.5; }
+      .c7_t { fill:#e0e0e0;opacity:0; }
+      .c8_t { fill:#e0e0e0;text-decoration:line-through; }
+      .c4_t { fill:#e0e0e0;text-decoration:underline; }
+
+            .v1_t {
+        animation: 5.026091s steps(1, end) infinite t-v1_t-anim;
+        visibility: hidden;
+      }
+      @keyframes t-v1_t-anim {
+        0.0000% { visibility: hidden; } 0.1326% { visibility: visible; }
+      }      .v2_t {
+        animation: 5.026091s steps(1, end) infinite t-v2_t-anim;
+        visibility: hidden;
+      }
+      @keyframes t-v2_t-anim {
+        0.0000% { visibility: hidden; } 0.1726% { visibility: visible; }
+      }      .v3_t {
+        animation: 5.026091s steps(1, end) infinite t-v3_t-anim;
+        visibility: hidden;
+      }
+      @keyframes t-v3_t-anim {
+        0.0000% { visibility: hidden; } 0.2114% { visibility: visible; }
+      }      .v4_t {
+        animation: 5.026091s steps(1, end) infinite t-v4_t-anim;
+        visibility: hidden;
+      }
+      @keyframes t-v4_t-anim {
+        0.0000% { visibility: hidden; } 0.2502% { visibility: visible; }
+      }      .v5_t {
+        animation: 5.026091s steps(1, end) infinite t-v5_t-anim;
+        visibility: hidden;
+      }
+      @keyframes t-v5_t-anim {
+        0.0000% { visibility: hidden; } 0.2894% { visibility: visible; }
+      }      .v6_t {
+        animation: 5.026091s steps(1, end) infinite t-v6_t-anim;
+        visibility: hidden;
+      }
+      @keyframes t-v6_t-anim {
+        0.0000% { visibility: hidden; } 0.3282% { visibility: visible; }
+      }      .v7_t {
+        animation: 5.026091s steps(1, end) infinite t-v7_t-anim;
+        visibility: hidden;
+      }
+      @keyframes t-v7_t-anim {
+        0.0000% { visibility: hidden; } 0.3671% { visibility: visible; }
+      }      .v8_t {
+        animation: 5.026091s steps(1, end) infinite t-v8_t-anim;
+        visibility: hidden;
+      }
+      @keyframes t-v8_t-anim {
+        0.0000% { visibility: hidden; } 0.4060% { visibility: visible; }
+      }      .v9_t {
+        animation: 5.026091s steps(1, end) infinite t-v9_t-anim;
+        visibility: hidden;
+      }
+      @keyframes t-v9_t-anim {
+        0.0000% { visibility: hidden; } 0.4624% { visibility: visible; }
+      }      .v10_t {
+        animation: 5.026091s steps(1, end) infinite t-v10_t-anim;
+        visibility: hidden;
+      }
+      @keyframes t-v10_t-anim {
+        0.0000% { visibility: hidden; } 0.5191% { visibility: visible; }
+      }      #t_cursor { animation: 5.026091s steps(1, end) infinite t-cursor-pos, 5.026091s steps(1, end) infinite t-cursor-vis; }
+      #t_main-screen { animation: 5.026091s steps(1, end) infinite t-main-screen; opacity: 1; pointer-events: auto; }
+      #t_alt-screen { animation: 5.026091s steps(1, end) infinite t-alt-screen; opacity: 0; pointer-events: none; }
+      #t_main-scroll { animation: 5.026091s steps(1, end) infinite t-main-scroll; }
+      #t_alt-scroll { animation: 5.026091s steps(1, end) infinite t-alt-scroll; }
+      @keyframes t-cursor-pos { 0.0000% { transform: translate(0.00px, 0.00px); } 0.1326% { transform: translate(0.00px, 16.80px); } 0.1726% { transform: translate(0.00px, 33.60px); } 0.2114% { transform: translate(0.00px, 50.40px); } 0.2502% { transform: translate(0.00px, 67.20px); } 0.2894% { transform: translate(0.00px, 84.00px); } 0.3282% { transform: translate(0.00px, 100.80px); } 0.3671% { transform: translate(0.00px, 117.60px); } 0.4060% { transform: translate(0.00px, 168.00px); } 0.4624% { transform: translate(0.00px, 184.80px); } 0.5191% { transform: translate(0.00px, 201.60px); } }
+      @keyframes t-cursor-vis { 0.0000% { visibility: visible; } }
+      @keyframes t-main-screen { 0% { opacity: 1; pointer-events: auto; } }
+      @keyframes t-alt-screen { 0% { opacity: 0; pointer-events: none; } }
+      @keyframes t-main-scroll {  }
+      @keyframes t-alt-scroll {  }
+    </style>
+    <rect width="100%" height="100%" fill="#1a1a1a" />
+        
+    <rect width="100%" height="100%" fill="#1a1a1a" />
+    <g id="t_master">
+        <g id="t_main-screen">
+            <g class="terminal-screen" id="t_main-scroll" text-rendering="geometricPrecision">
+                <rect class="c1_t v6_t" x="0.00" y="84.00" width="151.20" height="16.80"></rect><rect class="c1_t v7_t" x="0.00" y="100.80" width="109.20" height="16.80"></rect><text class="c1_t v1_t " x="0.00" y="14.00">Normal Text</text><text class="c2_t v2_t " x="0.00" y="30.80">Bold Text</text><text class="c3_t v3_t " x="0.00" y="47.60">Italic Text</text><text class="c4_t v4_t " x="0.00" y="64.40">Underlined Text</text><text class="c5_t v5_t " x="0.00" y="81.20">Dim/Faint Text</text><text class="c6_t v6_t " x="0.00" y="98.00">Reverse Video Text</text><text class="c6_t v7_t " x="0.00" y="114.80">Standout Text</text><text class="c1_t v8_t " x="0.00" y="131.60" xml:space="preserve">This is </text><text class="c7_t v8_t " x="67.20" y="131.60">Invisible Text</text><text class="c1_t v8_t " x="184.80" y="131.60">, but it's here.</text><text class="c8_t v8_t " x="0.00" y="148.40">Strikethrough Text</text><text class="c9_t v9_t " x="0.00" y="182.00">Bold and Underlined Text</text><text class="c10_t v10_t " x="0.00" y="198.80">Bold and Dim Text</text>
+            </g>
+        </g>
+        <g id="t_alt-screen">
+            <g class="terminal-screen" id="t_alt-scroll" text-rendering="geometricPrecision">
+                
+            </g>
+        </g>
+        <rect id="t_cursor" width="8.4" height="16.8" fill="#e0e0e0" opacity="0.7">
+        </rect>
+    </g>
+    
+</svg>

@@ -49,13 +49,16 @@ foreach ($testCaseDirs as $fileInfo) {
                 file_put_contents($caseDir . '/' . $filename, trim($svgContent));
             }
         } else {
-            echo "Processing animated snapshot for {$testCaseName}...\n";
-            $snapshotFile = $caseDir . '/snapshot.svg';
-            $config = Config::DEFAULTS;
-            $config['id'] = 't';
-            $converter = new TerminalToSvgConverter($typescriptFile, $timingFile, $config);
-            $svgContent = $converter->convert();
-            file_put_contents($snapshotFile, trim($svgContent));
+            foreach (['smil', 'css'] as $generator) {
+                echo "Processing animated snapshot for {$testCaseName} ({$generator})...\n";
+                $snapshotFile = $caseDir . "/snapshot.{$generator}.svg";
+                $config = Config::DEFAULTS;
+                $config['id'] = 't';
+                $config['generator'] = $generator;
+                $converter = new TerminalToSvgConverter($typescriptFile, $timingFile, $config);
+                $svgContent = $converter->convert();
+                file_put_contents($snapshotFile, trim($svgContent));
+            }
         }
     } catch (Exception $e) {
         echo "Error processing {$testCaseName}: " . $e->getMessage() . "\n";

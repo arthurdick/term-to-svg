@@ -1,0 +1,54 @@
+<svg id="t" viewBox="0 0 672 406" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family='Menlo, Monaco, "Courier New", monospace' font-size="14" text-rendering="geometricPrecision">
+    <title>Terminal Session Recording</title>
+    <style>
+            .c1_t { fill:#e0e0e0; }
+
+            .v1_t {
+        animation: 10.203701s steps(1, end) infinite t-v1_t-anim;
+        visibility: hidden;
+      }
+      @keyframes t-v1_t-anim {
+        0.0000% { visibility: hidden; } 5.0212% { visibility: visible; }
+      }      .v2_t {
+        animation: 10.203701s steps(1, end) infinite t-v2_t-anim;
+        visibility: hidden;
+      }
+      @keyframes t-v2_t-anim {
+        0.0000% { visibility: hidden; } 17.1204% { visibility: visible; }
+      }      .v3_t {
+        animation: 10.203701s steps(1, end) infinite t-v3_t-anim;
+        visibility: hidden;
+      }
+      @keyframes t-v3_t-anim {
+        0.0000% { visibility: hidden; } 50.9982% { visibility: visible; }
+      }      #t_cursor { animation: 10.203701s steps(1, end) infinite t-cursor-pos, 10.203701s steps(1, end) infinite t-cursor-vis; }
+      #t_main-screen { animation: 10.203701s steps(1, end) infinite t-main-screen; opacity: 1; pointer-events: auto; }
+      #t_alt-screen { animation: 10.203701s steps(1, end) infinite t-alt-screen; opacity: 0; pointer-events: none; }
+      #t_main-scroll { animation: 10.203701s steps(1, end) infinite t-main-scroll; }
+      #t_alt-scroll { animation: 10.203701s steps(1, end) infinite t-alt-scroll; }
+      @keyframes t-cursor-pos { 0.0000% { transform: translate(0.00px, 0.00px); } 5.0212% { transform: translate(42.00px, 0.00px); } 17.1204% { transform: translate(50.40px, 0.00px); } 50.9982% { transform: translate(84.00px, 0.00px); } }
+      @keyframes t-cursor-vis { 0.0000% { visibility: visible; } }
+      @keyframes t-main-screen { 0% { opacity: 1; pointer-events: auto; } }
+      @keyframes t-alt-screen { 0% { opacity: 0; pointer-events: none; } }
+      @keyframes t-main-scroll {  }
+      @keyframes t-alt-scroll {  }
+    </style>
+    <rect width="100%" height="100%" fill="#1a1a1a" />
+        
+    <rect width="100%" height="100%" fill="#1a1a1a" />
+    <g id="t_master">
+        <g id="t_main-screen">
+            <g class="terminal-screen" id="t_main-scroll" text-rendering="geometricPrecision">
+                <text class="c1_t v1_t " x="0.00" y="14.00">Hello</text><text class="c1_t v2_t " x="42.00" y="14.00" xml:space="preserve"> </text><text class="c1_t v3_t " x="50.40" y="14.00">SVG!</text>
+            </g>
+        </g>
+        <g id="t_alt-screen">
+            <g class="terminal-screen" id="t_alt-scroll" text-rendering="geometricPrecision">
+                
+            </g>
+        </g>
+        <rect id="t_cursor" width="8.4" height="16.8" fill="#e0e0e0" opacity="0.7">
+        </rect>
+    </g>
+    
+</svg>
