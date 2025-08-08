@@ -16,7 +16,7 @@ namespace ArthurDick\TermToSvg;
 class TerminalToSvgConverter
 {
     /** @var string The current version of the tool. */
-    public const VERSION = '4.3.1';
+    public const VERSION = '4.4.0-dev';
 
     /** @var resource|false The file handle for the typescript recording. */
     private $typescriptHandle;
@@ -26,10 +26,10 @@ class TerminalToSvgConverter
 
     /** @var array<string, mixed> The configuration for the conversion. */
     private array $config;
-
     private TerminalState $state;
     private AnsiParser $parser;
     private float $currentTime = 0.0;
+    private SvgGeneratorInterface $generator;
 
     /**
      * @param string $typescriptPath Path to the typescript file.
@@ -38,12 +38,12 @@ class TerminalToSvgConverter
      */
     public function __construct(string $typescriptPath, string $timingPath, array $config)
     {
-        $this->config = $config;
+        $this->config = array_merge(Config::DEFAULTS, $config);
         $this->state = new TerminalState($this->config);
         $this->parser = new AnsiParser($this->state, $this->config);
-        $this->typescriptHandle = @fopen($typescriptPath, 'r');
-        if (!$this->typescriptHandle) {
-            return;
+
+        if (!($this->typescriptHandle = @fopen($typescriptPath, 'r'))) {
+            throw new \RuntimeException("Cannot open typescript file: {$typescriptPath}");
         }
 
         $firstLine = fgets($this->typescriptHandle);
@@ -53,12 +53,30 @@ class TerminalToSvgConverter
         }
 
         $this->timingData = $this->parseTimingFile($timingPath);
+
+        $this->processRecording();
+
+        $generatorClass = $this->config['generator'] === 'css' ? CssSvgGenerator::class : SmilSvgGenerator::class;
+        $this->generator = new $generatorClass($this->state, $this->config, $this->currentTime);
     }
 
     public function __destruct()
     {
         if ($this->typescriptHandle) {
             fclose($this->typescriptHandle);
+        }
+    }
+
+    private function processRecording(): void
+    {
+        $this->state->cursorEvents[] = ['time' => 0.0, 'x' => $this->state->cursorX, 'y' => $this->state->cursorY, 'visible' => $this->state->cursorVisible];
+
+        foreach ($this->timingData as $timingLine) {
+            $this->currentTime += $timingLine['delay'];
+            if ($timingLine['bytes'] > 0) {
+                $chunk = fread($this->typescriptHandle, $timingLine['bytes']);
+                $this->parser->processChunk($chunk, $this->currentTime);
+            }
         }
     }
 
@@ -69,23 +87,12 @@ class TerminalToSvgConverter
      */
     public function convert(): string
     {
-        $this->state->cursorEvents[] = ['time' => 0.0, 'x' => $this->state->cursorX, 'y' => $this->state->cursorY, 'visible' => $this->state->cursorVisible];
-
-        while (($timingLine = array_shift($this->timingData)) !== null) {
-            $this->currentTime += $timingLine['delay'];
-            if ($timingLine['bytes'] > 0 && $this->typescriptHandle) {
-                $chunk = fread($this->typescriptHandle, $timingLine['bytes']);
-                $this->parser->processChunk($chunk, $this->currentTime);
-            }
-        }
-
-        $generator = new SvgGenerator($this->state, $this->config, $this->currentTime);
         if ($this->config['poster_at'] !== null) {
             $time = $this->config['poster_at'] === 'end' ? $this->currentTime : (float)$this->config['poster_at'];
-            return $generator->generatePoster($time);
-        } else {
-            return $generator->generate();
+            return $this->generator->generatePoster($time);
         }
+
+        return $this->generator->generate();
     }
 
     private function parseTimingFile(string $path): array

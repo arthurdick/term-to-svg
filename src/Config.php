@@ -17,6 +17,7 @@ class Config
      */
     public const DEFAULTS = [
         'id' => null,
+        'generator' => 'smil',
         'rows' => 24,
         'cols' => 80,
         'font_size' => 14,

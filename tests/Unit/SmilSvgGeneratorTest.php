@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Tests\Unit;
 
 use ArthurDick\TermToSvg\Config;
-use ArthurDick\TermToSvg\SvgGenerator;
+use ArthurDick\TermToSvg\SmilSvgGenerator;
 use ArthurDick\TermToSvg\TerminalState;
 use PHPUnit\Framework\TestCase;
 
-class SvgGeneratorTest extends TestCase
+class SmilSvgGeneratorTest extends TestCase
 {
     private TerminalState $state;
     private array $config;
@@ -24,9 +24,9 @@ class SvgGeneratorTest extends TestCase
         $this->charHeight = $this->config['font_size'] * $this->config['line_height_factor'];
     }
 
-    private function createGenerator(float $totalDuration = 1.0): SvgGenerator
+    private function createGenerator(float $totalDuration = 1.0): SmilSvgGenerator
     {
-        return new SvgGenerator($this->state, $this->config, $totalDuration);
+        return new SmilSvgGenerator($this->state, $this->config, $totalDuration);
     }
 
     public function testBasicSvgStructure(): void

@@ -59,6 +59,7 @@ function print_help()
     echo "  -t, --typescript_file <file>  Path to the typescript file (required).\n";
     echo "  -i, --timing_file <file>      Path to the timing file (required).\n";
     echo "  -o, --output_file <file>      Path to the output SVG file (required).\n";
+    echo "  --generator <smil|css>    Animation generator to use (smil or css). Default: smil.\n";
     echo "  --rows <number>           Number of terminal rows.\n";
     echo "  --cols <number>           Number of terminal columns.\n";
     echo "  --font_size <number>      Font size.\n";
@@ -80,6 +81,7 @@ $long_options = [
     "typescript_file:",
     "timing_file:",
     "output_file:",
+    "generator:",
     "id:",
     "rows:",
     "cols:",
