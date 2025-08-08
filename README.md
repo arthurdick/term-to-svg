@@ -11,7 +11,9 @@ Unlike GIF animations, SVG files are vector-based, resulting in sharper visuals 
 ## Features
 
   * **High Fidelity Playback**: Accurately interprets ANSI escape codes for cursor movement, color changes, inverse video, character/line manipulation, scroll regions, and screen clearing to reproduce your terminal session as precisely as possible.
-  * **Animated SVG Output**: Generates a single SVG file that animates the terminal session, making it ideal for web embedding. The animations are powered by SMIL (Synchronized Multimedia Integration Language).
+  * **Multiple Animation Engines**: Choose between two animation engines:
+    * **CSS Animations (Default)**: A modern, efficient engine that is widely supported and ideal for web embedding.
+    * **SMIL**: A powerful, self-contained animation engine that is also well-supported.
   * **Configurable**: Supports configuration for terminal dimensions, font size, font family, and default colors via command-line flags.
   * **Automatic Geometry Detection**: Can automatically detect terminal dimensions from the `script` log file if available.
   * **Lightweight**: A lightweight PHP application with no external runtime dependencies.
@@ -117,6 +119,8 @@ Options:
   -t, --typescript_file <file>  Path to the typescript file (required).
   -i, --timing_file <file>      Path to the timing file (required).
   -o, --output_file <file>      Path to the output SVG file (required).
+  --generator <css|smil>    Animation generator to use (css or smil). Default: css.
+  --id <string>             ID to use for the root SVG element.
   --rows <number>           Number of terminal rows.
   --cols <number>           Number of terminal columns.
   --font_size <number>      Font size.
