@@ -90,83 +90,140 @@ XML;
         $initialTimeText = sprintf("0.00s / %.2fs", $totalDuration);
         $scriptTemplate = <<<JS
 //<![CDATA[
-        (function() {
-            const svg = document.getElementById('%s');
-            if (!svg) return;
-            const player = {
-                svg: svg,
-                playPauseBtn: svg.querySelector('.play-pause-btn'),
-                playerIcon: svg.querySelector('.player-icon'),
-                timeDisplay: svg.querySelector('.time-display'),
-                scrubThumb: svg.querySelector('.scrub-thumb'),
-                controls: svg.querySelector('.player-controls'),
-                totalDuration: %.4F,
-                animationPause: %.4F,
-                scrubBarWidth: %.4F,
-                scrubBarStartX: %.4F,
-                isPlaying: true,
-                isScrubbing: false,
-                init: function() {
-                    this.loopDuration = this.totalDuration + this.animationPause;
-                    this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
-                    this.controls.addEventListener('mousedown', (e) => this.handleScrubStart(e));
-                    window.addEventListener('mousemove', (e) => this.handleScrubMove(e));
-                    window.addEventListener('mouseup', () => this.handleScrubEnd());
-                },
-                togglePlayPause: function() {
-                    this.isPlaying = !this.isPlaying;
-                    const allAnimatedElements = this.svg.querySelectorAll('*');
-                    const newState = this.isPlaying ? 'running' : 'paused';
-                    allAnimatedElements.forEach(el => {
-                        el.style.animationPlayState = newState;
-                    });
-                    this.playerIcon.setAttribute('href', this.isPlaying ? '#%s_pause-icon' : '#%s_play-icon');
-                },
-                handleScrubStart: function(e) {
-                    const targetClass = e.target.getAttribute('class');
-                    if (targetClass && (targetClass.includes('scrub-bar-track') || targetClass.includes('scrub-thumb'))) {
-                        this.isScrubbing = true;
-                        if(this.isPlaying) {
-                           const allAnimatedElements = this.svg.querySelectorAll('*');
-                            allAnimatedElements.forEach(el => {
-                                el.style.animationPlayState = 'paused';
-                            });
-                        }
-                        this.handleScrub(e);
-                    }
-                },
-                handleScrubMove: function(e) {
-                    if (!this.isScrubbing) return;
-                    this.handleScrub(e);
-                },
-                handleScrubEnd: function() {
-                    if (!this.isScrubbing) return;
-                    this.isScrubbing = false;
-                     if(this.isPlaying) {
-                        const allAnimatedElements = this.svg.querySelectorAll('*');
-                        allAnimatedElements.forEach(el => {
-                            el.style.animationPlayState = 'running';
-                        });
-                    }
-                },
-                handleScrub: function(e) {
-                    const clickX = e.clientX - this.svg.getBoundingClientRect().left;
-                    let percentage = (clickX - this.scrubBarStartX) / this.scrubBarWidth;
-                    percentage = Math.max(0, Math.min(1, percentage));
-                    const newDelay = percentage * this.totalDuration;
-                    const allAnimatedElements = this.svg.querySelectorAll('*');
-                    allAnimatedElements.forEach(el => {
-                        el.style.animationDelay = '-' + newDelay.toFixed(4) + 's';
-                    });
-                    this.timeDisplay.textContent = newDelay.toFixed(2) + 's / ' + this.totalDuration.toFixed(2) + 's';
-                    this.scrubThumb.setAttribute('x', this.scrubBarStartX + (percentage * this.scrubBarWidth));
+    (function() {
+        const svg = document.getElementById('%s');
+        if (!svg) return;
+
+        const animatedElements = Array.from(svg.querySelectorAll('#' + svg.id + '_cursor, #' + svg.id + '_main-screen, #' + svg.id + '_alt-screen, #' + svg.id + '_main-scroll, #' + svg.id + '_alt-scroll, [class*="' + svg.id + '"]'));
+
+        const player = {
+            svg: svg,
+            playPauseBtn: svg.querySelector('.play-pause-btn'),
+            playerIcon: svg.querySelector('.player-icon'),
+            timeDisplay: svg.querySelector('.time-display'),
+            scrubThumb: svg.querySelector('.scrub-thumb'),
+            controls: svg.querySelector('.player-controls'),
+
+            totalDuration: %.4F,
+            animationPause: %.4F,
+            scrubBarWidth: %.4F,
+            scrubBarStartX: %.4F,
+
+            isPlaying: true,
+            isScrubbing: false,
+            startTime: 0,
+            currentTime: 0,
+            thumbWidth: 10,
+            seekTime: -1,
+
+            init: function() {
+                this.loopDuration = this.totalDuration + this.animationPause;
+                this.effectiveScrubWidth = this.scrubBarWidth - this.thumbWidth;
+
+                this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
+                this.controls.addEventListener('mousedown', (e) => this.handleScrubStart(e));
+                window.addEventListener('mousemove', (e) => this.handleScrubMove(e));
+                window.addEventListener('mouseup', () => this.handleScrubEnd());
+
+                this.startTime = performance.now();
+                requestAnimationFrame(() => this.animationLoop());
+            },
+
+            animationLoop: function() {
+                if (this.isPlaying && !this.isScrubbing) {
+                    const elapsed = (performance.now() - this.startTime) / 1000;
+                    this.currentTime = elapsed %% this.loopDuration;
+                    this.updatePlayerVisuals(this.currentTime);
                 }
-            };
-            player.init();
-        })();
+                requestAnimationFrame(() => this.animationLoop());
+            },
+
+            updatePlayerVisuals: function(time) {
+                const displayTime = Math.min(time, this.totalDuration);
+                let percentage = this.totalDuration > 0 ? (displayTime / this.totalDuration) : 0;
+                percentage = Math.max(0, Math.min(1, percentage));
+
+                const thumbX = this.scrubBarStartX + (percentage * this.effectiveScrubWidth);
+                this.scrubThumb.setAttribute('x', thumbX);
+                this.timeDisplay.textContent = displayTime.toFixed(2) + 's / ' + this.totalDuration.toFixed(2) + 's';
+
+                if (time >= this.totalDuration && this.isPlaying) {
+                    this.playerIcon.setAttribute('href', '#%s_play-icon');
+                } else if (this.isPlaying) {
+                    this.playerIcon.setAttribute('href', '#%s_pause-icon');
+                }
+            },
+
+            togglePlayPause: function() {
+                this.isPlaying = !this.isPlaying;
+                const newState = this.isPlaying ? 'running' : 'paused';
+                animatedElements.forEach(el => {
+                    el.style.animationPlayState = newState;
+                });
+
+                if (this.isPlaying) {
+                    this.startTime = performance.now() - this.currentTime * 1000;
+                    requestAnimationFrame(() => this.animationLoop());
+                }
+                this.playerIcon.setAttribute('href', this.isPlaying ? '#%s_pause-icon' : '#%s_play-icon');
+            },
+
+            getSVGPoint: function(e) {
+                let point = this.svg.createSVGPoint();
+                point.x = e.clientX;
+                point.y = e.clientY;
+                return point.matrixTransform(this.svg.getScreenCTM().inverse());
+            },
+
+            handleScrubStart: function(e) {
+                const targetClass = e.target.getAttribute('class');
+                if (targetClass && (targetClass.includes('scrub-bar-track') || targetClass.includes('scrub-thumb'))) {
+                    this.isScrubbing = true;
+                    animatedElements.forEach(el => el.style.animationPlayState = 'paused');
+                    this.handleScrub(e);
+                }
+            },
+
+            handleScrubMove: function(e) {
+                if (!this.isScrubbing) return;
+                this.handleScrub(e);
+            },
+
+            handleScrubEnd: function() {
+                if (!this.isScrubbing) return;
+                this.isScrubbing = false;
+                if (this.seekTime !== -1) {
+                    this.currentTime = this.seekTime;
+                    this.startTime = performance.now() - this.currentTime * 1000;
+                    this.seekTime = -1;
+                }
+                 if(this.isPlaying) {
+                    animatedElements.forEach(el => el.style.animationPlayState = 'running');
+                    requestAnimationFrame(() => this.animationLoop());
+                }
+            },
+
+            handleScrub: function(e) {
+                const point = this.getSVGPoint(e);
+                let relativeX = point.x - this.scrubBarStartX - (this.thumbWidth / 2);
+                let percentage = this.effectiveScrubWidth > 0 ? (relativeX / this.effectiveScrubWidth) : 0;
+                percentage = Math.max(0, Math.min(1, percentage));
+
+                const newTime = percentage * this.totalDuration;
+                this.seekTime = newTime;
+
+                animatedElements.forEach(el => {
+                    el.style.animationDelay = '-' + newTime.toFixed(4) + 's';
+                });
+
+                this.updatePlayerVisuals(this.seekTime);
+            }
+        };
+        player.init();
+    })();
 //]]>
 JS;
-        $script = sprintf($scriptTemplate, $this->uniqueId, $totalDuration, $animationPauseSeconds, $scrubBarWidth, $scrubBarStartX, $this->uniqueId, $this->uniqueId);
+        $script = sprintf($scriptTemplate, $this->uniqueId, $totalDuration, $animationPauseSeconds, $scrubBarWidth, $scrubBarStartX, $this->uniqueId, $this->uniqueId, $this->uniqueId, $this->uniqueId);
         $playerTemplate = <<<SVG
     <g class="player-controls" transform="translate(0, %.2F)" style="font-family: sans-serif; font-size: 14px;">
         <rect class="player-background" x="0" y="0" width="%.2F" height="%.2F" fill="#222" stroke="#444" stroke-width="1" />
