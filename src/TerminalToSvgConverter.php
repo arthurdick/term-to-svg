@@ -16,7 +16,7 @@ namespace ArthurDick\TermToSvg;
 class TerminalToSvgConverter
 {
     /** @var string The current version of the tool. */
-    public const VERSION = '5.0.2';
+    public const VERSION = '5.0.3';
 
     /** @var resource|false The file handle for the typescript recording. */
     private $typescriptHandle;

@@ -132,31 +132,41 @@ XML;
             },
 
             animationLoop: function() {
-                // The loop should always run to keep the scrubber and timer updated unless the user is actively dragging it.
-                if (!this.isScrubbing) {
-                    const elapsed = (performance.now() - this.startTime) / 1000;
-                    const previousTime = this.currentTime;
-                    this.currentTime = elapsed %% this.loopDuration;
+                // The loop must always run to detect state changes (like natural looping) and to be ready for user interaction.
+                if (this.isScrubbing) {
+                    requestAnimationFrame(() => this.animationLoop());
+                    return;
+                }
 
-                    // Update the visuals on every frame.
+                // Only perform time updates and visual changes if the animation is actually playing.
+                // This prevents the time display from running when the user has paused the animation.
+                if (this.isPlaying) {
+                    const elapsed = (performance.now() - this.startTime) / 1000;
+                    this.currentTime = elapsed %% this.loopDuration;
+                    
                     this.updatePlayerVisuals(this.currentTime);
 
-                    // State management for the play/pause icon and isPlaying flag.
-                    if (this.isPlaying) {
-                        // If we are playing and enter the end-pause, switch to the "paused" state for the UI.
-                        if (this.currentTime >= this.totalDuration) {
-                            this.isPlaying = false;
-                            this.playerIcon.setAttribute('href', '#%s_play-icon');
-                        }
-                    } else {
-                        // If we are paused and the animation time wraps around, it means a natural loop occurred.
-                        // Switch back to the "playing" state for the UI.
-                        if (this.currentTime < previousTime) {
-                            this.isPlaying = true;
-                            this.playerIcon.setAttribute('href', '#%s_pause-icon');
-                        }
+                    // If we have played through the main content and entered the end-pause period,
+                    // update the UI state to "paused". The underlying CSS animation will continue to run and loop naturally.
+                    if (this.currentTime >= this.totalDuration) {
+                        this.isPlaying = false;
+                        this.playerIcon.setAttribute('href', '#%s_play-icon');
+                    }
+                } else {
+                    // This block handles the case where the animation loops on its own
+                    // while the UI is in a "paused" state (i.e., during the end-pause).
+                    const elapsed = (performance.now() - this.startTime) / 1000;
+                    const newTime = elapsed %% this.loopDuration;
+                    
+                    // A wrap-around (e.g., from 6s to 0.1s) indicates a natural loop has occurred.
+                    if (newTime < this.currentTime) {
+                        this.currentTime = newTime;
+                        this.isPlaying = true; // Switch UI back to "playing" state.
+                        this.playerIcon.setAttribute('href', '#%s_pause-icon');
+                        this.updatePlayerVisuals(this.currentTime); // Update display to reflect the new time.
                     }
                 }
+
                 requestAnimationFrame(() => this.animationLoop());
             },
 
