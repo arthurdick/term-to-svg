@@ -204,9 +204,16 @@ XML;
                     }
                 },
 
+                getSVGPoint: function(e) {
+                    let point = this.svg.createSVGPoint();
+                    point.x = e.clientX;
+                    point.y = e.clientY;
+                    return point.matrixTransform(this.svg.getScreenCTM().inverse());
+                },
+
                 handleScrub: function(e) {
-                    const clickX = e.clientX - this.svg.getBoundingClientRect().left;
-                    let percentage = (clickX - this.scrubBarStartX) / this.scrubBarWidth;
+                    const svgPoint = this.getSVGPoint(e);
+                    let percentage = (svgPoint.x - this.scrubBarStartX) / this.scrubBarWidth;
                     percentage = Math.max(0, Math.min(1, percentage));
                     const currentLoop = Math.floor(this.svg.getCurrentTime() / this.loopDuration);
                     const time = (currentLoop * this.loopDuration) + (percentage * this.totalDuration);
