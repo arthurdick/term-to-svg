@@ -156,28 +156,35 @@ XML;
                     this.scrubThumb.setAttribute('x', thumbX);
                     this.timeDisplay.textContent = `\${displayTime.toFixed(2)}s / \${this.totalDuration.toFixed(2)}s`;
 
-                    if (effectiveTime > this.totalDuration && this.isPlaying) {
+                    if (effectiveTime >= this.totalDuration && this.isPlaying) {
+                        this.isPlaying = false; // Correctly update state to "paused"
                         this.playerIcon.setAttribute('href', '#%s_play-icon');
-                    } else if (this.isPlaying) {
-                        this.playerIcon.setAttribute('href', '#%s_pause-icon');
                     }
                 },
 
                 animationLoop: function() {
-                    if (!this.isPlaying || this.isScrubbing) return;
-                    this.updatePlayerVisuals();
-                    requestAnimationFrame(() => this.animationLoop());
+                    if (!this.svg.animationsPaused()) {
+                        this.updatePlayerVisuals();
+                        requestAnimationFrame(() => this.animationLoop());
+                    }
                 },
 
                 togglePlayPause: function() {
-                    this.isPlaying = !this.isPlaying;
                     if (this.isPlaying) {
+                        this.svg.pauseAnimations();
+                        this.isPlaying = false;
+                        this.playerIcon.setAttribute('href', '#%s_play-icon');
+                    } else {
+                        const masterTime = this.svg.getCurrentTime();
+                        const effectiveTime = masterTime %% this.loopDuration;
+                        if (effectiveTime >= this.totalDuration) {
+                            const currentLoop = Math.floor(masterTime / this.loopDuration);
+                            this.svg.setCurrentTime(currentLoop * this.loopDuration);
+                        }
                         this.svg.unpauseAnimations();
+                        this.isPlaying = true;
                         this.playerIcon.setAttribute('href', '#%s_pause-icon');
                         requestAnimationFrame(() => this.animationLoop());
-                    } else {
-                        this.svg.pauseAnimations();
-                        this.playerIcon.setAttribute('href', '#%s_play-icon');
                     }
                 },
 
@@ -226,7 +233,7 @@ XML;
         })();
 //]]>
 JS;
-        $script = sprintf($scriptTemplate, $this->uniqueId, $totalDuration, $animationPauseSeconds, $scrubBarWidth, $scrubBarStartX, $this->uniqueId, $this->uniqueId, $this->uniqueId, $this->uniqueId);
+        $script = sprintf($scriptTemplate, $this->uniqueId, $totalDuration, $animationPauseSeconds, $scrubBarWidth, $scrubBarStartX, $this->uniqueId, $this->uniqueId, $this->uniqueId, $this->uniqueId, $this->uniqueId);
 
         $playerTemplate = <<<SVG
     <g class="player-controls" transform="translate(0, %.2F)" style="font-family: sans-serif; font-size: 14px;">

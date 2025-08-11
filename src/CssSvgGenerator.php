@@ -132,10 +132,30 @@ XML;
             },
 
             animationLoop: function() {
-                if (this.isPlaying && !this.isScrubbing) {
+                // The loop should always run to keep the scrubber and timer updated unless the user is actively dragging it.
+                if (!this.isScrubbing) {
                     const elapsed = (performance.now() - this.startTime) / 1000;
+                    const previousTime = this.currentTime;
                     this.currentTime = elapsed %% this.loopDuration;
+
+                    // Update the visuals on every frame.
                     this.updatePlayerVisuals(this.currentTime);
+
+                    // State management for the play/pause icon and isPlaying flag.
+                    if (this.isPlaying) {
+                        // If we are playing and enter the end-pause, switch to the "paused" state for the UI.
+                        if (this.currentTime >= this.totalDuration) {
+                            this.isPlaying = false;
+                            this.playerIcon.setAttribute('href', '#%s_play-icon');
+                        }
+                    } else {
+                        // If we are paused and the animation time wraps around, it means a natural loop occurred.
+                        // Switch back to the "playing" state for the UI.
+                        if (this.currentTime < previousTime) {
+                            this.isPlaying = true;
+                            this.playerIcon.setAttribute('href', '#%s_pause-icon');
+                        }
+                    }
                 }
                 requestAnimationFrame(() => this.animationLoop());
             },
@@ -157,15 +177,26 @@ XML;
             },
 
             togglePlayPause: function() {
-                this.isPlaying = !this.isPlaying;
                 if (this.isPlaying) {
+                    // If playing, a click should pause.
+                    this.isPlaying = false;
+                    this.animations.forEach(anim => anim.pause());
+                    this.playerIcon.setAttribute('href', '#%s_play-icon');
+                } else {
+                    // If paused, a click should play.
+                    // If paused at the end of the content, restart from the beginning immediately.
+                    if (this.currentTime >= this.totalDuration) {
+                        this.currentTime = 0;
+                        this.animations.forEach(anim => {
+                            anim.currentTime = 0; // Force animations to restart
+                        });
+                    }
+                    // Recalculate start time to resume from the correct spot.
                     this.startTime = performance.now() - this.currentTime * 1000;
                     this.animations.forEach(anim => anim.play());
-                    requestAnimationFrame(() => this.animationLoop());
-                } else {
-                    this.animations.forEach(anim => anim.pause());
+                    this.isPlaying = true;
+                    this.playerIcon.setAttribute('href', '#%s_pause-icon');
                 }
-                this.playerIcon.setAttribute('href', this.isPlaying ? '#%s_pause-icon' : '#%s_play-icon');
             },
 
             getSVGPoint: function(e) {
@@ -223,7 +254,7 @@ XML;
     })();
 //]]>
 JS;
-        $script = sprintf($scriptTemplate, $this->uniqueId, $totalDuration, $animationPauseSeconds, $scrubBarWidth, $scrubBarStartX, $this->uniqueId, $this->uniqueId, $this->uniqueId, $this->uniqueId);
+        $script = sprintf($scriptTemplate, $this->uniqueId, $totalDuration, $animationPauseSeconds, $scrubBarWidth, $scrubBarStartX, $this->uniqueId, $this->uniqueId, $this->uniqueId, $this->uniqueId, $this->uniqueId, $this->uniqueId);
         $playerTemplate = <<<SVG
     <g class="player-controls" transform="translate(0, %.2F)" style="font-family: sans-serif; font-size: 14px;">
         <rect class="player-background" x="0" y="0" width="%.2F" height="%.2F" fill="#222" stroke="#444" stroke-width="1" />
