@@ -120,6 +120,8 @@ XML;
                 this.loopDuration = this.totalDuration + this.animationPause;
                 this.effectiveScrubWidth = this.scrubBarWidth - this.thumbWidth;
 
+                this.animations = animatedElements.flatMap(el => el.getAnimations());
+
                 this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
                 this.controls.addEventListener('mousedown', (e) => this.handleScrubStart(e));
                 window.addEventListener('mousemove', (e) => this.handleScrubMove(e));
@@ -156,14 +158,12 @@ XML;
 
             togglePlayPause: function() {
                 this.isPlaying = !this.isPlaying;
-                const newState = this.isPlaying ? 'running' : 'paused';
-                animatedElements.forEach(el => {
-                    el.style.animationPlayState = newState;
-                });
-
                 if (this.isPlaying) {
                     this.startTime = performance.now() - this.currentTime * 1000;
+                    this.animations.forEach(anim => anim.play());
                     requestAnimationFrame(() => this.animationLoop());
+                } else {
+                    this.animations.forEach(anim => anim.pause());
                 }
                 this.playerIcon.setAttribute('href', this.isPlaying ? '#%s_pause-icon' : '#%s_play-icon');
             },
@@ -179,7 +179,7 @@ XML;
                 const targetClass = e.target.getAttribute('class');
                 if (targetClass && (targetClass.includes('scrub-bar-track') || targetClass.includes('scrub-thumb'))) {
                     this.isScrubbing = true;
-                    animatedElements.forEach(el => el.style.animationPlayState = 'paused');
+                    this.animations.forEach(anim => anim.pause());
                     this.handleScrub(e);
                 }
             },
@@ -197,29 +197,29 @@ XML;
                     this.startTime = performance.now() - this.currentTime * 1000;
                     this.seekTime = -1;
                 }
-                 if(this.isPlaying) {
-                    animatedElements.forEach(el => el.style.animationPlayState = 'running');
+                if(this.isPlaying) {
+                    this.animations.forEach(anim => anim.play());
                     requestAnimationFrame(() => this.animationLoop());
                 }
             },
 
             handleScrub: function(e) {
-                const point = this.getSVGPoint(e);
-                let relativeX = point.x - this.scrubBarStartX - (this.thumbWidth / 2);
-                let percentage = this.effectiveScrubWidth > 0 ? (relativeX / this.effectiveScrubWidth) : 0;
-                percentage = Math.max(0, Math.min(1, percentage));
+                const svgPoint = this.getSVGPoint(e);
+                const scrubX = svgPoint.x - this.scrubBarStartX;
+                const clampedX = Math.max(0, Math.min(scrubX, this.effectiveScrubWidth));
+                const newTime = (clampedX / this.effectiveScrubWidth) * this.totalDuration;
 
-                const newTime = percentage * this.totalDuration;
                 this.seekTime = newTime;
+                this.updatePlayerVisuals(newTime);
 
-                animatedElements.forEach(el => {
-                    el.style.animationDelay = '-' + newTime.toFixed(4) + 's';
+                // Set the animation's time directly (in milliseconds)
+                this.animations.forEach(anim => {
+                    anim.currentTime = newTime * 1000;
                 });
-
-                this.updatePlayerVisuals(this.seekTime);
             }
         };
         player.init();
+
     })();
 //]]>
 JS;
