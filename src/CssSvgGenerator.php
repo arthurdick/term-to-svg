@@ -111,6 +111,7 @@ XML;
 
             isPlaying: true,
             isScrubbing: false,
+            userPaused: false,
             startTime: 0,
             currentTime: 0,
             thumbWidth: 10,
@@ -159,7 +160,8 @@ XML;
                     const newTime = elapsed %% this.loopDuration;
                     
                     // A wrap-around (e.g., from 6s to 0.1s) indicates a natural loop has occurred.
-                    if (newTime < this.currentTime) {
+                    // We also check that the user has not explicitly paused the animation.
+                    if (newTime < this.currentTime && !this.userPaused) {
                         this.currentTime = newTime;
                         this.isPlaying = true; // Switch UI back to "playing" state.
                         this.playerIcon.setAttribute('href', '#%s_pause-icon');
@@ -190,10 +192,12 @@ XML;
                 if (this.isPlaying) {
                     // If playing, a click should pause.
                     this.isPlaying = false;
+                    this.userPaused = true;
                     this.animations.forEach(anim => anim.pause());
                     this.playerIcon.setAttribute('href', '#%s_play-icon');
                 } else {
                     // If paused, a click should play.
+                    this.userPaused = false;
                     // If paused at the end of the content, restart from the beginning immediately.
                     if (this.currentTime >= this.totalDuration) {
                         this.currentTime = 0;
