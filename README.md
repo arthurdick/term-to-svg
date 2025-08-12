@@ -14,7 +14,8 @@ Unlike GIF animations, SVG files are vector-based, resulting in sharper visuals 
   * **Multiple Animation Engines**: Choose between two animation engines:
     * **CSS Animations (Default)**: A modern, efficient engine that is widely supported and ideal for web embedding.
     * **SMIL**: A powerful, self-contained animation engine that is also well-supported.
-  * **Configurable**: Supports configuration for terminal dimensions, font size, font family, and default colors via command-line flags.
+  * **Powerful Theming**: Customize the look and feel of your SVG with a simple JSON theme file. A variety of pre-made light and dark themes are included.
+  * **Configurable**: Supports configuration for terminal dimensions, font size, and more via command-line flags that can override theme settings.
   * **Automatic Geometry Detection**: Can automatically detect terminal dimensions from the `script` log file if available.
   * **Lightweight**: A lightweight PHP application with no external runtime dependencies.
 
@@ -79,7 +80,7 @@ export PATH="/usr/local/bin:$PATH"
 
 1.  **Clone:** Clone the repository to your local machine.
     ```bash
-    git clone [https://github.com/arthurdick/term-to-svg.git](https://github.com/arthurdick/term-to-svg.git)
+    git clone https://github.com/arthurdick/term-to-svg.git
     cd term-to-svg
     ```
 2.  **Install Dependencies:**
@@ -110,7 +111,7 @@ You will now have two files: `rec.log` (the terminal output) and `rec.time` (the
 
 ## Configuration
 
-You can customize the output by using command-line flags. Run `term-to-svg --help` to see all available options.
+You can customize the output by using command-line flags. Flags will always override any settings provided by a theme.
 
 ```
 Usage: term-to-svg [options]
@@ -120,15 +121,16 @@ Options:
   -i, --timing_file <file>      Path to the timing file (required).
   -o, --output_file <file>      Path to the output SVG file (required).
   --generator <css|smil>    Animation generator to use (css or smil). Default: css.
+  --theme <file>            Path to a custom theme JSON file.
   --id <string>             ID to use for the root SVG element.
   --rows <number>           Number of terminal rows.
   --cols <number>           Number of terminal columns.
   --font_size <number>      Font size.
   --line_height_factor <float> Line height factor.
   --font_width_factor <float> Font width factor.
-  --font_family <string>    Font family.
-  --default_fg <hex>        Default foreground color.
-  --default_bg <hex>        Default background color.
+  --font_family <string>    Font family (overrides theme).
+  --default_fg <hex>        Default foreground color (overrides theme).
+  --default_bg <hex>        Default background color (overrides theme).
   --animation_pause_seconds <number> Animation pause in seconds at the end.
   --poster-at <time|end>    Generate a non-animated SVG of a single frame at a specific time or at the end.
   --interactive             Enable interactive player controls.
@@ -137,6 +139,38 @@ Options:
 ```
 
 **Note on Geometry Detection**: If your `rec.log` file was generated with a `script` version that includes `COLUMNS` and `LINES` information in its first line (e.g., `COLUMNS="80" LINES="24"`), the script will automatically use these dimensions, overriding the `--rows` and `--cols` flags.
+
+-----
+
+## Theming
+
+You can easily change the appearance of the output SVG by using a theme file. A number of pre-made themes are available in the `themes/` directory.
+
+### Using a Theme
+
+To use a theme, pass the path to the theme file using the `--theme` flag:
+
+```bash
+./term-to-svg -t rec.log -i rec.time -o output.svg --theme themes/dracula.json
+```
+
+### Creating a Custom Theme
+
+You can create your own themes by making a JSON file with the following structure:
+
+```json
+{
+    "font_family": "Menlo, Monaco, \"Courier New\", monospace",
+    "default_fg": "#f8f8f2",
+    "default_bg": "#282a36",
+    "ansi_16_colors": {
+        "30": "#000000", "31": "#ff5555", "32": "#50fa7b", "33": "#f1fa8c",
+        "34": "#bd93f9", "35": "#ff79c6", "36": "#8be9fd", "37": "#f8f8f2",
+        "90": "#6272a4", "91": "#ff6e6e", "92": "#69ff94", "93": "#ffffa5",
+        "94": "#d6acff", "95": "#ff92df", "96": "#a4ffff", "97": "#ffffff"
+    }
+}
+```
 
 -----
 
@@ -150,7 +184,7 @@ Options:
 
 ## Contributing
 
-Contributions are welcome! If you find a bug or have a feature request, please open an issue or submit a pull request.
+Contributions are welcome\! If you find a bug or have a feature request, please open an issue or submit a pull request.
 
 ## License
 

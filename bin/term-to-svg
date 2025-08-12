@@ -60,7 +60,8 @@ function print_help()
     echo "  -i, --timing_file <file>      Path to the timing file (required).\n";
     echo "  -o, --output_file <file>      Path to the output SVG file (required).\n";
     echo "  --generator <smil|css>    Animation generator to use (smil or css). Default: css.\n";
-    echo "  --id <string>             ID to use for the root SVG element.";
+    echo "  --theme <file>            Path to a custom theme JSON file.\n";
+    echo "  --id <string>             ID to use for the root SVG element.\n";
     echo "  --rows <number>           Number of terminal rows.\n";
     echo "  --cols <number>           Number of terminal columns.\n";
     echo "  --font_size <number>      Font size.\n";
@@ -83,6 +84,7 @@ $long_options = [
     "timing_file:",
     "output_file:",
     "generator:",
+    "theme:",
     "id:",
     "rows:",
     "cols:",
@@ -148,12 +150,31 @@ if ($timingFile === false || !is_readable($timingFile)) {
 }
 
 try {
-    // Get default config and override with command-line options
+    // --- Configuration Loading ---
     $config = Config::DEFAULTS;
+
+    // 1. Load theme first, if specified. This becomes the new base.
+    if (isset($options['theme'])) {
+        $themePath = realpath($options['theme']);
+        if ($themePath === false || !is_readable($themePath)) {
+            echo "Error: Theme file not found or is not readable: {$options['theme']}\n";
+            exit(1);
+        }
+        Config::loadTheme($themePath, $config);
+    }
+
+    // 2. Override with any specific command-line flags.
+    // This ensures flags always have the highest precedence.
     foreach ($long_options as $long_opt) {
         $isFlag = !str_ends_with($long_opt, ':');
         $opt = rtrim($long_opt, ':');
+
         if (isset($options[$opt])) {
+            // The 'theme' option is for loading only; don't store the path in the final config.
+            if ($opt === 'theme') {
+                continue;
+            }
+
             if ($isFlag) {
                 $config[$opt] = true;
             } else {
@@ -162,7 +183,7 @@ try {
         }
     }
 
-    // Use the new Config class for default settings
+    // --- Conversion ---
     $converter = new TerminalToSvgConverter($typescriptFile, $timingFile, $config);
     $svgContent = $converter->convert();
     file_put_contents($outputFile, $svgContent);

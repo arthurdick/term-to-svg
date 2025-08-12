@@ -29,5 +29,27 @@ class Config
         'animation_pause_seconds' => 5,
         'interactive' => false,
         'poster_at' => null,
+        'theme' => null,
+        'ansi_16_colors' => [
+            30 => '#2e3436', 31 => '#cc0000', 32 => '#4e9a06', 33 => '#c4a000',
+            34 => '#3465a4', 35 => '#75507b', 36 => '#06989a', 37 => '#d3d7cf',
+            90 => '#555753', 91 => '#ef2929', 92 => '#8ae234', 93 => '#fce94f',
+            94 => '#729fcf', 95 => '#ad7fa8', 96 => '#34e2e2', 97 => '#eeeeec',
+        ]
     ];
+
+    public static function loadTheme(string $themePath, array &$config): void
+    {
+        if (!file_exists($themePath) || !is_readable($themePath)) {
+            throw new \RuntimeException("Theme file not found or is not readable: {$themePath}");
+        }
+
+        $themeConfig = json_decode(file_get_contents($themePath), true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \RuntimeException("Error parsing theme file: " . json_last_error_msg());
+        }
+
+        $config = array_merge($config, $themeConfig);
+    }
 }

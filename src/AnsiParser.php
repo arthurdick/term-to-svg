@@ -28,18 +28,11 @@ class AnsiParser
     private const WONT_IMPLEMENT_ESC = [];
     private const WONT_IMPLEMENT_OSC = [0, 1, 2, 9, 52, 777];
 
-    /** @var array<int, string> The 16 standard ANSI color hex codes. */
-    public const ANSI_16_COLORS = [
-        30 => '#2e3436', 31 => '#cc0000', 32 => '#4e9a06', 33 => '#c4a000',
-        34 => '#3465a4', 35 => '#75507b', 36 => '#06989a', 37 => '#d3d7cf',
-        90 => '#555753', 91 => '#ef2929', 92 => '#8ae234', 93 => '#fce94f',
-        94 => '#729fcf', 95 => '#ad7fa8', 96 => '#34e2e2', 97 => '#eeeeec',
-    ];
-
     private TerminalState $state;
     private array $config;
     private float $currentTime = 0.0;
     private string $oscBuffer = '';
+    private array $ansi16Colors;
 
 
     /**
@@ -50,6 +43,7 @@ class AnsiParser
     {
         $this->state = $state;
         $this->config = $config;
+        $this->ansi16Colors = $config['ansi_16_colors'];
     }
 
     /**
@@ -439,11 +433,11 @@ class AnsiParser
             } elseif ($p === 29) {
                 $this->state->currentStyle['strikethrough'] = false;
                 $handled = true;
-            } elseif (array_key_exists($p, self::ANSI_16_COLORS)) {
+            } elseif (array_key_exists($p, $this->ansi16Colors)) {
                 $this->state->currentStyle['fg'] = 'fg-' . $p;
                 $this->state->currentStyle['fg_hex'] = null;
                 $handled = true;
-            } elseif (array_key_exists($p - 10, self::ANSI_16_COLORS)) {
+            } elseif (array_key_exists($p - 10, $this->ansi16Colors)) {
                 $this->state->currentStyle['bg'] = 'bg-' . $p;
                 $this->state->currentStyle['bg_hex'] = null;
                 $handled = true;
@@ -482,10 +476,10 @@ class AnsiParser
     private function mapAnsi256ToHex(int $code): string
     {
         if ($code < 8) {
-            return self::ANSI_16_COLORS[$code + 30];
+            return $this->ansi16Colors[$code + 30];
         }
         if ($code < 16) {
-            return self::ANSI_16_COLORS[$code - 8 + 90];
+            return $this->ansi16Colors[$code - 8 + 90];
         }
         if ($code >= 16 && $code <= 231) {
             $code -= 16;

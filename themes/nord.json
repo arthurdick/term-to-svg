@@ -1,0 +1,11 @@
+{
+    "font_family": "Menlo, Monaco, \"Courier New\", monospace",
+    "default_fg": "#d8dee9",
+    "default_bg": "#2e3440",
+    "ansi_16_colors": {
+        "30": "#3b4252", "31": "#bf616a", "32": "#a3be8c", "33": "#ebcb8b",
+        "34": "#81a1c1", "35": "#b48ead", "36": "#88c0d0", "37": "#e5e9f0",
+        "90": "#4c566a", "91": "#bf616a", "92": "#a3be8c", "93": "#ebcb8b",
+        "94": "#81a1c1", "95": "#b48ead", "96": "#8fbcbb", "97": "#eceff4"
+    }
+}

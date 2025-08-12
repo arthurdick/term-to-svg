@@ -6,6 +6,7 @@ namespace Tests\Unit;
 
 use ArthurDick\TermToSvg\AnsiParser;
 use ArthurDick\TermToSvg\TerminalState;
+use ArthurDick\TermToSvg\Config;
 use PHPUnit\Framework\TestCase;
 
 class AnsiCommandsTest extends TestCase
@@ -16,15 +17,10 @@ class AnsiCommandsTest extends TestCase
 
     protected function setUp(): void
     {
-        $config = [
+        $config = array_merge(Config::DEFAULTS, [
             'rows' => 24,
             'cols' => 80,
-            'font_size' => 14,
-            'line_height_factor' => 1.2,
-            'font_family' => 'monospace',
-            'default_fg' => '#e0e0e0',
-            'default_bg' => '#1a1a1a',
-        ];
+        ]);
 
         $this->state = new TerminalState($config);
         $this->parser = new AnsiParser($this->state, $config);

@@ -225,7 +225,7 @@ abstract class AbstractSvgGenerator implements SvgGeneratorInterface
         } elseif ($code >= 40 && $code <= 47) {
             $code -= 10;
         }
-        return AnsiParser::ANSI_16_COLORS[$code] ?? ($type === 'fg' ? $this->config['default_fg'] : $this->config['default_bg']);
+        return $this->config['ansi_16_colors'][$code] ?? ($type === 'fg' ? $this->config['default_fg'] : $this->config['default_bg']);
     }
 
     protected function findCellMatching(array &$lifespans, array $targetCell): ?array
