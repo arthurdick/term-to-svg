@@ -36,6 +36,9 @@ class TerminalState
     /** @var bool Whether auto-wrap mode is enabled. */
     public bool $autoWrapMode = true;
 
+    /** @var bool Whether the DEC Special Graphics Character Set is active. */
+    public bool $decSpecialCharsMode = false;
+
     /** @var array<int, array<string, mixed>> A log of cursor movement and visibility change events. */
     public array $cursorEvents = [];
 
@@ -103,6 +106,7 @@ class TerminalState
             'bg_hex' => null,
             'link' => null,
         ];
+        $this->decSpecialCharsMode = false;
     }
 
     /**

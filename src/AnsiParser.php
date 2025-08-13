@@ -34,6 +34,41 @@ class AnsiParser
     private string $oscBuffer = '';
     private array $ansi16Colors;
 
+    private array $decSpecialChars = [
+        '_' => ' ',
+        '`' => '◆',
+        'a' => '▒',
+        'b' => '␉',
+        'c' => '␌',
+        'd' => '␍',
+        'e' => '␊',
+        'f' => '°',
+        'g' => '±',
+        'h' => '␤',
+        'i' => '␋',
+        'j' => '┘',
+        'k' => '┐',
+        'l' => '┌',
+        'm' => '└',
+        'n' => '┼',
+        'o' => '⎺',
+        'p' => '⎻',
+        'q' => '─',
+        'r' => '⎼',
+        's' => '⎽',
+        't' => '├',
+        'u' => '┤',
+        'v' => '┴',
+        'w' => '┬',
+        'x' => '│',
+        'y' => '≤',
+        'z' => '≥',
+        '{' => 'π',
+        '|' => '≠',
+        '}' => '£',
+        '~' => '·',
+     ];
+
 
     /**
      * @param TerminalState $state The terminal state object to manipulate.
@@ -81,7 +116,7 @@ class AnsiParser
                     } elseif ($char === ']') {
                         $this->oscBuffer = '';
                         $state = self::STATE_OSC_STRING;
-                    } elseif ($char === '(') {
+                    } elseif ($char === '(' || $char === ')') {
                         $state = self::STATE_CHARSET;
                     } elseif ($char === 'D') {
                         $this->moveCursorDownAndScroll();
@@ -119,6 +154,11 @@ class AnsiParser
                     }
                     break;
                 case self::STATE_CHARSET:
+                    if ($char === '0') {
+                        $this->state->decSpecialCharsMode = true;
+                    } elseif ($char === 'B') {
+                        $this->state->decSpecialCharsMode = false;
+                    }
                     $state = self::STATE_GROUND;
                     break;
                 case self::STATE_OSC_STRING:
@@ -186,6 +226,10 @@ class AnsiParser
                 break;
             default:
                 if (mb_check_encoding($char, 'UTF-8') && preg_match('/[[:print:]]/u', $char)) {
+                    if ($this->state->decSpecialCharsMode && isset($this->decSpecialChars[$char])) {
+                        $char = $this->decSpecialChars[$char];
+                    }
+
                     if ($this->state->cursorX >= $this->config['cols']) {
                         if ($this->state->autoWrapMode) {
                             $this->state->cursorX = 0;
