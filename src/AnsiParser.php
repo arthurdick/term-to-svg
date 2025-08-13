@@ -225,11 +225,12 @@ class AnsiParser
                 $this->state->cursorX = min($this->config['cols'] - 1, (int)($this->state->cursorX / 8 + 1) * 8);
                 break;
             default:
-                if (mb_check_encoding($char, 'UTF-8') && preg_match('/[[:print:]]/u', $char)) {
-                    if ($this->state->decSpecialCharsMode && isset($this->decSpecialChars[$char])) {
-                        $char = $this->decSpecialChars[$char];
-                    }
+                $charToPrint = $char;
+                if ($this->state->decSpecialCharsMode && isset($this->decSpecialChars[$char])) {
+                    $charToPrint = $this->decSpecialChars[$char];
+                }
 
+                if (mb_check_encoding($charToPrint, 'UTF-8') && preg_match('/[[:print:]]/u', $charToPrint)) {
                     if ($this->state->cursorX >= $this->config['cols']) {
                         if ($this->state->autoWrapMode) {
                             $this->state->cursorX = 0;
@@ -239,7 +240,7 @@ class AnsiParser
                         }
                     }
 
-                    $this->writeCharToHistory($char);
+                    $this->writeCharToHistory($charToPrint);
 
                     if ($this->state->autoWrapMode) {
                         $this->state->cursorX++;
