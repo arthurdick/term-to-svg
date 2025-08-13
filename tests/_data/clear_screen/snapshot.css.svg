@@ -14,6 +14,18 @@
         visibility: hidden;
       }
       @keyframes t-v2_t-anim {
+        0.0000% { visibility: hidden; } 16.1290% { visibility: visible; }
+      }      .v3_t {
+        animation: 6.2s steps(1, end) infinite t-v3_t-anim;
+        visibility: hidden;
+      }
+      @keyframes t-v3_t-anim {
+        0.0000% { visibility: hidden; } 16.1290% { visibility: visible; } 19.3548% { visibility: hidden; }
+      }      .v4_t {
+        animation: 6.2s steps(1, end) infinite t-v4_t-anim;
+        visibility: hidden;
+      }
+      @keyframes t-v4_t-anim {
         0.0000% { visibility: hidden; } 19.3548% { visibility: visible; }
       }      #t_cursor { animation: 6.2s steps(1, end) infinite t-cursor-pos, 6.2s steps(1, end) infinite t-cursor-vis; }
       #t_main-screen { animation: 6.2s steps(1, end) infinite t-main-screen; opacity: 1; pointer-events: auto; }
@@ -33,7 +45,7 @@
     <g id="t_master">
         <g id="t_main-screen">
             <g class="terminal-screen" id="t_main-scroll" text-rendering="geometricPrecision">
-                <text class="c1_t v1_t " x="0.00" y="14.00">Hello</text><text class="c1_t v2_t " x="42.00" y="14.00">Clear</text>
+                <text class="c1_t v1_t " x="0.00" y="14.00">Hello</text><text class="c1_t v2_t " x="0.00" y="14.00" xml:space="preserve">     </text><text class="c1_t v3_t " x="42.00" y="14.00" xml:space="preserve">     </text><text class="c1_t v4_t " x="42.00" y="14.00">Clear</text><text class="c1_t v2_t " x="84.00" y="14.00" xml:space="preserve">                                                                      </text><text class="c1_t v2_t " x="0.00" y="30.80" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="47.60" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="64.40" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="81.20" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="98.00" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="114.80" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="131.60" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="148.40" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="165.20" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="182.00" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="198.80" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="215.60" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="232.40" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="249.20" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="266.00" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="282.80" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="299.60" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="316.40" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="333.20" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="350.00" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="366.80" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="383.60" xml:space="preserve">                                                                                </text><text class="c1_t v2_t " x="0.00" y="400.40" xml:space="preserve">                                                                                </text>
             </g>
         </g>
         <g id="t_alt-screen">

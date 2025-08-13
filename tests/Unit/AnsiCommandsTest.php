@@ -61,9 +61,9 @@ class AnsiCommandsTest extends TestCase
         $this->process("Hello\nWorld");
         $this->process("\x1b[2J"); // ESC[2J
 
-        // 'H' at (0,0) and 'W' at (1,0) should now be inactive.
-        $this->assertNull($this->findActiveCellAt(0, 0));
-        $this->assertNull($this->findActiveCellAt(1, 0));
+        // 'H' at (0,0) and 'W' at (1,0) should now be spaces with default style.
+        $this->assertEquals(' ', $this->findActiveCellAt(0, 0)['char']);
+        $this->assertEquals(' ', $this->findActiveCellAt(1, 0)['char']);
     }
 
     public function testCursorForwardMovesCursor(): void
@@ -147,9 +147,9 @@ class AnsiCommandsTest extends TestCase
         $this->assertEquals('s', $this->findActiveCellAt(0, 0)['char']);
         $this->assertEquals(' ', $this->findActiveCellAt(0, 4)['char']);
 
-        // "text" should be erased
+        // "text" should be erased and replaced with spaces
         for ($x = 5; $x < 9; $x++) {
-            $this->assertNull($this->findActiveCellAt(0, $x));
+            $this->assertEquals(' ', $this->findActiveCellAt(0, $x)['char']);
         }
     }
 
@@ -162,9 +162,11 @@ class AnsiCommandsTest extends TestCase
         $this->assertEquals('a', $this->findActiveCellAt(0, 0)['char']);
         $this->assertEquals('b', $this->findActiveCellAt(0, 1)['char']);
         $this->assertEquals('e', $this->findActiveCellAt(0, 2)['char']);
-        $this->assertEquals('f', $this->findActiveCellAt(0, 3)['char']);
-        $this->assertNull($this->findActiveCellAt(0, 4));
-        $this->assertNull($this->findActiveCellAt(0, 5));
+        $this->assertEquals('f',
+        $this->findActiveCellAt(0, 3)['char']);
+        // The rest of the line should be spaces
+        $this->assertEquals(' ', $this->findActiveCellAt(0, 4)['char']);
+        $this->assertEquals(' ', $this->findActiveCellAt(0, 5)['char']);
     }
 
     public function testInsertCharacters(): void
@@ -175,12 +177,12 @@ class AnsiCommandsTest extends TestCase
 
         $this->assertEquals('a', $this->findActiveCellAt(0, 0)['char']);
         $this->assertEquals('b', $this->findActiveCellAt(0, 1)['char']);
-        $this->assertNull($this->findActiveCellAt(0, 2));
-        $this->assertNull($this->findActiveCellAt(0, 3));
+        // The inserted characters should be spaces
+        $this->assertEquals(' ', $this->findActiveCellAt(0, 2)['char']);
+        $this->assertEquals(' ', $this->findActiveCellAt(0, 3)['char']);
         $this->assertEquals('c', $this->findActiveCellAt(0, 4)['char']);
         $this->assertEquals('d', $this->findActiveCellAt(0, 5)['char']);
     }
-
 
     public function testSetScrollRegion(): void
     {
@@ -196,8 +198,9 @@ class AnsiCommandsTest extends TestCase
         $this->process("\x1b[2L"); // Insert 2 lines
 
         $this->assertEquals('l', $this->findActiveCellAt(0, 0)['char']); // line1 is untouched
-        $this->assertNull($this->findActiveCellAt(1, 0)); // New line
-        $this->assertNull($this->findActiveCellAt(2, 0)); // New line
+        // The new lines should be spaces
+        $this->assertEquals(' ', $this->findActiveCellAt(1, 0)['char']);
+        $this->assertEquals(' ', $this->findActiveCellAt(2, 0)['char']);
         $this->assertEquals('l', $this->findActiveCellAt(3, 0)['char']); // line2 is shifted down
     }
 
@@ -266,8 +269,8 @@ class AnsiCommandsTest extends TestCase
         // Check that "Line 7" has moved up to row 5.
         $this->assertEquals('7', $this->findActiveCellAt(5, 5)['char']);
 
-        // Check that the last line of the scroll region is now blank
-        $this->assertNull($this->findActiveCellAt(6, 0));
+        // Check that the last line of the scroll region is now spaces
+        $this->assertEquals(' ', $this->findActiveCellAt(6, 0)['char']);
     }
 
 
@@ -276,7 +279,7 @@ class AnsiCommandsTest extends TestCase
         $this->process("line1\nline2");
         $this->process("\x1b[1T");
 
-        $this->assertNull($this->findActiveCellAt(0, 0));
+        $this->assertEquals(' ', $this->findActiveCellAt(0, 0)['char']);
         $this->assertEquals('l', $this->findActiveCellAt(1, 0)['char']);
         $this->assertEquals('1', $this->findActiveCellAt(1, 4)['char']);
     }
@@ -397,10 +400,10 @@ class AnsiCommandsTest extends TestCase
         $this->assertEquals('a', $this->findActiveCellAt(0, 0)['char']);
         $this->assertEquals('b', $this->findActiveCellAt(0, 1)['char']);
 
-        // 'c', 'd', 'e' should be erased
-        $this->assertNull($this->findActiveCellAt(0, 2));
-        $this->assertNull($this->findActiveCellAt(0, 3));
-        $this->assertNull($this->findActiveCellAt(0, 4));
+        // 'c', 'd', 'e' should be erased and replaced with spaces
+        $this->assertEquals(' ', $this->findActiveCellAt(0, 2)['char']);
+        $this->assertEquals(' ', $this->findActiveCellAt(0, 3)['char']);
+        $this->assertEquals(' ', $this->findActiveCellAt(0, 4)['char']);
 
         // 'f', 'g', 'h' should be unchanged
         $this->assertEquals('f', $this->findActiveCellAt(0, 5)['char']);

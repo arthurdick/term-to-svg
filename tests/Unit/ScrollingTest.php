@@ -83,7 +83,7 @@ class ScrollingTest extends TestCase
         $this->assertEquals('7', $this->findActiveCellAt(5, 5)['char']);
 
         // Check that the last line of the scroll region is now blank
-        $this->assertNull($this->findActiveCellAt(6, 0));
+        $this->assertEquals(' ', $this->findActiveCellAt(6, 0)['char']);
     }
 
     public function testScrollDownInRegionMovesTextCorrectly(): void
@@ -114,6 +114,6 @@ class ScrollingTest extends TestCase
         $this->assertEquals('6', $this->findActiveCellAt(6, 5)['char']);
 
         // The top line of the scroll region (line 3's original position) should now be blank
-        $this->assertNull($this->findActiveCellAt(2, 0));
+        $this->assertEquals(' ', $this->findActiveCellAt(2, 0)['char']);
     }
 }
