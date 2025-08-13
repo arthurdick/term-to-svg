@@ -498,48 +498,52 @@ class AnsiParser
 
     private function eraseInDisplay(int $mode): void
     {
-        $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
         if ($mode === 0) { // From cursor to end of screen
             $this->eraseInLine(0);
             for ($y = $this->state->cursorY + 1; $y <= $this->state->scrollBottom; $y++) {
-                $this->endLifespanForLine($y + $scrollOffset, 0);
+                for ($x = 0; $x < $this->config['cols']; $x++) {
+                    $this->writeCharToHistoryAt($x, $y, ' ', $this->state->currentStyle);
+                }
             }
         } elseif ($mode === 1) { // From start of screen to cursor
             for ($y = $this->state->scrollTop; $y < $this->state->cursorY; $y++) {
-                $this->endLifespanForLine($y + $scrollOffset, 0);
+                for ($x = 0; $x < $this->config['cols']; $x++) {
+                    $this->writeCharToHistoryAt($x, $y, ' ', $this->state->currentStyle);
+                }
             }
             $this->eraseInLine(1);
         } elseif ($mode === 2 || $mode === 3) { // Entire screen
             for ($y = $this->state->scrollTop; $y <= $this->state->scrollBottom; $y++) {
-                $this->endLifespanForLine($y + $scrollOffset, 0);
+                for ($x = 0; $x < $this->config['cols']; $x++) {
+                    $this->writeCharToHistoryAt($x, $y, ' ', $this->state->currentStyle);
+                }
             }
         }
     }
 
     private function eraseInLine(int $mode): void
     {
-        $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
-        $y = $this->state->cursorY + $scrollOffset;
         $startX = 0;
-        $count = $this->config['cols'];
+        $endX = $this->config['cols'];
 
         if ($mode === 0) { // From cursor to end of line
             $startX = $this->state->cursorX;
-            $count = $this->config['cols'] - $startX;
         } elseif ($mode === 1) { // From start of line to cursor
-            $startX = 0;
-            $count = $this->state->cursorX + 1;
+            $endX = $this->state->cursorX + 1;
         }
 
-        $this->endLifespanForLine($y, $startX, $count);
+        for ($x = $startX; $x < $endX; $x++) {
+            $this->writeCharToHistoryAt($x, $this->state->cursorY, ' ', $this->state->currentStyle);
+        }
     }
 
     private function eraseCharacters(int $n = 1): void
     {
         $n = max(1, $n);
-        $scrollOffset = $this->state->altScreenActive ? $this->state->altScrollOffset : $this->state->mainScrollOffset;
-        $y = $this->state->cursorY + $scrollOffset;
-        $this->endLifespanForLine($y, $this->state->cursorX, $n);
+        $endX = min($this->state->cursorX + $n, $this->config['cols']);
+        for ($x = $this->state->cursorX; $x < $endX; $x++) {
+            $this->writeCharToHistoryAt($x, $this->state->cursorY, ' ', $this->state->currentStyle);
+        }
     }
 
     private function deleteCharacters(int $n = 1): void
@@ -558,17 +562,18 @@ class AnsiParser
         // Shift characters from right to left
         for ($x = $x_start; $x < $cols; $x++) {
             $x_source = $x + $n;
-            $this->endLifespanForLine($y, $x, 1);
             if ($x_source < $cols && isset($buffer[$y][$x_source]) && !empty($buffer[$y][$x_source])) {
                 $lastIndex = count($buffer[$y][$x_source]) - 1;
                 $cellToMove = $buffer[$y][$x_source][$lastIndex];
                 if (!isset($cellToMove['endTime']) || $cellToMove['endTime'] > $this->currentTime) {
-                    $buffer[$y][$x][] = [
-                        'char' => $cellToMove['char'],
-                        'style' => $cellToMove['style'],
-                        'startTime' => $this->currentTime,
-                    ];
+                    $this->writeCharToHistoryAt($x, $this->state->cursorY, $cellToMove['char'], $cellToMove['style']);
+                } else {
+                    // If the source character has ended, paint with current style
+                    $this->writeCharToHistoryAt($x, $this->state->cursorY, ' ', $this->state->currentStyle);
                 }
+            } else {
+                // If there's no source character, paint the rest of the line with the current style
+                $this->writeCharToHistoryAt($x, $this->state->cursorY, ' ', $this->state->currentStyle);
             }
         }
     }
@@ -590,24 +595,21 @@ class AnsiParser
         for ($x = $cols - 1; $x >= $x_start + $n; $x--) {
             $x_source = $x - $n;
             if (isset($buffer[$y][$x_source]) && !empty($buffer[$y][$x_source])) {
-                $this->endLifespanForLine($y, $x, 1);
                 $lastIndex = count($buffer[$y][$x_source]) - 1;
                 $cellToMove = $buffer[$y][$x_source][$lastIndex];
                 if (!isset($cellToMove['endTime']) || $cellToMove['endTime'] > $this->currentTime) {
-                    $buffer[$y][$x][] = [
-                        'char' => $cellToMove['char'],
-                        'style' => $cellToMove['style'],
-                        'startTime' => $this->currentTime,
-                    ];
+                    $this->writeCharToHistoryAt($x, $this->state->cursorY, $cellToMove['char'], $cellToMove['style']);
                 }
             } else {
-                // If the source is empty, ensure the destination is also empty
+                // Ensure the destination is also empty if the source is
                 $this->endLifespanForLine($y, $x, 1);
             }
         }
 
-        // Clear the space that was opened up
-        $this->endLifespanForLine($y, $x_start, $n);
+        // Paint the space that was opened up
+        for ($x = $x_start; $x < $x_start + $n && $x < $cols; $x++) {
+            $this->writeCharToHistoryAt($x, $this->state->cursorY, ' ', $this->state->currentStyle);
+        }
     }
 
     private function setScrollRegion(array $params): void
@@ -638,12 +640,22 @@ class AnsiParser
             return;
         }
 
-        // Create an array of N new, empty lines to insert.
-        $newLines = array_fill(0, $n, []);
+        // Shift existing lines down
+        for ($y = $scrollBottom; $y >= $cursorY + $n; --$y) {
+            $srcY = $y - $n;
+            if (isset($buffer[$srcY + $scrollOffset])) {
+                $buffer[$y + $scrollOffset] = $buffer[$srcY + $scrollOffset];
+            } else {
+                unset($buffer[$y + $scrollOffset]);
+            }
+        }
 
-        // Use array_splice to insert the new lines. This is an atomic and safe operation.
-        // It correctly shifts all subsequent elements down.
-        array_splice($buffer, $cursorY + $scrollOffset, 0, $newLines);
+        // Paint the new, empty lines with the current style
+        for ($y = $cursorY; $y < $cursorY + $n && $y <= $scrollBottom; ++$y) {
+            for ($x = 0; $x < $this->config['cols']; ++$x) {
+                $this->writeCharToHistoryAt($x, $y, ' ', $this->state->currentStyle);
+            }
+        }
     }
 
     private function deleteLines(int $n): void
@@ -657,13 +669,28 @@ class AnsiParser
             return;
         }
 
-        // Use array_splice to remove N lines starting from the cursor position.
-        // It correctly shifts all subsequent elements up.
-        array_splice($buffer, $cursorY + $scrollOffset, $n);
+        // End lifespan for the lines that will be deleted
+        for ($i = 0; $i < $n; $i++) {
+            $this->endLifespanForLine($cursorY + $scrollOffset + $i, 0);
+        }
 
-        // Add new empty lines at the bottom of the buffer to maintain screen size.
-        $newEmptyLines = array_fill(0, $n, []);
-        array_splice($buffer, $scrollBottom + $scrollOffset - $n + 1, 0, $newEmptyLines);
+        // Shift lines up
+        for ($y = $cursorY; $y <= $scrollBottom - $n; $y++) {
+            $srcY = $y + $n + $scrollOffset;
+            $destY = $y + $scrollOffset;
+            if (isset($buffer[$srcY])) {
+                $buffer[$destY] = $buffer[$srcY];
+            } else {
+                unset($buffer[$destY]);
+            }
+        }
+
+        // Paint the new empty lines at the bottom of the region
+        for ($y = $scrollBottom - $n + 1; $y <= $scrollBottom; $y++) {
+            for ($x = 0; $x < $this->config['cols']; $x++) {
+                $this->writeCharToHistoryAt($x, $y, ' ', $this->state->currentStyle);
+            }
+        }
     }
 
     private function doScrollUp(int $n): void
@@ -697,8 +724,10 @@ class AnsiParser
                 }
             }
 
-            // Clear the last line of the scroll region
-            $this->endLifespanForLine($this->state->scrollBottom + $scrollOffset, 0);
+            // Clear the last line of the scroll region by painting it with the current background color
+            for ($x = 0; $x < $this->config['cols']; $x++) {
+                $this->writeCharToHistoryAt($x, $this->state->scrollBottom, ' ', $this->state->currentStyle);
+            }
         }
     }
 
@@ -717,7 +746,6 @@ class AnsiParser
                 $srcY = $y - 1 + $scrollOffset;
                 $destY = $y + $scrollOffset;
 
-                // End the lifespan of the destination line before overwriting
                 $this->endLifespanForLine($destY, 0);
 
                 if (isset($buffer[$srcY])) {
@@ -734,8 +762,10 @@ class AnsiParser
                 }
             }
 
-            // The top line of the scroll region is now a new, empty line
-            $this->endLifespanForLine($this->state->scrollTop + $scrollOffset, 0);
+            // The top line of the scroll region is now a new, empty line that needs to be painted
+            for ($x = 0; $x < $this->config['cols']; $x++) {
+                $this->writeCharToHistoryAt($x, $this->state->scrollTop, ' ', $this->state->currentStyle);
+            }
         }
     }
 
@@ -748,6 +778,12 @@ class AnsiParser
             $this->endLifespanForLine($scrollOffsetRef, 0);
             $scrollEventsRef[] = ['time' => $this->currentTime, 'offset' => $scrollOffsetRef];
             $scrollOffsetRef++;
+
+            // Paint the new line at the bottom of the screen
+            $new_line_y = $this->state->scrollBottom;
+            for ($x = 0; $x < $this->config['cols']; $x++) {
+                $this->writeCharToHistoryAt($x, $new_line_y, ' ', $this->state->currentStyle);
+            }
         }
     }
 

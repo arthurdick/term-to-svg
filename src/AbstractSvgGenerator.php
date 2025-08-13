@@ -148,8 +148,7 @@ abstract class AbstractSvgGenerator implements SvgGeneratorInterface
                         $rectElements .= sprintf('<rect class="%s" x="%.2F" y="%.2F" width="%.2F" height="%.2F" />', $bgClass, $rectX, $rectY, $chunkWidth, $charHeight);
                     }
 
-                    $trimmedTextChunk = rtrim($textChunk);
-                    if ($trimmedTextChunk !== '') {
+                    if ($textChunk !== '') {
                         $textX = $x * $charWidth;
                         $textY = $y * $charHeight + $this->config['font_size'];
                         $textCss = sprintf('fill:%s;', $fgHex);
@@ -179,7 +178,7 @@ abstract class AbstractSvgGenerator implements SvgGeneratorInterface
                             $spacePreserveAttr = ' xml:space="preserve"';
                         }
 
-                        $textElement = sprintf('<text class="%s" x="%.2F" y="%.2F"%s>%s</text>', $textClass, $textX, $textY, $spacePreserveAttr, $trimmedTextChunk);
+                        $textElement = sprintf('<text class="%s" x="%.2F" y="%.2F"%s>%s</text>', $textClass, $textX, $textY, $spacePreserveAttr, $textChunk);
 
                         if (!empty($style['link'])) {
                             $textElements .= sprintf('<a href="%s" target="_blank">%s</a>', htmlspecialchars($style['link'], ENT_XML1), $textElement);
