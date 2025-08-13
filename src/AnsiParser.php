@@ -262,7 +262,7 @@ class AnsiParser
         if ($command === 8) {
             $uri = end($parts);
             $this->state->currentStyle['link'] = $uri ?: null;
-        } elseif (in_array($command, self::WONT_IMPLEMENT_OSC)) {
+        } elseif (!in_array($command, self::WONT_IMPLEMENT_OSC)) {
             $this->logWarning("Unsupported OSC command: {$command}");
         }
     }
