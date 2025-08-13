@@ -162,8 +162,10 @@ class AnsiCommandsTest extends TestCase
         $this->assertEquals('a', $this->findActiveCellAt(0, 0)['char']);
         $this->assertEquals('b', $this->findActiveCellAt(0, 1)['char']);
         $this->assertEquals('e', $this->findActiveCellAt(0, 2)['char']);
-        $this->assertEquals('f',
-        $this->findActiveCellAt(0, 3)['char']);
+        $this->assertEquals(
+            'f',
+            $this->findActiveCellAt(0, 3)['char']
+        );
         // The rest of the line should be spaces
         $this->assertEquals(' ', $this->findActiveCellAt(0, 4)['char']);
         $this->assertEquals(' ', $this->findActiveCellAt(0, 5)['char']);
