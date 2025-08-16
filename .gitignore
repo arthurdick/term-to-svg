@@ -12,3 +12,6 @@
 
 # Un-ignore in the /tests/_data directory
 !/tests/_data/**
+
+coverage.clover
+/coverage-html/

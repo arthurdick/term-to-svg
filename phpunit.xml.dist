@@ -15,5 +15,9 @@
         <include>
             <directory>src</directory>
         </include>
+       <report>
+            <html outputDirectory="coverage-html"/>
+            <clover outputFile="coverage.clover"/>
+        </report>
     </coverage>
 </phpunit>

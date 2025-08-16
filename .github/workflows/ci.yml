@@ -44,6 +44,7 @@ jobs:
           php-version: ${{ matrix.php-version }}
           # Explicitly list the required PHP extensions for clarity and robustness.
           extensions: mbstring
+          coverage: xdebug
 
       # Step 3: Dynamically get the path to Composer's cache directory.
       # This is more reliable than hardcoding a path. The output is used in the next step.
@@ -80,5 +81,5 @@ jobs:
 
       # Step 7: Run the project's PHPUnit test suite.
       # This simple command is sufficient because all configuration is handled by the project's phpunit.xml file.
-      - name: Run PHPUnit tests
-        run: ./vendor/bin/phpunit
+      - name: Run PHPUnit tests with coverage
+        run: ./vendor/bin/phpunit --coverage-text
