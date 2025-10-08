@@ -132,7 +132,7 @@ Options:
   --default_fg <hex>        Default foreground color (overrides theme).
   --default_bg <hex>        Default background color (overrides theme).
   --animation_pause_seconds <number> Animation pause in seconds at the end.
-  --poster-at <time|end>    Generate a non-animated SVG of a single frame at a specific time or at the end.
+  --poster_at <time|end>    Generate a non-animated SVG of a single frame at a specific time or at the end.
   --interactive             Enable interactive player controls.
   -v, --version             Display the version number.
   -h, --help                Display this help message.
